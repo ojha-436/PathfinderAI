@@ -1,0 +1,10 @@
+# Keep the Cloud Build upload lean — never ship the local venv or caches.
+backend/venv/
+**/__pycache__/
+**/*.pyc
+**/*.db
+**/.DS_Store
+backend/app/data/demand_series.json
+backend/app/data/sample_resume_asha.pdf
+tests/
+.git/

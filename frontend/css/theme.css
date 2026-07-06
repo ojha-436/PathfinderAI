@@ -1,0 +1,141 @@
+/* PathFinder — "career atlas" design system.
+   Editorial field-guide aesthetic: warm paper, ink serif display, pine-green for
+   rising demand, terracotta for decline, marigold accent, mono for data. */
+
+:root {
+  /* Paper & ink */
+  --paper:      #f4eee1;
+  --paper-2:    #faf5ea;
+  --card:       #fffdf7;
+  --ink:        #1b1811;
+  --ink-soft:   #514a3c;
+  --ink-faint:  #8a8069;
+  --line:       #e3d9c4;
+  --line-soft:  #ece3d3;
+
+  /* Signal colors */
+  --pine:       #0e5c48;   /* rising / primary */
+  --pine-2:     #0a4536;
+  --pine-tint:  #e2efe9;
+  --marigold:   #d69200;   /* accent (India warmth) */
+  --marigold-2: #b87d00;
+  --marigold-tint:#f7eccf;
+  --terracotta: #bd4a2c;   /* declining */
+  --terracotta-tint:#f6e0d7;
+  --slate:      #3a5566;   /* neutral-cool for flat */
+
+  /* Typography */
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-body: "Avenir Next", "Segoe UI", Roboto, "Helvetica Neue", system-ui, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", "Roboto Mono", ui-monospace, Menlo, monospace;
+
+  /* Shape & depth */
+  --r-sm: 8px; --r: 14px; --r-lg: 22px; --r-pill: 999px;
+  --sh-1: 0 1px 2px rgba(40,30,10,.06), 0 2px 8px rgba(40,30,10,.05);
+  --sh-2: 0 4px 14px rgba(40,30,10,.09), 0 12px 34px rgba(40,30,10,.07);
+  --sh-3: 0 18px 50px rgba(30,22,8,.18);
+  --ring: 0 0 0 3px rgba(14,92,72,.28);
+
+  --maxw: 1140px;
+  --nav-h: 66px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(1200px 600px at 12% -8%, var(--paper-2), transparent 60%),
+    radial-gradient(900px 500px at 110% 0%, #f0e4cd88, transparent 55%);
+  line-height: 1.6;
+  font-size: 16px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Faint paper grain overlay */
+body::before {
+  content: "";
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  opacity: .5; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+}
+
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height: 1.12; letter-spacing: -.01em; color: var(--ink); margin: 0 0 .4em; }
+h1 { font-size: clamp(2.4rem, 5.5vw, 4.3rem); }
+h2 { font-size: clamp(1.7rem, 3.4vw, 2.6rem); }
+h3 { font-size: 1.28rem; }
+p { margin: 0 0 1rem; color: var(--ink-soft); }
+a { color: var(--pine); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.eyebrow {
+  font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .22em;
+  font-size: .7rem; color: var(--marigold-2); font-weight: 600;
+}
+.serif { font-family: var(--font-display); }
+
+/* Layout */
+.wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+.section { padding: clamp(48px, 8vw, 104px) 0; }
+.center { text-align: center; }
+.muted { color: var(--ink-faint); }
+.hidden { display: none !important; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5em;
+  font-family: var(--font-body); font-weight: 600; font-size: .96rem;
+  padding: .8em 1.4em; border-radius: var(--r-pill); border: 1.5px solid transparent;
+  cursor: pointer; transition: transform .15s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+  white-space: nowrap; line-height: 1;
+}
+.btn:active { transform: translateY(1px) scale(.99); }
+.btn-primary { background: var(--pine); color: #fdfbf4; box-shadow: var(--sh-1); }
+.btn-primary:hover { background: var(--pine-2); box-shadow: var(--sh-2); text-decoration: none; transform: translateY(-1px); }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn-ghost:hover { border-color: var(--ink); text-decoration: none; background: #fff8ea88; }
+.btn-amber { background: var(--marigold); color: #22190a; box-shadow: var(--sh-1); }
+.btn-amber:hover { background: var(--marigold-2); text-decoration: none; transform: translateY(-1px); }
+.btn-sm { padding: .5em .9em; font-size: .82rem; }
+.btn-block { width: 100%; }
+.btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+/* Cards & surfaces */
+.card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); box-shadow: var(--sh-1);
+}
+.tag {
+  display: inline-flex; align-items: center; gap: .35em;
+  font-family: var(--font-mono); font-size: .74rem; font-weight: 600;
+  padding: .28em .7em; border-radius: var(--r-pill); border: 1px solid var(--line);
+  background: #fff8ea; color: var(--ink-soft);
+}
+
+/* Focus visibility */
+:focus-visible { outline: none; box-shadow: var(--ring); border-radius: var(--r-sm); }
+
+/* Reveal animation */
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.reveal { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
+@media (prefers-reduced-motion: reduce) { .reveal { animation: none; } * { scroll-behavior: auto !important; } }
+
+/* Toast */
+#toasts { position: fixed; top: 78px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 10px; }
+.toast {
+  background: var(--ink); color: #fdfbf4; padding: .8em 1.1em; border-radius: var(--r);
+  box-shadow: var(--sh-3); font-size: .9rem; max-width: 340px; animation: rise .3s ease both;
+  border-left: 4px solid var(--marigold);
+}
+.toast.err { border-left-color: var(--terracotta); }
+.toast.ok  { border-left-color: var(--pine); }
+
+/* Scrollbar polish */
+::-webkit-scrollbar { height: 10px; width: 10px; }
+::-webkit-scrollbar-thumb { background: #d8ccb2; border-radius: 10px; border: 2px solid var(--paper); }

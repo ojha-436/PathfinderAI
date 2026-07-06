@@ -1,0 +1,74 @@
+{
+  "_meta": {
+    "market": "India",
+    "note": "Role → required-skill weights (0..1, importance of the skill for the role). Weights within a role sum to ~1.0. Skill ids reference skills.json. time_to_ready_base_months assumes ~6-8 hrs/week of study for someone starting from a clerical baseline.",
+    "source": "Curated from O*NET/ESCO role descriptors and India job-posting skill frequencies (curated snapshot)."
+  },
+  "roles": [
+    {
+      "id": "data_entry_operator",
+      "name": "Data Entry Operator",
+      "is_baseline": true,
+      "salary_key": "data_entry_operator",
+      "time_to_ready_base_months": 0,
+      "description": "Current clerical baseline role — high automation exposure.",
+      "skills": {"data_entry": 0.30, "typing": 0.20, "basic_ms_office": 0.15, "attention_to_detail": 0.15, "excel": 0.10, "filing": 0.10}
+    },
+    {
+      "id": "data_quality_analyst",
+      "name": "Data Quality Analyst",
+      "salary_key": "data_quality_analyst",
+      "time_to_ready_base_months": 5,
+      "description": "Owns the accuracy, completeness and consistency of an organisation's data — the natural, low-jump upgrade from data entry because attention-to-detail transfers directly.",
+      "skills": {"data_quality": 0.22, "excel_advanced": 0.16, "sql": 0.16, "data_cleaning": 0.16, "attention_to_detail": 0.10, "data_analysis": 0.10, "communication": 0.05, "database_fundamentals": 0.05}
+    },
+    {
+      "id": "bi_associate",
+      "name": "Business Intelligence Associate",
+      "salary_key": "bi_associate",
+      "time_to_ready_base_months": 6,
+      "description": "Turns raw business data into dashboards and reports leaders act on.",
+      "skills": {"power_bi": 0.20, "sql": 0.18, "data_visualization": 0.16, "business_intelligence": 0.14, "excel_advanced": 0.12, "dashboarding": 0.10, "data_storytelling": 0.06, "communication": 0.04}
+    },
+    {
+      "id": "ops_automation_specialist",
+      "name": "Operations Automation Specialist",
+      "salary_key": "ops_automation_specialist",
+      "time_to_ready_base_months": 6,
+      "description": "Automates the very repetitive clerical workflows this worker already understands — turning displacement risk into displacement expertise.",
+      "skills": {"process_automation": 0.22, "rpa": 0.20, "excel_advanced": 0.16, "problem_solving": 0.12, "sql": 0.10, "data_cleaning": 0.10, "project_coordination": 0.06, "communication": 0.04}
+    },
+    {
+      "id": "data_analyst",
+      "name": "Data Analyst",
+      "salary_key": "data_analyst",
+      "time_to_ready_base_months": 8,
+      "description": "Answers business questions with data — the flagship data-adjacent role.",
+      "skills": {"data_analysis": 0.20, "sql": 0.18, "python": 0.16, "data_visualization": 0.14, "statistics": 0.12, "excel_advanced": 0.10, "data_storytelling": 0.06, "communication": 0.04}
+    },
+    {
+      "id": "reporting_analyst",
+      "name": "Reporting Analyst",
+      "salary_key": "reporting_analyst",
+      "time_to_ready_base_months": 5,
+      "description": "Builds recurring MIS/operational reports — closest to existing spreadsheet work.",
+      "skills": {"excel_advanced": 0.22, "dashboarding": 0.18, "sql": 0.16, "data_visualization": 0.14, "business_intelligence": 0.12, "attention_to_detail": 0.08, "communication": 0.05, "data_analysis": 0.05}
+    },
+    {
+      "id": "crm_data_coordinator",
+      "name": "CRM Data Coordinator",
+      "salary_key": "crm_data_coordinator",
+      "time_to_ready_base_months": 4,
+      "description": "Maintains and analyses customer data inside CRM systems — leans on customer-service and data-hygiene skills.",
+      "skills": {"crm_tools": 0.24, "data_quality": 0.16, "excel_advanced": 0.14, "customer_service": 0.12, "data_cleaning": 0.12, "communication": 0.10, "sql": 0.08, "attention_to_detail": 0.04}
+    },
+    {
+      "id": "junior_data_engineer",
+      "name": "Junior Data Engineer",
+      "salary_key": "junior_data_engineer",
+      "time_to_ready_base_months": 10,
+      "description": "Builds the pipelines that move and shape data — highest payoff, steepest climb.",
+      "skills": {"sql": 0.20, "python": 0.20, "etl": 0.18, "database_fundamentals": 0.14, "data_cleaning": 0.12, "cloud_basics": 0.10, "problem_solving": 0.06}
+    }
+  ]
+}

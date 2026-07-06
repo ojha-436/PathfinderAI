@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "market": "India",
+    "currency": "INR",
+    "period": "annual (CTC)",
+    "note": "Median and band figures are a curated snapshot aligned to public India salary reports (entry-level ranges for the given roles). Used for salary-uplift estimates only; framed as decision support, not a guarantee.",
+    "source": "Curated from public India salary reports (2024-25 ranges)."
+  },
+  "roles": {
+    "data_entry_operator": {"entry": 180000, "median": 240000, "experienced": 330000},
+    "data_quality_analyst": {"entry": 400000, "median": 550000, "experienced": 850000},
+    "bi_associate": {"entry": 450000, "median": 650000, "experienced": 1100000},
+    "ops_automation_specialist": {"entry": 500000, "median": 700000, "experienced": 1200000},
+    "data_analyst": {"entry": 500000, "median": 750000, "experienced": 1300000},
+    "reporting_analyst": {"entry": 420000, "median": 600000, "experienced": 950000},
+    "crm_data_coordinator": {"entry": 330000, "median": 450000, "experienced": 700000},
+    "junior_data_engineer": {"entry": 650000, "median": 900000, "experienced": 1600000}
+  }
+}

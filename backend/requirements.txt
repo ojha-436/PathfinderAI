@@ -1,0 +1,24 @@
+# PathFinder v2 — runtime dependencies (lean by design; OneDrive-friendly)
+# Core web
+fastapi>=0.110,<1.0
+uvicorn>=0.29,<1.0
+# ORM + DB (SQLite in dev; swap DATABASE_URL for Postgres/AlloyDB in prod)
+SQLAlchemy>=2.0,<3.0
+# Multipart form parsing (resume file upload)
+python-multipart>=0.0.9
+# PDF text extraction (pure-python, no native build)
+pypdf>=4.0
+# Settings + email validation (used by config.py and schemas EmailStr)
+pydantic-settings>=2.0,<3.0
+email-validator>=2.0
+# Gemini (skill extraction) — activated when GEMINI_API_KEY is set; local fallback otherwise
+google-generativeai>=0.8.0
+#
+# NOTE: Auth (PBKDF2 password hashing + HS256 JWT) uses ONLY the Python
+# standard library (hashlib, hmac, secrets) — no bcrypt/PyJWT native deps.
+#
+# OPTIONAL — install only to activate the GCP providers (see README):
+#   google-generativeai        # Gemini skill extraction
+#   google-cloud-aiplatform    # Vertex AI RAG grounding
+#   google-cloud-bigquery      # BigQuery + BQML ML.FORECAST
+#   google-adk                 # Agent Development Kit harness

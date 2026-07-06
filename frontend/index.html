@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PathFinder — Will your skills survive the next 5 years?</title>
+  <meta name="description" content="Upload your resume and get 3 ranked, future-proof career pathways with forecasted demand, salary uplift, an explainable why, and the first 3 courses to start today." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%A7%AD%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/css/theme.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <div id="toasts"></div>
+
+  <!-- NAV -->
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="#/" data-nav>
+        <svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <circle cx="16" cy="16" r="15" stroke="var(--pine)" stroke-width="1.5"/>
+          <path d="M16 4 L20 18 L16 15 L12 18 Z" fill="var(--terracotta)"/>
+          <path d="M16 28 L12 14 L16 17 L20 14 Z" fill="var(--pine)"/>
+        </svg>
+        PathFinder
+      </a>
+      <div class="nav-spacer"></div>
+      <span class="provider-badge" id="providerBadge" title="Which AI provider is serving each capability">
+        <span class="dot"></span> <span id="providerText">local engine</span>
+      </span>
+      <nav class="nav-links">
+        <a href="#/" data-nav class="hide-sm">Home</a>
+        <a href="#/analyze" data-nav>Analyze</a>
+      </nav>
+      <div id="navAuth"></div>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ===================== LANDING ===================== -->
+    <section id="view-landing" class="view">
+      <div class="hero">
+        <div class="hero-contours" aria-hidden="true">
+          <svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M-50 120 C 200 60, 400 180, 650 120 S 1050 40, 1260 130"/>
+            <path d="M-50 190 C 220 130, 420 250, 660 190 S 1060 110, 1260 200"/>
+            <path d="M-50 270 C 240 210, 440 330, 680 270 S 1070 190, 1260 280"/>
+            <path d="M-50 360 C 240 300, 460 420, 700 360 S 1080 280, 1260 370"/>
+            <path d="M-50 450 C 260 390, 470 510, 710 450 S 1090 370, 1260 460"/>
+            <path d="M-50 540 C 260 480, 480 600, 730 540 S 1100 460, 1260 550"/>
+            <circle cx="655" cy="120" r="4" fill="var(--terracotta)" stroke="none"/>
+            <circle cx="700" cy="360" r="4" fill="var(--pine)" stroke="none"/>
+          </svg>
+        </div>
+        <div class="wrap">
+          <div class="hero-grid">
+            <div class="reveal">
+              <span class="eyebrow">AI Career &amp; Reskilling Decision Advisor</span>
+              <h1 style="margin-top:.3em">Will your skills survive the <span class="accent">next five years?</span></h1>
+              <p class="lede">Upload your resume. PathFinder forecasts which of your skills are rising or dying in your market, then maps 3 future-proof pathways — with the payoff, the reason, and the first courses to start today.</p>
+              <div class="hero-cta">
+                <button class="btn btn-primary" data-nav="#/analyze">Analyze my resume →</button>
+                <button class="btn btn-ghost" id="tryAshaBtn">Try Asha's sample</button>
+              </div>
+              <div class="hero-note">
+                <span>🔒</span> Create a free account to save your history — or continue as a guest.
+              </div>
+            </div>
+
+            <div class="specimen reveal" style="animation-delay:.15s" aria-hidden="true">
+              <div class="card">
+                <span class="eyebrow">Your skill forecast</span>
+                <div class="specimen-skill"><span class="mono" style="font-weight:600">Data Entry</span><span class="mono down">▼ −18%/yr</span></div>
+                <div class="specimen-skill"><span class="mono" style="font-weight:600">Document Filing</span><span class="mono down">▼ −17%/yr</span></div>
+                <div class="specimen-skill"><span class="mono" style="font-weight:600">Microsoft Excel</span><span class="mono up">▲ +8%/yr</span></div>
+                <div class="specimen-skill"><span class="mono" style="font-weight:600">Data Cleaning</span><span class="mono up">▲ +14%/yr</span></div>
+              </div>
+              <div class="card">
+                <span class="eyebrow">#1 Pathway</span>
+                <div style="font-family:var(--font-display);font-size:1.15rem;font-weight:600;margin:.2em 0">Data Quality Analyst</div>
+                <div class="mono" style="color:var(--pine);font-weight:700">+₹3,10,000/yr · ~5 mo</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- How it works -->
+      <div class="section">
+        <div class="wrap">
+          <span class="eyebrow">How PathFinder decides</span>
+          <h2>A four-agent decision pipeline</h2>
+          <p class="muted" style="max-width:52ch">Not a chatbot. A transparent pipeline that predicts, detects, explains, and recommends — every number traceable to a dataset row or model output.</p>
+          <div class="agents-row">
+            <div class="card agent-step reveal"><div class="ico">🧭</div><div class="num">AGENT 01</div><h3>SkillsExtractor</h3><p>Reads your resume and maps it to a canonical skill profile.</p></div>
+            <div class="card agent-step reveal" style="animation-delay:.08s"><div class="ico">📈</div><div class="num">AGENT 02</div><h3>MarketAnalyst</h3><p>Forecasts 3-year demand per skill — rising or declining.</p></div>
+            <div class="card agent-step reveal" style="animation-delay:.16s"><div class="ico">🗺️</div><div class="num">AGENT 03</div><h3>PathwayPlanner</h3><p>Matches your profile to future-proof roles by skill coverage.</p></div>
+            <div class="card agent-step reveal" style="animation-delay:.24s"><div class="ico">🎯</div><div class="num">AGENT 04</div><h3>ROIForecaster</h3><p>Ranks by payoff and grounds the first 3 real courses.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pillars -->
+      <div class="section" style="padding-top:0">
+        <div class="wrap">
+          <div class="pillars">
+            <div class="card pillar reveal"><h3>🔮 Predict, don't guess</h3><p>A real forecasting model over a curated India labour-market series — reproducible, not an LLM hunch.</p></div>
+            <div class="card pillar reveal" style="animation-delay:.1s"><h3>🧾 Explain everything</h3><p>Every pathway shows skill overlap, demand trend, salary basis, and its data source. Decision support, not a black box.</p></div>
+            <div class="card pillar reveal" style="animation-delay:.2s"><h3>📚 Grounded courses</h3><p>Recommendations come only from a real course catalog — zero hallucinated links.</p></div>
+          </div>
+          <div class="center" style="margin-top:40px">
+            <button class="btn btn-primary" data-nav="#/analyze">Start my analysis →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== ANALYZE ===================== -->
+    <section id="view-analyze" class="view hidden">
+      <div class="section">
+        <div class="wrap" id="analyzeRoot"><!-- filled by app.js --></div>
+      </div>
+    </section>
+
+    <!-- ===================== HISTORY ===================== -->
+    <section id="view-history" class="view hidden">
+      <div class="section">
+        <div class="wrap" id="historyRoot"><!-- filled by app.js --></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="wrap">
+      <div class="cols">
+        <div>
+          <a class="brand" href="#/" data-nav style="font-size:1.1rem">🧭 PathFinder</a>
+          <p style="margin-top:10px;max-width:34ch">Lifelong-learning decision intelligence for the individual. Built for the Google Cloud Gen AI Academy (APAC C2), Education &amp; Lifelong Learning track.</p>
+        </div>
+        <div>
+          <h4>Data sources</h4>
+          <ul>
+            <li>Skill taxonomy: O*NET / ESCO-aligned</li>
+            <li>Demand series: curated India signals*</li>
+            <li>Salaries: public India reports</li>
+            <li>Courses: NPTEL · SWAYAM · Coursera · Kaggle</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Responsible AI</h4>
+          <p class="ra">Every figure is traceable to a dataset row or model output — the model narrates, it never invents numbers. *Demand series are synthesized from documented parameters where public data has gaps. Advice is decision support, not a guarantee. Your raw resume is never stored after parsing; you can delete any analysis or your whole account anytime.</p>
+        </div>
+      </div>
+      <div class="legal">
+        <span>© 2026 PathFinder. Market: India (v1).</span>
+        <span class="mono" id="footMeta">local engine · reproducible forecasts</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- AUTH MODAL (mount point) -->
+  <div id="authModal"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/charts.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
