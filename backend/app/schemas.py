@@ -161,3 +161,39 @@ class MetaResponse(BaseModel):
     market: str
     provider_status: Dict[str, str]
     counts: Dict[str, int]
+
+
+# --- Jobs (professional dashboard) ----------------------------------------
+class Job(BaseModel):
+    id: str
+    title: str
+    company: str = ""
+    location: str = ""
+    salary: str = ""
+    posted: str = ""
+    url: str = ""                              # deep-link to the original posting
+    source: str = ""                          # jsearch | adzuna | greenhouse | lever | sample
+
+
+class JobMatch(BaseModel):
+    job: Job
+    match_pct: int
+    matched_skills: List[str] = []            # display names the user already has
+    gap_skills: List[str] = []                # display names to learn to qualify
+    courses: List[Course] = []                # grounded courses to close the gaps
+
+
+class JobMatchRequest(BaseModel):
+    analysis_id: Optional[str] = None         # load skills from a saved analysis (auth)
+    skills: List[str] = []                    # skill IDs or free-text terms
+    resume_text: Optional[str] = None
+    location: Optional[str] = None
+    query: Optional[str] = None               # role/keywords; derived if omitted
+    limit: int = 8
+
+
+class JobMatchResponse(BaseModel):
+    source: str
+    query: str
+    count: int
+    matches: List[JobMatch]

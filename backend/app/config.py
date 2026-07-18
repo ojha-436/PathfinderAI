@@ -29,6 +29,13 @@ class Settings(BaseSettings):
     VERTEX_RAG_CORPUS: str = os.getenv("VERTEX_RAG_CORPUS", "")
     BQML_DATASET: str = os.getenv("BQML_DATASET", "")
 
+    # Job data providers (professional dashboard) — all optional; local sample fallback.
+    RAPIDAPI_KEY: str = os.getenv("RAPIDAPI_KEY", "")           # JSearch (RapidAPI)
+    JSEARCH_HOST: str = os.getenv("JSEARCH_HOST", "jsearch.p.rapidapi.com")
+    ADZUNA_APP_ID: str = os.getenv("ADZUNA_APP_ID", "")
+    ADZUNA_APP_KEY: str = os.getenv("ADZUNA_APP_KEY", "")
+    JOBS_COUNTRY: str = os.getenv("JOBS_COUNTRY", "in")         # Adzuna country code (India)
+
     model_config = SettingsConfigDict(case_sensitive=True, extra="ignore")
 
     @property
