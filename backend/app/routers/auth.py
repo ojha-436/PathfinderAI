@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.deps import get_db, get_current_user
 from app.models import User
-from app.schemas import UserCreate, UserLogin, UserResponse, Token
+from app.schemas import UserCreate, UserLogin, UserResponse, Token, PersonaUpdate
 from app.security import hash_password, verify_password, create_access_token
 
 
@@ -54,6 +54,16 @@ def login(user_in: UserLogin, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+@router.patch("/me", response_model=UserResponse)
+def update_me(body: PersonaUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if body.persona not in {"student", "professional", "auto"}:
+        raise HTTPException(status_code=400, detail="persona must be student|professional|auto")
+    current_user.persona = body.persona
+    db.commit()
+    db.refresh(current_user)
     return current_user
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)

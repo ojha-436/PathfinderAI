@@ -25,10 +25,15 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     id: str
     email: EmailStr
+    persona: str = "auto"
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class PersonaUpdate(BaseModel):
+    persona: str  # student | professional | auto
 
 
 class Token(BaseModel):
@@ -197,3 +202,46 @@ class JobMatchResponse(BaseModel):
     query: str
     count: int
     matches: List[JobMatch]
+
+
+# --- Learning tracker (Phase 3) -------------------------------------------
+class LearningItemIn(BaseModel):
+    course_id: Optional[str] = None
+    title: str
+    provider: str = ""
+    url: str = ""
+    skill_ids: List[str] = []
+
+
+class LearningItem(BaseModel):
+    id: str
+    course_id: Optional[str] = None
+    title: str
+    provider: str = ""
+    url: str = ""
+    skill_ids: List[str] = []
+    status: str
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class StatusUpdate(BaseModel):
+    status: str  # saved | in_progress | completed
+
+
+class PathwayProgress(BaseModel):
+    role: str
+    role_id: str
+    before_pct: int
+    after_pct: int
+    delta: int
+
+
+class ProgressResponse(BaseModel):
+    analysis_id: str
+    acquired_skills: List[str]           # display names learned (completed items)
+    completed_count: int
+    pathways: List[PathwayProgress]

@@ -54,7 +54,7 @@ def match_jobs(
         raise HTTPException(status_code=400, detail="Provide skills, resume_text, or an analysis_id to match against.")
 
     query = req.query or ", ".join(ds.SKILL_NAME[s] for s in user_ids[:3]) or "data analyst"
-    raw = jobs_engine.search_jobs(query, req.location, num=max(req.limit * 2, 12))
+    raw, source = jobs_engine.search_jobs(query, req.location, num=max(req.limit * 2, 12))
 
     matches: List[JobMatch] = []
     for j in raw:
@@ -75,4 +75,4 @@ def match_jobs(
 
     matches.sort(key=lambda r: (-r.match_pct, r.job.id))
     matches = matches[: req.limit]
-    return JobMatchResponse(source=jobs_engine.active_source(), query=query, count=len(matches), matches=matches)
+    return JobMatchResponse(source=source, query=query, count=len(matches), matches=matches)

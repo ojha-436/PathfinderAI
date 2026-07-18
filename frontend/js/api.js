@@ -66,4 +66,24 @@ const Api = {
   deleteAnalysis: (id) => fetch(`${API}/history/${id}`, { method: 'DELETE', headers: authHeaders() }).then(handle),
 
   skills: () => fetch(`${API}/catalog/skills`).then(handle),
+
+  // Professional dashboard — job matching
+  matchJobs: (body) => fetch(`${API}/jobs/match`, {
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body),
+  }).then(handle),
+
+  // Learning tracker (Phase 3)
+  learning: () => fetch(`${API}/learning/`, { headers: authHeaders() }).then(handle),
+  addLearning: (item) => fetch(`${API}/learning/`, {
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(item),
+  }).then(handle),
+  patchLearning: (id, status) => fetch(`${API}/learning/${id}`, {
+    method: 'PATCH', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ status }),
+  }).then(handle),
+  deleteLearning: (id) => fetch(`${API}/learning/${id}`, { method: 'DELETE', headers: authHeaders() }).then(handle),
+  progress: (analysisId) => fetch(`${API}/learning/progress?analysis_id=${encodeURIComponent(analysisId)}`, { headers: authHeaders() }).then(handle),
+
+  updatePersona: (persona) => fetch(`${API}/auth/me`, {
+    method: 'PATCH', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ persona }),
+  }).then(handle),
 };

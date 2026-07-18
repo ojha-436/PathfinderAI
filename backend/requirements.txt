@@ -13,6 +13,8 @@ pydantic-settings>=2.0,<3.0
 email-validator>=2.0
 # Gemini (skill extraction) — activated when GEMINI_API_KEY is set; local fallback otherwise
 google-generativeai>=0.8.0
+# Postgres driver (pure-python) for Cloud SQL / AlloyDB in production
+pg8000>=1.30
 #
 # NOTE: Auth (PBKDF2 password hashing + HS256 JWT) uses ONLY the Python
 # standard library (hashlib, hmac, secrets) — no bcrypt/PyJWT native deps.

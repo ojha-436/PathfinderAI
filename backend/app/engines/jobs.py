@@ -123,16 +123,22 @@ def active_source() -> str:
     return "+".join(x.name for x in p) if p else "sample"
 
 
-def search_jobs(query: str, location: str | None = None, num: int = 16) -> List[Dict[str, Any]]:
+def search_jobs(query: str, location: str | None = None, num: int = 16):
     """Query live providers (if credentialed), merge + de-dupe; fall back to the
-    local sample on empty/errors so the feature always returns results."""
+    local sample on empty/errors so the feature always returns results.
+    Returns (jobs, source_used) where source_used reflects what ACTUALLY served
+    (honest: 'sample' when live providers returned nothing / errored)."""
     collected: List[Dict[str, Any]] = []
+    used: List[str] = []
     for prov in _active_providers():
         try:
-            collected.extend(prov.search(query, location, num))
+            got = prov.search(query, location, num)
+            if got:
+                collected.extend(got)
+                used.append(prov.name)
         except Exception as exc:  # pragma: no cover - external service
             print(f"[PathFinder] job provider {prov.name} failed: {exc}", file=sys.stderr)
     collected = _dedupe([j for j in collected if j.get("description")])
     if not collected:
-        collected = LocalSampleProvider().search(query, location, num)
-    return collected[:num]
+        return LocalSampleProvider().search(query, location, num)[:num], "sample"
+    return collected[:num], "+".join(used) or "sample"

@@ -227,3 +227,32 @@ textarea.paste, .manual-box input, .manual-box textarea {
   .nav-links .hide-sm { display: none; }
   .trace-node { min-width: 130px; }
 }
+
+/* ---------- Persona toggle ---------- */
+.persona-toggle { display: inline-flex; background: #efe6d4; border: 1px solid var(--line); border-radius: var(--r-pill); padding: 3px; gap: 3px; }
+.persona-toggle button { border: none; background: none; font: inherit; font-weight: 600; font-size: .82rem; color: var(--ink-soft); padding: .4em .95em; border-radius: var(--r-pill); cursor: pointer; }
+.persona-toggle button.on { background: var(--card); color: var(--ink); box-shadow: var(--sh-1); }
+
+/* ---------- Job match cards ---------- */
+.jobs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.job-card { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.job-src { font-family: var(--font-mono); font-size: .68rem; color: var(--marigold-2); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.job-meta { font-size: .82rem; color: var(--ink-faint); font-family: var(--font-mono); }
+.job-courses { border-top: 1px dashed var(--line); padding-top: 10px; margin-top: 2px; }
+.mini-course { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 0; font-size: .82rem; }
+.mini-course a { font-weight: 600; }
+@media (max-width: 900px) { .jobs-grid { grid-template-columns: 1fr; } }
+
+/* ---------- Learning tracker + progress ---------- */
+.learn-item { display: flex; align-items: center; gap: 14px; padding: 14px 18px; }
+.learn-item .li-body { flex: 1; min-width: 0; }
+.learn-item select { font: inherit; font-size: .82rem; padding: .35em .5em; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--card); }
+.badge-done { color: var(--pine); font-weight: 700; font-size: .8rem; }
+.prog-card { padding: 18px 20px; margin-bottom: 12px; }
+.prog-row { margin: 12px 0; }
+.prog-head { display: flex; justify-content: space-between; align-items: baseline; font-size: .9rem; margin-bottom: 5px; }
+.prog-head .pn { font-weight: 600; }
+.prog-delta { font-family: var(--font-mono); font-weight: 700; color: var(--pine); }
+.prog-bar { height: 11px; background: var(--line-soft); border-radius: var(--r-pill); position: relative; overflow: hidden; }
+.prog-fill { height: 100%; background: linear-gradient(90deg, var(--pine), var(--marigold)); border-radius: var(--r-pill); transition: width .7s cubic-bezier(.2,.7,.2,1); }
+.prog-before { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--terracotta); }

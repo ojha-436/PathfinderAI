@@ -58,6 +58,7 @@ function renderNav() {
       <div class="menu-pop hidden" id="menuPop">
         <div class="who">Signed in as<br><strong>${esc(u.email)}</strong></div>
         <button data-act="history">📁 My analyses</button>
+        <button data-act="learning">🎓 My learning</button>
         <button data-act="logout">↩ Log out</button>
         <button data-act="delacct" class="danger">🗑 Delete account</button>
       </div>
@@ -67,6 +68,7 @@ function renderNav() {
       $('#menuPop').classList.add('hidden');
       const a = b.dataset.act;
       if (a === 'history') location.hash = '#/history';
+      else if (a === 'learning') location.hash = '#/learning';
       else if (a === 'logout') { Store.clear(); renderNav(); toast('Logged out.'); location.hash = '#/'; }
       else if (a === 'delacct') confirmDeleteAccount();
     });
@@ -134,7 +136,7 @@ async function confirmDeleteAccount() {
 }
 
 /* ---------------- router ---------------- */
-const VIEWS = ['landing', 'analyze', 'history'];
+const VIEWS = ['landing', 'analyze', 'history', 'learning'];
 function showView(name) {
   VIEWS.forEach((v) => $(`#view-${v}`).classList.toggle('hidden', v !== name));
   window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
@@ -147,12 +149,25 @@ function route() {
     if (!Store.user) { toast('Log in to see your saved analyses.'); State.pendingAfterAuth = () => location.hash = '#/history'; openAuth('login'); location.hash = '#/'; return; }
     showView('history'); renderHistory(); return;
   }
+  if (hash.startsWith('#/learning')) {
+    if (!Store.user) { toast('Log in to see your learning.'); State.pendingAfterAuth = () => (location.hash = '#/learning'); openAuth('login'); location.hash = '#/'; return; }
+    showView('learning'); renderLearning(); return;
+  }
   showView('landing');
 }
 window.addEventListener('hashchange', route);
 document.addEventListener('click', (e) => {
   const nav = e.target.closest('[data-nav]');
   if (nav) { e.preventDefault(); location.hash = nav.getAttribute('data-nav') || nav.getAttribute('href'); }
+});
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-track]');
+  if (!b) return;
+  if (!Store.user) { toast('Log in to track your learning.'); openAuth('login'); return; }
+  const skills = (b.dataset.cs || '').split(',').filter(Boolean);
+  Api.addLearning({ course_id: b.dataset.cid, title: b.dataset.ct, provider: b.dataset.cp, url: b.dataset.cu, skill_ids: skills })
+    .then(() => { toast('Added to My Learning ✓'); b.textContent = '✓ Tracking'; b.disabled = true; })
+    .catch((err) => toast(err.message || 'Could not track.', 'err'));
 });
 
 /* ---------------- analyze: intro (tabs) ---------------- */
@@ -384,7 +399,11 @@ function renderResults(r) {
           <span class="tag mono">${esc(Object.values(r.provider_status || {}).every((v) => v === 'local') ? 'local engine' : 'cloud providers')}</span>
         </div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div class="persona-toggle" id="personaToggle">
+          <button data-persona="student">🎓 Student</button>
+          <button data-persona="professional">💼 Professional</button>
+        </div>
         ${!r.saved ? `<button class="btn btn-amber btn-sm" id="saveBtn">🔒 Log in to save</button>` : ''}
         ${r.saved ? `<button class="btn btn-ghost btn-sm" id="delBtn">🗑 Delete</button>` : ''}
         <button class="btn btn-ghost btn-sm" id="newBtn">＋ New analysis</button>
@@ -401,6 +420,17 @@ function renderResults(r) {
     <div class="paths">${cards}</div>
 
     <div id="drill"></div>
+
+    <div class="subhead" id="jobsHead" style="margin-top:38px">
+      <h2>💼 Jobs matched to you</h2><span class="hint">real openings ranked by your skill match</span>
+    </div>
+    <div id="jobsPanel">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input id="jobLoc" placeholder="Location (e.g. Pune)" style="padding:.6em .9em;border:1px solid var(--line);border-radius:var(--r);font:inherit;background:var(--card)">
+        <button class="btn btn-primary" id="findJobsBtn">Find matching jobs →</button>
+        <span class="muted" style="font-size:.82rem">Live via JSearch/Adzuna when keyed · sample fallback otherwise.</span>
+      </div>
+    </div>
 
     <div class="card trace-strip" style="margin-top:34px">
       <h4>🧠 How PathFinder decided — ${r.trace.length}-agent trace</h4>
@@ -422,6 +452,8 @@ function renderResults(r) {
     openAuth('register');
   };
   renderDrill(); highlightCards();
+  initPersona(r);
+  if ($('#findJobsBtn')) $('#findJobsBtn').onclick = renderJobsPanel;
 }
 
 function summarize(o) {
@@ -470,7 +502,10 @@ function renderDrill() {
       <h4>${esc(c.title)}</h4>
       <div class="reason">${esc(c.match_reason)}</div>
       <div class="meta"><span>${c.hours}h</span><span>${esc(c.level)}</span><span class="rating">★ ${c.rating}</span><span>${esc(c.cost)}</span></div>
-      <a class="btn btn-ghost btn-sm" href="${esc(c.url)}" target="_blank" rel="noopener" style="margin-top:6px">Open course ↗</a>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <a class="btn btn-ghost btn-sm" href="${esc(c.url)}" target="_blank" rel="noopener">Open ↗</a>
+        <button class="btn btn-ghost btn-sm" data-track data-cid="${esc(c.id)}" data-ct="${esc(c.title)}" data-cp="${esc(c.provider)}" data-cu="${esc(c.url)}" data-cs="${esc((c.skills || []).join(','))}">＋ Track</button>
+      </div>
     </div>`;
   const freeC = (pw.courses || []).filter((c) => c.track === 'free_gov');
   const paidC = (pw.courses || []).filter((c) => c.track !== 'free_gov');
@@ -554,6 +589,112 @@ async function renderHistory() {
 async function openHistory(id) {
   try { const res = await Api.getAnalysis(id); State.result = res; State.selected = 0; showView('analyze'); location.hash = '#/analyze'; renderResults(res); }
   catch (e) { toast(e.message || 'Could not open.', 'err'); }
+}
+
+/* ---------------- professional: persona + job matches ---------------- */
+function initPersona(r) {
+  let persona = (Store.user && Store.user.persona && Store.user.persona !== 'auto') ? Store.user.persona : null;
+  if (!persona) persona = (r.profile.years_experience || 0) >= 1 ? 'professional' : 'student';
+  applyPersona(persona);
+  const tg = $('#personaToggle');
+  if (tg) tg.querySelectorAll('[data-persona]').forEach((b) => b.onclick = () => {
+    applyPersona(b.dataset.persona);
+    if (Store.user) Api.updatePersona(b.dataset.persona).then((u) => { Store.user = u; }).catch(() => {});
+  });
+}
+function applyPersona(persona) {
+  document.querySelectorAll('#personaToggle [data-persona]').forEach((b) => b.classList.toggle('on', b.dataset.persona === persona));
+  const show = persona === 'professional';
+  if ($('#jobsHead')) $('#jobsHead').classList.toggle('hidden', !show);
+  if ($('#jobsPanel')) $('#jobsPanel').classList.toggle('hidden', !show);
+}
+async function renderJobsPanel() {
+  const r = State.result, panel = $('#jobsPanel');
+  const loc = ($('#jobLoc') && $('#jobLoc').value.trim()) || '';
+  panel.innerHTML = '<p class="muted">Finding real jobs matched to your skills…</p>';
+  try {
+    const body = r.id ? { analysis_id: r.id, location: loc, limit: 6 } : { skills: r.profile.skills, location: loc, limit: 6 };
+    const res = await Api.matchJobs(body);
+    if (!res.matches.length) { panel.innerHTML = '<p class="muted">No matching jobs found — try a different location.</p>'; return; }
+    panel.innerHTML = `<p class="muted" style="font-size:.82rem;margin-bottom:12px">Source: <b>${esc(res.source)}</b> · ${res.count} matches for "${esc(res.query)}"</p>
+      <div class="jobs-grid">${res.matches.map(jobCard).join('')}</div>`;
+  } catch (e) { panel.innerHTML = `<p class="muted">Could not load jobs: ${esc(e.message)}</p>`; }
+}
+function jobCard(m) {
+  const j = m.job;
+  const have = m.matched_skills.slice(0, 6).map((s) => `<span class="pill-have">${esc(s)}</span>`).join('') || '<span class="muted" style="font-size:.8rem">—</span>';
+  const gap = m.gap_skills.slice(0, 5).map((s) => `<span class="pill-gap">${esc(s)}</span>`).join('');
+  const courses = (m.courses || []).slice(0, 3).map((c) => `<div class="mini-course"><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a>
+      <button class="btn btn-ghost btn-sm" data-track data-cid="${esc(c.id)}" data-ct="${esc(c.title)}" data-cp="${esc(c.provider)}" data-cu="${esc(c.url)}" data-cs="${esc((c.skills || []).join(','))}">＋ Track</button></div>`).join('');
+  return `<div class="card job-card">
+    <div class="path-top">
+      <div><div class="job-src">${esc(j.source)}</div><h3 style="margin:.15em 0">${esc(j.title)}</h3><div class="job-meta">${esc(j.company)}${j.location ? ' · ' + esc(j.location) : ''}</div></div>
+      ${Charts.matchRing(m.match_pct)}
+    </div>
+    ${j.salary ? `<div class="job-meta">💰 ${esc(j.salary)}${j.posted ? ' · ' + esc(j.posted) : ''}</div>` : ''}
+    <div><div style="font-size:.72rem;color:var(--ink-faint);font-family:var(--font-mono);text-transform:uppercase;margin-bottom:3px">You have</div><div class="skill-pills">${have}</div></div>
+    ${gap ? `<div><div style="font-size:.72rem;color:var(--ink-faint);font-family:var(--font-mono);text-transform:uppercase;margin:6px 0 3px">Learn to qualify</div><div class="skill-pills">${gap}</div></div>` : ''}
+    ${courses ? `<div class="job-courses">${courses}</div>` : ''}
+    <a class="btn btn-primary btn-sm" href="${esc(j.url)}" target="_blank" rel="noopener" style="margin-top:auto">Apply ↗</a>
+  </div>`;
+}
+
+/* ---------------- learning tracker ---------------- */
+async function renderLearning() {
+  const root = $('#learningRoot');
+  root.innerHTML = `<span class="eyebrow">Your account</span><h2 style="margin:.2em 0 18px">🎓 My learning</h2>
+    <div id="progressBox"></div>
+    <div class="subhead" style="margin-top:26px"><h2 style="font-size:1.3rem">Tracked courses</h2></div>
+    <div id="learnList"><p class="muted">Loading…</p></div>`;
+  await refreshLearning();
+  try {
+    const hist = await Api.history();
+    if (hist.length) {
+      const pr = await Api.progress(hist[0].id);
+      $('#progressBox').innerHTML = progressCard(pr, hist[0].title);
+    } else {
+      $('#progressBox').innerHTML = '<p class="muted">Run an analysis, then track courses here to watch your pathway match grow as you complete them.</p>';
+    }
+  } catch { /* progress optional */ }
+}
+async function refreshLearning() {
+  const list = $('#learnList');
+  const items = await Api.learning();
+  if (!items.length) { list.innerHTML = `<div class="empty-state card"><div class="big">📚</div><p>Nothing tracked yet. Open a pathway or a matched job and hit "＋ Track" on a course.</p><button class="btn btn-primary" data-nav="#/analyze">Run an analysis →</button></div>`; return; }
+  list.innerHTML = `<div class="hist-list">${items.map(learnRow).join('')}</div>`;
+  list.querySelectorAll('[data-ls]').forEach((sel) => sel.onchange = async () => {
+    try { await Api.patchLearning(sel.dataset.ls, sel.value); toast('Updated.'); renderLearning(); }
+    catch (e) { toast(e.message, 'err'); }
+  });
+  list.querySelectorAll('[data-ldel]').forEach((b) => b.onclick = async () => {
+    try { await Api.deleteLearning(b.dataset.ldel); toast('Removed.'); renderLearning(); }
+    catch (e) { toast(e.message, 'err'); }
+  });
+}
+function learnRow(it) {
+  const opt = (v, l) => `<option value="${v}"${it.status === v ? ' selected' : ''}>${l}</option>`;
+  return `<div class="card learn-item">
+    <div style="font-size:1.3rem">${it.status === 'completed' ? '✅' : '📘'}</div>
+    <div class="li-body"><div class="hi-title" style="font-size:1.02rem">${esc(it.title)}</div><div class="hi-date mono">${esc(it.provider || '')}</div></div>
+    <select data-ls="${esc(it.id)}">${opt('saved', 'Saved')}${opt('in_progress', 'In progress')}${opt('completed', 'Completed')}</select>
+    ${it.url ? `<a class="btn btn-ghost btn-sm" href="${esc(it.url)}" target="_blank" rel="noopener">Open ↗</a>` : ''}
+    <button class="btn btn-ghost btn-sm" data-ldel="${esc(it.id)}" style="color:var(--terracotta)">Remove</button>
+  </div>`;
+}
+function progressCard(pr, title) {
+  if (!pr.pathways.length) return '<p class="muted">No pathways to track yet.</p>';
+  const rows = pr.pathways.map((p) => `
+    <div class="prog-row">
+      <div class="prog-head"><span class="pn">${esc(p.role)}</span><span>${p.before_pct}% → ${p.after_pct}% ${p.delta > 0 ? `<span class="prog-delta">+${p.delta}</span>` : ''}</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${p.after_pct}%"></div><div class="prog-before" style="left:${p.before_pct}%"></div></div>
+    </div>`).join('');
+  const acq = pr.acquired_skills.length ? `<div style="margin-top:8px;font-size:.85rem;color:var(--ink-soft)">Acquired: ${pr.acquired_skills.map((s) => `<span class="pill-have">${esc(s)}</span>`).join(' ')}</div>` : '';
+  return `<div class="card prog-card">
+    <span class="eyebrow">Your progress — ${esc(title)}</span>
+    <p class="muted" style="font-size:.84rem;margin:.3em 0 .6em">As you complete tracked courses, your skill coverage for each pathway rises. The red line marks where you started.</p>
+    ${rows}${acq}
+    ${pr.completed_count === 0 ? '<p class="muted" style="font-size:.82rem;margin-top:8px">Mark a tracked course "Completed" to see your coverage jump.</p>' : ''}
+  </div>`;
 }
 
 /* ---------------- boot ---------------- */

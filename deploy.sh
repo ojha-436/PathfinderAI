@@ -34,6 +34,25 @@ if [ -n "${GEMINI_API_KEY:-}" ]; then
 else
   echo "▶ Gemini: not set — using local extractor"
 fi
+if [ -n "${RAPIDAPI_KEY:-}" ]; then
+  ENV_VARS="${ENV_VARS},RAPIDAPI_KEY=${RAPIDAPI_KEY}"
+  echo "▶ JSearch (RapidAPI): key set"
+fi
+if [ -n "${ADZUNA_APP_ID:-}" ] && [ -n "${ADZUNA_APP_KEY:-}" ]; then
+  ENV_VARS="${ENV_VARS},ADZUNA_APP_ID=${ADZUNA_APP_ID},ADZUNA_APP_KEY=${ADZUNA_APP_KEY}"
+  echo "▶ Adzuna: keys set"
+fi
+if [ -n "${DATABASE_URL:-}" ]; then
+  ENV_VARS="${ENV_VARS},DATABASE_URL=${DATABASE_URL}"
+  echo "▶ Database: Cloud SQL / Postgres (DATABASE_URL set)"
+else
+  echo "▶ Database: on-container SQLite (ephemeral — resets on redeploy)"
+fi
+CLOUDSQL_FLAG=""
+if [ -n "${CLOUDSQL_CONN:-}" ]; then
+  CLOUDSQL_FLAG="--add-cloudsql-instances=${CLOUDSQL_CONN}"
+  echo "▶ Cloud SQL instance: ${CLOUDSQL_CONN}"
+fi
 
 echo "▶ Building & deploying from source (uses ./Dockerfile)…"
 gcloud run deploy "$SERVICE" \
@@ -45,6 +64,7 @@ gcloud run deploy "$SERVICE" \
   --port 8080 \
   --memory 512Mi --cpu 1 \
   --min-instances 1 --max-instances 1 \
+  ${CLOUDSQL_FLAG} \
   --set-env-vars "${ENV_VARS}"
 
 URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format 'value(status.url)')"

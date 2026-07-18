@@ -16,9 +16,9 @@ USER = ["excel", "attention_to_detail", "communication", "data_entry", "customer
 
 
 def main():
-    raw = jobs.search_jobs("data quality analyst", "Pune", num=12)
+    raw, source = jobs.search_jobs("data quality analyst", "Pune", num=12)
     assert raw, "no jobs returned"
-    print(f"source: {jobs.active_source()} · jobs: {len(raw)}")
+    print(f"source: {source} · jobs: {len(raw)}")
 
     catalog_urls = {c["url"] for c in ds.COURSES}
     rows = []

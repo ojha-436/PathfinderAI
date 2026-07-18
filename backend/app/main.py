@@ -15,7 +15,7 @@ from app.config import settings
 from app.database import Base, engine
 from app.engines import datasets as ds
 from app.engines import providers
-from app.routers import analysis, auth, catalog, history, jobs, meta
+from app.routers import analysis, auth, catalog, history, jobs, learning, meta
 
 # Create tables on boot (idempotent). Datasets load lazily on first import.
 Base.metadata.create_all(bind=engine)
@@ -48,6 +48,7 @@ app.include_router(analysis.router, prefix=f"{settings.API_V1_STR}/analysis", ta
 app.include_router(history.router, prefix=f"{settings.API_V1_STR}/history", tags=["history"])
 app.include_router(catalog.router, prefix=f"{settings.API_V1_STR}/catalog", tags=["catalog"])
 app.include_router(jobs.router, prefix=f"{settings.API_V1_STR}/jobs", tags=["jobs"])
+app.include_router(learning.router, prefix=f"{settings.API_V1_STR}/learning", tags=["learning"])
 app.include_router(meta.router, prefix=f"{settings.API_V1_STR}/meta", tags=["meta"])
 
 # Static SPA (landing + app). html=True serves index.html at "/".
