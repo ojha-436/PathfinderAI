@@ -36,8 +36,8 @@ def _gemini_jd_skills(text: str) -> List[str]:  # pragma: no cover - external se
 
 
 def parse_jd(text: str) -> List[str]:
-    ids = taxonomy.match_skill_ids(text)  # local, grounded, deterministic
-    if settings.GEMINI_API_KEY:
+    ids = taxonomy.match_skill_ids(text)  # local, grounded, deterministic (fast, per-job)
+    if settings.GEMINI_API_KEY and settings.GEMINI_JD_PARSE:
         try:
             for sid in _gemini_jd_skills(text):
                 if sid not in ids:

@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     # Pluggable AI providers (all optional — see engines/providers.py)
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    # JD parsing across many jobs stays LOCAL (fast, deterministic) unless explicitly enabled.
+    GEMINI_JD_PARSE: bool = False
     VERTEX_PROJECT: str = os.getenv("VERTEX_PROJECT", "")
     VERTEX_RAG_CORPUS: str = os.getenv("VERTEX_RAG_CORPUS", "")
     BQML_DATASET: str = os.getenv("BQML_DATASET", "")
