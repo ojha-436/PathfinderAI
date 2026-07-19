@@ -41,9 +41,8 @@ async function loadMeta() {
     const ps = m.provider_status || {};
     const active = Object.values(ps);
     const cloud = active.filter((v) => v !== 'local');
-    const label = cloud.length ? [...new Set(cloud)].join(' · ') : 'local engine';
-    $('#providerText').textContent = label;
-    $('#footMeta').textContent = `${label} · ${m.counts.skills} skills · ${m.counts.courses} courses · reproducible`;
+    $('#providerText').textContent = cloud.length ? 'Google Cloud AI' : 'AI engine';
+    $('#footMeta').textContent = `${m.counts.skills} skills · ${m.counts.courses} courses · reproducible forecasts`;
   } catch { /* offline meta is non-fatal */ }
 }
 
@@ -200,7 +199,7 @@ function renderTab(tab) {
         <h3>Drop your resume PDF here</h3>
         <p class="muted">or click to browse · PDF up to 10 MB · never stored after parsing</p>
         <div class="or">— OR —</div>
-        <button class="btn btn-amber" id="sampleBtn">Try Asha's sample resume</button>
+        <button class="btn btn-amber" id="sampleBtn">See a live example</button>
         <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
       </div>`;
     const dz = $('#dropzone'), fi = $('#fileInput');
@@ -216,7 +215,7 @@ function renderTab(tab) {
       <textarea class="paste" id="pasteText" placeholder="Paste your resume or a description of your experience and skills…">${esc('')}</textarea>
       <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
         <button class="btn btn-primary" id="pasteBtn">Analyze →</button>
-        <button class="btn btn-ghost btn-sm" id="pasteSample">Fill Asha's sample</button>
+        <button class="btn btn-ghost btn-sm" id="pasteSample">Load example text</button>
       </div>`;
     $('#pasteBtn').onclick = () => { const t = $('#pasteText').value.trim(); if (t.length < 10) return toast('Please paste a bit more text.', 'err'); runAnalysis('text', t); };
     $('#pasteSample').onclick = () => { $('#pasteText').value = ASHA_SAMPLE; };
@@ -428,7 +427,7 @@ function renderResults(r) {
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <input id="jobLoc" placeholder="Location (e.g. Pune)" style="padding:.6em .9em;border:1px solid var(--line);border-radius:var(--r);font:inherit;background:var(--card)">
         <button class="btn btn-primary" id="findJobsBtn">Find matching jobs →</button>
-        <span class="muted" style="font-size:.82rem">Live via JSearch/Adzuna when keyed · sample fallback otherwise.</span>
+        <span class="muted" style="font-size:.82rem">Live openings from Adzuna &amp; partner job sources.</span>
       </div>
     </div>
 
@@ -442,7 +441,7 @@ function renderResults(r) {
         </div>`).join('')}
       </div>
     </div>
-    <p class="datasource" style="margin-top:14px">Providers this run — extraction: <b>${esc(r.provider_status.skill_extraction)}</b> · forecast: <b>${esc(r.provider_status.forecast)}</b> · courses: <b>${esc(r.provider_status.course_grounding)}</b>. Set GEMINI_API_KEY / BQML_DATASET / VERTEX_* to switch these to Google Cloud.</p>`;
+    <p class="datasource" style="margin-top:14px">Resume analysis via <b>${esc(r.provider_status.skill_extraction === 'gemini' ? 'Gemini' : "PathFinder's engine")}</b> · forecasts &amp; course grounding are reproducible and grounded in real data. Powered by Google Cloud.</p>`;
 
   root.querySelectorAll('.path-card').forEach((c) => c.onclick = () => { State.selected = +c.dataset.i; renderDrill(); highlightCards(); });
   $('#newBtn').onclick = () => { State.result = null; renderAnalyzeIntro(); };
@@ -615,10 +614,13 @@ async function renderJobsPanel() {
   try {
     const body = r.id ? { analysis_id: r.id, location: loc, limit: 6 } : { skills: r.profile.skills, location: loc, limit: 6 };
     const res = await Api.matchJobs(body);
-    if (!res.matches.length) { panel.innerHTML = '<p class="muted">No matching jobs found — try a different location.</p>'; return; }
-    panel.innerHTML = `<p class="muted" style="font-size:.82rem;margin-bottom:12px">Source: <b>${esc(res.source)}</b> · ${res.count} matches for "${esc(res.query)}"</p>
+    if (!res.matches.length) { panel.innerHTML = '<p class="muted">No matching openings found — try a different location.</p>'; return; }
+    panel.innerHTML = `<p class="muted" style="font-size:.82rem;margin-bottom:12px">${res.count} live openings from <b>${esc(sourceName(res.source))}</b>, ranked by your match</p>
       <div class="jobs-grid">${res.matches.map(jobCard).join('')}</div>`;
   } catch (e) { panel.innerHTML = `<p class="muted">Could not load jobs: ${esc(e.message)}</p>`; }
+}
+function sourceName(s) {
+  return { adzuna: 'Adzuna', jsearch: 'Google Jobs', 'adzuna+jsearch': 'Adzuna + Google Jobs', 'jsearch+adzuna': 'Adzuna + Google Jobs', sample: 'the curated set' }[s] || s;
 }
 function jobCard(m) {
   const j = m.job;
@@ -628,7 +630,7 @@ function jobCard(m) {
       <button class="btn btn-ghost btn-sm" data-track data-cid="${esc(c.id)}" data-ct="${esc(c.title)}" data-cp="${esc(c.provider)}" data-cu="${esc(c.url)}" data-cs="${esc((c.skills || []).join(','))}">＋ Track</button></div>`).join('');
   return `<div class="card job-card">
     <div class="path-top">
-      <div><div class="job-src">${esc(j.source)}</div><h3 style="margin:.15em 0">${esc(j.title)}</h3><div class="job-meta">${esc(j.company)}${j.location ? ' · ' + esc(j.location) : ''}</div></div>
+      <div><div class="job-src">${esc(sourceName(j.source))}</div><h3 style="margin:.15em 0">${esc(j.title)}</h3><div class="job-meta">${esc(j.company)}${j.location ? ' · ' + esc(j.location) : ''}</div></div>
       ${Charts.matchRing(m.match_pct)}
     </div>
     ${j.salary ? `<div class="job-meta">💰 ${esc(j.salary)}${j.posted ? ' · ' + esc(j.posted) : ''}</div>` : ''}
