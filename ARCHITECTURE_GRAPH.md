@@ -1,6 +1,6 @@
 # PathFinder — Architecture & Tech-Stack Graph
 
-> Top-101 finalist · Google Cloud Gen AI Academy (APAC, Cohort 2). This graph maps every component, the data flow between them, and the technology behind each. It renders on GitHub and in Notion. Companion: [SPEC.md](../SPEC.md) · [ARCHITECTURE.md](../ARCHITECTURE.md) · [README.md](README.md).
+> This graph maps every component, the data flow between them, and the technology behind each. It renders on GitHub and in Notion. Companion: [SPEC.md](../SPEC.md) · [ARCHITECTURE.md](../ARCHITECTURE.md) · [README.md](README.md).
 
 ## Architecture & data-flow graph
 
@@ -74,7 +74,7 @@ flowchart LR
 | **Persistence** | SQLAlchemy ORM · SQLite (dev) → Cloud SQL / AlloyDB Postgres (prod) |
 | **Data** | Curated JSON datasets (skills, demand series, role–skill matrix, salaries, courses) |
 | **Infra / deploy** | Docker · **Google Cloud Run** · Cloud Build (project `promptwar-501405`, `asia-south1`) |
-| **Live** | https://pathfinder-823065407403.asia-south1.run.app |
+| **Live** | https://pathfinder-383713992026.asia-south1.run.app/#/ |
 
 ## Component legend
 

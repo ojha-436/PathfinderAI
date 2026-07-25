@@ -2,7 +2,7 @@
 
 > Career decision intelligence that reads your resume, forecasts which of your skills are rising or fading, maps future-proof career pathways, **matches you to real open jobs**, recommends grounded courses, and **tracks your progress** as you close the gaps — for both students and working professionals.
 
-**Live app:** https://pathfinder-823065407403.asia-south1.run.app · Health: https://pathfinder-823065407403.asia-south1.run.app/api/health
+**Live app:** https://pathfinder-383713992026.asia-south1.run.app/#/ · Health: https://pathfinder-383713992026.asia-south1.run.app/api/health
 _Powered by Google Cloud (Cloud Run · Gemini · Cloud SQL), project `promptwar-501405`, region `asia-south1`._
 Specs & design: [../SPEC.md](../SPEC.md) · [../ARCHITECTURE.md](../ARCHITECTURE.md) · [ARCHITECTURE_GRAPH.md](ARCHITECTURE_GRAPH.md) · [plan.md](plan.md)
 

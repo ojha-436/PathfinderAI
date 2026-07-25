@@ -172,7 +172,7 @@ POST /internal/digest/run         scheduler-triggered (auth: OIDC/service token)
 | H1 | **Alembic migrations** | Replace reliance on `create_all` for schema change. `create_all` **does not ALTER** existing live tables — every new column (and clean table versioning) needs a migration. Add `alembic`, autogenerate, run on deploy. **Blocks Features 1 & 3 tables on live Postgres.** |
 | H2 | **Secret Manager + rotation** | Move `GEMINI_API_KEY`, `RAPIDAPI_KEY`, `ADZUNA_*`, `JWT_SECRET`, SMTP creds into Secret Manager; `--set-secrets`. Rotate the pasted keys. |
 | H3 | **Email live** | Wire transactional SMTP (Brevo recommended) → reset + digest emails actually send. |
-| H4 | **Google Sign-In activation** | Set `GOOGLE_CLIENT_ID`; authorize JS origin `https://pathfinder-823065407403.asia-south1.run.app`. |
+| H4 | **Google Sign-In activation** | Set `GOOGLE_CLIENT_ID`; authorize JS origin `https://pathfinder-383713992026.asia-south1.run.app`. |
 | H5 | **Testing + CI** | pytest: matching math, roadmap sequencing, intake mapping, streak logic, digest composer (mocked SMTP), auth flows. **AI-eval:** grounding audit (every emitted skill/course ∈ catalog), determinism. GitHub Actions → Cloud Run on green. |
 | H6 | **Observability** | Structured JSON logs → Cloud Logging; latency p50/p95 on heavy routes; provider error rates; Gemini token spend; cache hit-rate. |
 | H7 | **Abuse & cost control** | Rate-limit auth + analysis + roadmap; cap Gemini calls/request; caches (job, JD-parse) with TTL; prompt-injection guard on all free-text→Gemini. |
