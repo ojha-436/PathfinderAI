@@ -170,7 +170,6 @@ def _resume_local(profile: Dict[str, Any], matched: List[str], gaps: List[str]) 
 
 def _cover_letter_local(profile: Dict[str, Any], company: str, role: str, matched: List[str]) -> Dict[str, Any]:
     p = _personal(profile)
-    name = p["name"] or "the candidate"
     summary = _summary_text(profile)
     exp = _experience(profile)
     top_org = next((e.get("org") for e in exp if e.get("org")), "")
@@ -207,7 +206,6 @@ _DEFAULT_QUESTIONS = [
 
 def _answers_local(profile: Dict[str, Any], company: str, role: str,
                    matched: List[str], questions: Optional[List[str]]) -> Dict[str, Any]:
-    p = _personal(profile)
     summary = _summary_text(profile)
     skills = _skill_names(profile)
     exp = _experience(profile)

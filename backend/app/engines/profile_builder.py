@@ -239,11 +239,11 @@ def _local_build(resume_text: str) -> Dict[str, Any]:
 
     seen_skills = False
     for btype, blines in blocks:
-        body = [l for l in blines if l.strip()]
+        body = [line for line in blines if line.strip()]
         if btype in ("_preamble",):
             continue
         if btype == "summary":
-            txt = " ".join(l.strip() for l in body).strip()
+            txt = " ".join(line.strip() for line in body).strip()
             if txt:
                 sections.append({"type": "summary", "title": _TITLE["summary"], "text": txt})
         elif btype == "experience":
