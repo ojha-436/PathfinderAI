@@ -80,15 +80,27 @@ def _looks_like_name(line: str) -> bool:
     s = line.strip()
     if not s or "@" in s or _URL_RE.search(s) or any(ch.isdigit() for ch in s):
         return False
+    lower = s.lower()
+    skip_keywords = ["resume", "curriculum vitae", "cv", "profile", "contact", "summary", "experience", "education", "skills", "page"]
+    if any(kw in lower for kw in skip_keywords):
+        return False
     words = s.split()
-    return 1 <= len(words) <= 5 and _match_heading(s) is None
+    return 1 <= len(words) <= 4 and _match_heading(s) is None
 
 
 def _extract_contact(text: str) -> Dict[str, Any]:
     email_m = _EMAIL_RE.search(text)
     email = email_m.group(0) if email_m else ""
-    phone_m = _PHONE_RE.search(text)
-    phone = phone_m.group(0).strip() if phone_m else ""
+    
+    # Extract phone numbers, avoiding date ranges like 2020-2024
+    phone = ""
+    for m in _PHONE_RE.finditer(text):
+        p = m.group(0).strip()
+        digits = re.sub(r"\D", "", p)
+        if 7 <= len(digits) <= 15 and not re.search(r"^(19|20)\d{2}[-\s](19|20)\d{2}$", p):
+            phone = p
+            break
+
     links = []
     github = ""
     linkedin = ""
@@ -97,19 +109,27 @@ def _extract_contact(text: str) -> Dict[str, Any]:
         u = m.group(0).rstrip(".,);")
         if u not in links:
             links.append(u)
-        if "github.com" in u.lower() and not github:
+        u_low = u.lower()
+        if "github.com" in u_low and not github:
             github = u
-        elif "linkedin.com" in u.lower() and not linkedin:
+        elif "linkedin.com" in u_low and not linkedin:
             linkedin = u
-        elif not portfolio and "github.com" not in u.lower() and "linkedin.com" not in u.lower():
+        elif not portfolio and "github.com" not in u_low and "linkedin.com" not in u_low:
             portfolio = u
 
     city = ""
     country = ""
-    loc_m = re.search(r"\b([A-Z][a-zA-Z\s]+),\s*([A-Z][a-zA-Z\s]+)\b", text[:600])
-    if loc_m:
-        city = loc_m.group(1).strip()
-        country = loc_m.group(2).strip()
+    lines = [ln.strip() for ln in text.splitlines()[:20] if ln.strip()]
+    loc_pat = re.compile(r"^[📍\s]*([A-Z][a-zA-Z\s\.]{1,25}),\s*([A-Z][a-zA-Z\s\.]{1,25})$")
+    for ln in lines:
+        if "@" in ln or "http" in ln or _PHONE_RE.search(ln):
+            continue
+        lm = loc_pat.search(ln)
+        if lm:
+            c1, c2 = lm.group(1).strip(), lm.group(2).strip()
+            if not _match_heading(c1) and not _match_heading(c2):
+                city, country = c1, c2
+                break
 
     return {
         "email": email,

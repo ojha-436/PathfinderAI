@@ -1331,7 +1331,7 @@ function progressCard(pr, title) {
 }
 
 /* ---------------- Apply Assistant: Profile (Phase A) ---------------- */
-async function renderProfile(draftSections = null, isEditMode = false) {
+async function renderProfile(draftSections = null, isEditMode = false, activeTab = 'all') {
   const root = $('#profileRoot');
   if (!draftSections) {
     root.innerHTML = `<div class="card" style="padding:40px; text-align:center">
@@ -1371,6 +1371,16 @@ async function renderProfile(draftSections = null, isEditMode = false) {
         </div>`;
       }
       
+      const tabs = [
+        { id: 'all', label: '✨ All Sections' },
+        { id: 'personal', label: '👤 Personal Details' },
+        { id: 'summary', label: '📄 Summary' },
+        { id: 'experience', label: '💼 Experience' },
+        { id: 'education', label: '🎓 Education' },
+        { id: 'skills', label: '⚡ Skills' },
+        { id: 'projects', label: '🚀 Projects & Extra' }
+      ];
+
       let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
           <h2 style="margin:0; font-family:var(--font-display);">Master Profile ${isDraft ? '<span class="pill-have" style="background:var(--terracotta);color:white;margin-left:8px;font-size:0.8rem; vertical-align:middle;">Unsaved Draft</span>' : ''}</h2>
           <div>
@@ -1381,12 +1391,33 @@ async function renderProfile(draftSections = null, isEditMode = false) {
             }
           </div>
         </div>
-        <p class="muted" style="margin-bottom:32px;">This data grounds all AI-generated application materials to prevent hallucinations.</p>
+        <p class="muted" style="margin-bottom:20px;">This data grounds all AI-generated application materials to prevent hallucinations.</p>
+
+        <!-- Section Navigation Tabs -->
+        <div class="prof-tabs-bar" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:12px; margin-bottom:28px; border-bottom:1px solid rgba(13, 148, 136, 0.2);">
+          ${tabs.map(t => `<button class="btn btn-sm prof-tab-btn" data-tab="${t.id}" style="${activeTab === t.id ? 'background:#0d9488; color:white; font-weight:600; border:none; box-shadow:0 2px 8px rgba(13,148,136,0.3);' : 'background:rgba(255,255,255,0.7); color:#475569; border:1px solid rgba(109,122,119,0.3);'} padding:8px 16px; border-radius:8px; cursor:pointer; transition:all 0.2s;">${t.label}</button>`).join('')}
+        </div>
+
         <div style="display:flex; flex-direction:column; gap:24px;">`;
+
+      const visibleSections = sections.filter(sec => {
+        if (activeTab === 'all') return true;
+        if (activeTab === 'personal') return sec.type === 'personal';
+        if (activeTab === 'summary') return sec.type === 'summary';
+        if (activeTab === 'experience') return sec.type === 'experience';
+        if (activeTab === 'education') return sec.type === 'education';
+        if (activeTab === 'skills') return sec.type === 'skills';
+        if (activeTab === 'projects') return ['personal', 'summary', 'experience', 'education', 'skills'].indexOf(sec.type) === -1 || sec.type === 'projects' || sec.type === 'certifications';
+        return true;
+      });
+
+      if (!visibleSections.length) {
+        html += `<div class="card" style="text-align:center; padding:32px; color:#64748b;">No items in this section tab yet. Click "Edit Profile" to add.</div>`;
+      }
         
-      sections.forEach(sec => {
-        html += `<div class="card" style="border:1px solid var(--line); background:var(--card); box-shadow:var(--sh-1); padding:24px;">
-          <h3 style="margin:0 0 16px 0; color:var(--pine); border-bottom:1px solid var(--line-soft); padding-bottom:12px; font-family:var(--font-display); font-size:1.4rem;">${esc(sec.title)}</h3>`;
+      visibleSections.forEach(sec => {
+        html += `<div class="card" style="border:1px solid rgba(13, 148, 136, 0.2); background:rgba(255,255,255,0.85); backdrop-filter:blur(20px); box-shadow:0 4px 20px rgba(0,0,0,0.04); border-radius:16px; padding:28px;">
+          <h3 style="margin:0 0 20px 0; color:#0d9488; border-bottom:1px solid rgba(13, 148, 136, 0.15); padding-bottom:12px; font-family:'Inter', sans-serif; font-size:1.3rem; font-weight:700;">${esc(sec.title)}</h3>`;
         
         if (sec.type === 'personal' && sec.fields) {
           const mob = sec.fields.mobile || sec.fields.phone || '';
@@ -1395,37 +1426,79 @@ async function renderProfile(draftSections = null, isEditMode = false) {
           const gh = sec.fields.github || '';
           const li = sec.fields.linkedin || '';
           const port = sec.fields.portfolio || '';
+          const locStr = [cityVal, countryVal].filter(Boolean).join(', ') || sec.fields.location || '—';
 
           if (isEditMode) {
-             html += `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Full Name</div> <input type="text" id="edit-personal-name" value="${esc(sec.fields.name || '')}" placeholder="John Doe" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
-               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Mobile / Phone</div> <input type="text" id="edit-personal-mobile" value="${esc(mob)}" placeholder="+1 234 567 8900" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
-               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Email Address</div> <input type="text" id="edit-personal-email" value="${esc(sec.fields.email || '')}" placeholder="user@example.com" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
-               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">City</div> <input type="text" id="edit-personal-city" value="${esc(cityVal)}" placeholder="San Francisco" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
-               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Country</div> <input type="text" id="edit-personal-country" value="${esc(countryVal)}" placeholder="USA" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
-               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">GitHub Profile</div> <input type="text" id="edit-personal-github" value="${esc(gh)}" placeholder="https://github.com/username" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
-               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">LinkedIn Profile</div> <input type="text" id="edit-personal-linkedin" value="${esc(li)}" placeholder="https://linkedin.com/in/username" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
-               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Portfolio Website</div> <input type="text" id="edit-personal-portfolio" value="${esc(port)}" placeholder="https://myportfolio.com" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+             html += `<div style="display:flex; flex-direction:column; gap:20px;">
+               <!-- Card 1: Contact Information -->
+               <div style="background:rgba(248, 250, 252, 0.9); border:1px solid rgba(13, 148, 136, 0.15); border-radius:12px; padding:20px;">
+                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600;">📞 Contact Information</h4>
+                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Full Name</div> <input type="text" id="edit-personal-name" value="${esc(sec.fields.name || '')}" placeholder="John Doe" style="width:100%; padding:9px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Mobile / Phone</div> <input type="text" id="edit-personal-mobile" value="${esc(mob)}" placeholder="+1 234 567 8900" style="width:100%; padding:9px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Email Address</div> <input type="text" id="edit-personal-email" value="${esc(sec.fields.email || '')}" placeholder="user@example.com" style="width:100%; padding:9px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+                 </div>
+               </div>
+
+               <!-- Card 2: Location Details -->
+               <div style="background:rgba(248, 250, 252, 0.9); border:1px solid rgba(13, 148, 136, 0.15); border-radius:12px; padding:20px;">
+                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600;">📍 Location & Region</h4>
+                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">City</div> <input type="text" id="edit-personal-city" value="${esc(cityVal)}" placeholder="San Francisco" style="width:100%; padding:9px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Country</div> <input type="text" id="edit-personal-country" value="${esc(countryVal)}" placeholder="USA" style="width:100%; padding:9px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+                 </div>
+               </div>
+
+               <!-- Card 3: Web & Profiles -->
+               <div style="background:rgba(248, 250, 252, 0.9); border:1px solid rgba(13, 148, 136, 0.15); border-radius:12px; padding:20px;">
+                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600;">🌐 Web & Social Links</h4>
+                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">GitHub Profile</div> <input type="text" id="edit-personal-github" value="${esc(gh)}" placeholder="https://github.com/username" style="width:100%; padding:9px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">LinkedIn Profile</div> <input type="text" id="edit-personal-linkedin" value="${esc(li)}" placeholder="https://linkedin.com/in/username" style="width:100%; padding:9px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Portfolio Website</div> <input type="text" id="edit-personal-portfolio" value="${esc(port)}" placeholder="https://myportfolio.com" style="width:100%; padding:9px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+                 </div>
+               </div>
              </div>`;
           } else {
-            const locStr = [cityVal, countryVal].filter(Boolean).join(', ') || sec.fields.location || '—';
-            html += `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Full Name</div> <div style="font-size:1.05rem; font-weight:600; color:var(--ink);">${esc(sec.fields.name || '—')}</div></div>
-              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Mobile</div> <div style="font-size:1.05rem; color:var(--ink);">${esc(mob || '—')}</div></div>
-              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Email</div> <div style="font-size:1.05rem; color:var(--ink);">${esc(sec.fields.email || '—')}</div></div>
-              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Location</div> <div style="font-size:1.05rem; color:var(--ink);">${esc(locStr)}</div></div>
-              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">GitHub</div> <div style="font-size:1.05rem;">${gh ? `<a href="${esc(gh)}" target="_blank" style="color:var(--pine); text-decoration:none; font-weight:500;">${esc(gh)}</a>` : '—'}</div></div>
-              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">LinkedIn</div> <div style="font-size:1.05rem;">${li ? `<a href="${esc(li)}" target="_blank" style="color:var(--pine); text-decoration:none; font-weight:500;">${esc(li)}</a>` : '—'}</div></div>
-              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Portfolio Website</div> <div style="font-size:1.05rem;">${port ? `<a href="${esc(port)}" target="_blank" style="color:var(--pine); text-decoration:none; font-weight:500;">${esc(port)}</a>` : '—'}</div></div>
-            </div>`;
+             html += `<div style="display:flex; flex-direction:column; gap:20px;">
+               <!-- Card 1: Contact Information -->
+               <div style="background:rgba(248, 250, 252, 0.9); border:1px solid rgba(13, 148, 136, 0.15); border-radius:12px; padding:20px;">
+                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600;">📞 Contact Information</h4>
+                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Full Name</div> <div style="font-size:1.1rem; font-weight:600; color:#0f172a;">${esc(sec.fields.name || '—')}</div></div>
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Mobile / Phone</div> <div style="font-size:1.05rem; color:#0f172a;">${esc(mob || '—')}</div></div>
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Email Address</div> <div style="font-size:1.05rem; color:#0f172a;">${esc(sec.fields.email || '—')}</div></div>
+                 </div>
+               </div>
+
+               <!-- Card 2: Location Details -->
+               <div style="background:rgba(248, 250, 252, 0.9); border:1px solid rgba(13, 148, 136, 0.15); border-radius:12px; padding:20px;">
+                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600;">📍 Location & Region</h4>
+                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">City</div> <div style="font-size:1.05rem; color:#0f172a;">${esc(cityVal || '—')}</div></div>
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Country</div> <div style="font-size:1.05rem; color:#0f172a;">${esc(countryVal || '—')}</div></div>
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Full Location</div> <div style="font-size:1.05rem; color:#0f172a;">${esc(locStr)}</div></div>
+                 </div>
+               </div>
+
+               <!-- Card 3: Web & Profiles -->
+               <div style="background:rgba(248, 250, 252, 0.9); border:1px solid rgba(13, 148, 136, 0.15); border-radius:12px; padding:20px;">
+                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600;">🌐 Web & Social Links</h4>
+                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">GitHub</div> <div style="font-size:1rem;">${gh ? `<a href="${esc(gh)}" target="_blank" style="color:#0d9488; text-decoration:none; font-weight:500;">${esc(gh)} ↗</a>` : '—'}</div></div>
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">LinkedIn</div> <div style="font-size:1rem;">${li ? `<a href="${esc(li)}" target="_blank" style="color:#0d9488; text-decoration:none; font-weight:500;">${esc(li)} ↗</a>` : '—'}</div></div>
+                   <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Portfolio Website</div> <div style="font-size:1rem;">${port ? `<a href="${esc(port)}" target="_blank" style="color:#0d9488; text-decoration:none; font-weight:500;">${esc(port)} ↗</a>` : '—'}</div></div>
+                 </div>
+               </div>
+             </div>`;
           }
         } else if (sec.type === 'skills' && Array.isArray(sec.items)) {
           if (isEditMode) {
-            html += `<textarea id="edit-skills" rows="4" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">${esc(sec.items.join(', '))}</textarea>
-            <div class="muted" style="font-size:0.8rem; margin-top:4px;">Comma separated</div>`;
+            html += `<textarea id="edit-skills" rows="4" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; font:inherit; background:var(--paper); box-sizing:border-box;">${esc(sec.items.join(', '))}</textarea>
+            <div class="muted" style="font-size:0.8rem; margin-top:6px;">Comma separated skill tags</div>`;
           } else {
-            html += `<div style="display:flex; flex-wrap:wrap; gap:8px;">
-              ${sec.items.map(s => `<span class="pill-have" style="background:var(--pine-tint); color:var(--pine); font-weight:500; padding:6px 12px; font-size:0.9rem;">${esc(s)}</span>`).join('')}
+            html += `<div style="display:flex; flex-wrap:wrap; gap:10px;">
+              ${sec.items.map(s => `<span class="pill-have" style="background:rgba(13, 148, 136, 0.1); color:#0d9488; border:1px solid rgba(13,148,136,0.2); font-weight:500; padding:8px 16px; border-radius:999px; font-size:0.95rem;">${esc(s)}</span>`).join('')}
             </div>`;
           }
         } else if (Array.isArray(sec.items)) {
@@ -1433,39 +1506,57 @@ async function renderProfile(draftSections = null, isEditMode = false) {
           sec.items.forEach((item, idx) => {
             if (sec.type === 'experience') {
               if (isEditMode) {
-                 html += `<div style="position:relative; padding-left:16px; border-left:3px solid var(--pine-tint);">
-                   <input type="text" id="edit-exp-role-${idx}" value="${esc(item.role || '')}" placeholder="Role" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">
-                   <input type="text" id="edit-exp-org-${idx}" value="${esc(item.org || '')}" placeholder="Organization" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">
+                 html += `<div style="position:relative; padding:16px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #0d9488;">
+                   <input type="text" id="edit-exp-role-${idx}" value="${esc(item.role || '')}" placeholder="Role Title" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">
+                   <input type="text" id="edit-exp-org-${idx}" value="${esc(item.org || '')}" placeholder="Organization / Company" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">
                    <div style="display:flex; gap:8px; margin-bottom:8px;">
-                     <input type="text" id="edit-exp-start-${idx}" value="${esc(item.start || '')}" placeholder="Start" style="flex:1; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">
-                     <input type="text" id="edit-exp-end-${idx}" value="${esc(item.end || '')}" placeholder="End" style="flex:1; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">
+                     <input type="text" id="edit-exp-start-${idx}" value="${esc(item.start || '')}" placeholder="Start Date" style="flex:1; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">
+                     <input type="text" id="edit-exp-end-${idx}" value="${esc(item.end || '')}" placeholder="End Date" style="flex:1; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">
                    </div>
-                   <textarea id="edit-exp-bullets-${idx}" rows="4" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">${esc((item.bullets || []).join('\n'))}</textarea>
+                   <textarea id="edit-exp-bullets-${idx}" rows="4" placeholder="Bullet points (one per line)" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">${esc((item.bullets || []).join('\n'))}</textarea>
                  </div>`;
               } else {
-                html += `<div style="position:relative; padding-left:16px; border-left:3px solid var(--pine-tint);">
-                  <div style="font-size:1.1rem; font-weight:600; color:var(--ink);">${esc(item.role || '')}</div>
-                  <div style="font-size:1rem; color:var(--pine); margin-top:2px;">${esc(item.org || '')}</div>
-                  <div class="mono" style="font-size:0.85rem; color:var(--ink-faint); margin-top:4px;">${esc(item.start || '')} - ${esc(item.end || 'Present')}</div>
-                  ${item.bullets && item.bullets.length ? `<ul style="margin-top:12px; padding-left:16px; font-size:0.95rem; color:var(--ink-soft); line-height:1.5;">` + item.bullets.map(b => `<li style="margin-bottom:6px;">${esc(b)}</li>`).join('') + `</ul>` : ''}
+                html += `<div style="position:relative; padding:20px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #0d9488; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                      <div style="font-size:1.15rem; font-weight:700; color:#0f172a;">${esc(item.role || '')}</div>
+                      <div style="font-size:1rem; color:#0d9488; font-weight:600; margin-top:2px;">${esc(item.org || '')}</div>
+                    </div>
+                    <div class="mono" style="font-size:0.85rem; background:rgba(13, 148, 136, 0.1); color:#0d9488; padding:4px 10px; border-radius:6px; font-weight:500;">${esc(item.start || '')} - ${esc(item.end || 'Present')}</div>
+                  </div>
+                  ${item.bullets && item.bullets.length ? `<ul style="margin-top:14px; padding-left:20px; font-size:0.95rem; color:#334155; line-height:1.6;">` + item.bullets.map(b => `<li style="margin-bottom:6px;">${esc(b)}</li>`).join('') + `</ul>` : ''}
                 </div>`;
               }
             } else if (sec.type === 'education') {
               if (isEditMode) {
-                 html += `<div style="position:relative; padding-left:16px; border-left:3px solid var(--marigold-tint);">
-                   <input type="text" id="edit-edu-deg-${idx}" value="${esc(item.degree || '')}" placeholder="Degree" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">
-                   <input type="text" id="edit-edu-inst-${idx}" value="${esc(item.institution || '')}" placeholder="Institution" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">
-                   <input type="text" id="edit-edu-year-${idx}" value="${esc(item.year || '')}" placeholder="Year" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">
+                 html += `<div style="position:relative; padding:16px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #f59e0b;">
+                   <input type="text" id="edit-edu-deg-${idx}" value="${esc(item.degree || '')}" placeholder="Degree Title" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">
+                   <input type="text" id="edit-edu-inst-${idx}" value="${esc(item.institution || '')}" placeholder="Institution" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">
+                   <input type="text" id="edit-edu-year-${idx}" value="${esc(item.year || '')}" placeholder="Year" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">
                  </div>`;
               } else {
-                html += `<div style="position:relative; padding-left:16px; border-left:3px solid var(--marigold-tint);">
-                  <div style="font-size:1.1rem; font-weight:600; color:var(--ink);">${esc(item.degree || '')}</div>
-                  <div style="font-size:1rem; color:var(--marigold-2); margin-top:2px;">${esc(item.institution || '')} ${item.year ? `<span class="mono" style="font-size:0.85rem; color:var(--ink-faint); margin-left:8px;">(${esc(item.year)})</span>` : ''}</div>
+                html += `<div style="position:relative; padding:20px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #f59e0b; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                      <div style="font-size:1.15rem; font-weight:700; color:#0f172a;">${esc(item.degree || '')}</div>
+                      <div style="font-size:1rem; color:#d97706; font-weight:600; margin-top:2px;">${esc(item.institution || '')}</div>
+                    </div>
+                    ${item.year ? `<div class="mono" style="font-size:0.85rem; background:rgba(245, 158, 11, 0.1); color:#d97706; padding:4px 10px; border-radius:6px; font-weight:500;">${esc(item.year)}</div>` : ''}
+                  </div>
                 </div>`;
               }
+            } else {
+              const h = item.heading || (typeof item === 'string' ? item : '');
+              const d = item.detail || '';
+              html += `<div style="padding:16px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border:1px solid rgba(109,122,119,0.2);">
+                <div style="font-size:1rem; font-weight:600; color:#0f172a;">${esc(h)}</div>
+                ${d ? `<div style="font-size:0.9rem; color:#475569; margin-top:4px;">${esc(d)}</div>` : ''}
+              </div>`;
             }
           });
           html += `</div>`;
+        } else if (sec.type === 'summary') {
+          html += `<div style="font-size:1rem; line-height:1.6; color:#334155; background:rgba(248, 250, 252, 0.9); padding:20px; border-radius:12px; border:1px solid rgba(13, 148, 136, 0.15);">${esc(sec.text || '')}</div>`;
         } else {
           html += `<pre class="mono" style="font-size:0.85rem; white-space:pre-wrap; background:var(--paper); padding:16px; border-radius:var(--r); border:1px solid var(--line-soft);">${esc(JSON.stringify(sec, null, 2))}</pre>`;
         }
@@ -1478,6 +1569,10 @@ async function renderProfile(draftSections = null, isEditMode = false) {
     };
 
     root.innerHTML = `<div style="max-width:900px; margin:0 auto; padding: 20px 0;">${renderSectionsUI()}</div>`;
+
+    root.querySelectorAll('.prof-tab-btn').forEach(btn => {
+      btn.onclick = () => renderProfile(sections, isEditMode, btn.dataset.tab);
+    });
     
     if (!sections.length) {
       const handleExtract = async (file, text) => {
