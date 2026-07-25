@@ -56,6 +56,7 @@ function renderNav() {
       <div class="avatar" id="avatarBtn" title="${esc(u.email)}">${esc(initial)}</div>
       <div class="menu-pop hidden" id="menuPop">
         <div class="who">Signed in as<br><strong>${esc(u.email)}</strong></div>
+        <button data-act="profile">👤 My profile</button>
         <button data-act="history">📁 My analyses</button>
         <button data-act="learning">🎓 My learning</button>
         <button data-act="logout">↩ Log out</button>
@@ -67,6 +68,7 @@ function renderNav() {
       $('#menuPop').classList.add('hidden');
       const a = b.dataset.act;
       if (a === 'history') location.hash = '#/history';
+      else if (a === 'profile') location.hash = '#/profile';
       else if (a === 'learning') location.hash = '#/learning';
       else if (a === 'logout') { Store.clear(); renderNav(); toast('Logged out.'); location.hash = '#/'; }
       else if (a === 'delacct') confirmDeleteAccount();
@@ -1329,65 +1331,240 @@ function progressCard(pr, title) {
 }
 
 /* ---------------- Apply Assistant: Profile (Phase A) ---------------- */
-async function renderProfile() {
+async function renderProfile(draftSections = null, isEditMode = false) {
   const root = $('#profileRoot');
-  root.innerHTML = `<div class="card" style="padding:40px; text-align:center">
-    <h2>Loading profile...</h2>
-  </div>`;
+  if (!draftSections) {
+    root.innerHTML = `<div class="card" style="padding:40px; text-align:center">
+      <h2>Loading profile...</h2>
+    </div>`;
+  }
+  
   try {
-    const profile = await Api.getProfile();
-    let sections = profile.sections_json || [];
+    let sections = draftSections;
+    let isDraft = !!draftSections && !isEditMode;
     
-    const renderSections = () => {
+    if (!draftSections && !isEditMode) {
+      const profile = await Api.getProfile();
+      sections = profile.sections_json || [];
+    }
+    
+    const renderSectionsUI = () => {
       if (!sections.length) {
-        return `<div class="empty-state">
-          <p>You don't have a master profile yet.</p>
-          <div class="field">
-            <label>Upload Resume (PDF/TXT) or paste text</label>
-            <input type="file" id="profFile" accept=".pdf,.txt">
-            <textarea id="profText" placeholder="Or paste your resume text here..." rows="4" style="margin-top:8px"></textarea>
+        return `<div class="empty-state" style="max-width:600px; margin:0 auto; text-align:center;">
+          <h2 style="font-family:var(--font-display); margin-bottom: 8px;">Create your Master Profile</h2>
+          <p class="muted" style="margin-bottom: 32px;">Upload your resume to extract your skills, experience, and education. We'll use this to match you with future-proof roles.</p>
+          
+          <div class="dropzone" id="profDropzone" style="margin-bottom: 24px; position:relative;">
+            <div class="big" style="margin-bottom: 12px; font-size: 2.8rem; color: var(--pine);">📄</div>
+            <h3 style="font-family:var(--font-display);">Drag & drop your resume here</h3>
+            <p class="muted" style="font-size: 0.9rem;">PDF or TXT up to 5MB</p>
+            <div class="or">OR</div>
+            <button class="btn btn-primary" id="profBrowseBtn" style="position:relative; z-index:10;">Browse Files</button>
+            <input type="file" id="profFile" accept=".pdf,.txt" style="position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer;">
           </div>
-          <button class="btn btn-primary" id="profUploadBtn">Extract Profile</button>
+          
+          <div style="text-align: left;">
+            <label class="muted" style="font-size: 0.85rem; display:block; margin-bottom:8px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Or paste text directly</label>
+            <textarea class="paste" id="profText" placeholder="Paste your resume text here..." rows="4"></textarea>
+            <button class="btn btn-ghost" id="profExtractTextBtn" style="margin-top: 12px; width:100%;">Extract from text</button>
+          </div>
         </div>`;
       }
-      return `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <h2 style="margin:0">Master Profile</h2>
-          <button class="btn btn-primary" id="profSaveBtn">Save Changes</button>
+      
+      let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h2 style="margin:0; font-family:var(--font-display);">Master Profile ${isDraft ? '<span class="pill-have" style="background:var(--terracotta);color:white;margin-left:8px;font-size:0.8rem; vertical-align:middle;">Unsaved Draft</span>' : ''}</h2>
+          <div>
+            ${isEditMode 
+              ? `<button class="btn btn-ghost" id="profCancelBtn" style="margin-right:8px;">Cancel</button>
+                 <button class="btn btn-primary" id="profSaveEditBtn">Save Changes</button>`
+              : `<button class="btn btn-primary" id="profEditBtn">${isDraft ? 'Save Extracted Profile' : 'Edit Profile'}</button>`
+            }
+          </div>
         </div>
-        <p class="muted">Your profile is used to ground all AI-generated application materials.</p>
-        <div id="profSections">
-          <textarea id="profJson" rows="20" style="width:100%; font-family:monospace; font-size:12px;">${esc(JSON.stringify(sections, null, 2))}</textarea>
-        </div>`;
+        <p class="muted" style="margin-bottom:32px;">This data grounds all AI-generated application materials to prevent hallucinations.</p>
+        <div style="display:flex; flex-direction:column; gap:24px;">`;
+        
+      sections.forEach(sec => {
+        html += `<div class="card" style="border:1px solid var(--line); background:var(--card); box-shadow:var(--sh-1); padding:24px;">
+          <h3 style="margin:0 0 16px 0; color:var(--pine); border-bottom:1px solid var(--line-soft); padding-bottom:12px; font-family:var(--font-display); font-size:1.4rem;">${esc(sec.title)}</h3>`;
+        
+        if (sec.type === 'personal' && sec.fields) {
+          if (isEditMode) {
+             html += `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Name</div> <input type="text" id="edit-personal-name" value="${esc(sec.fields.name || '')}" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Email</div> <input type="text" id="edit-personal-email" value="${esc(sec.fields.email || '')}" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Phone</div> <input type="text" id="edit-personal-phone" value="${esc(sec.fields.phone || '')}" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Location</div> <input type="text" id="edit-personal-location" value="${esc(sec.fields.location || '')}" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+             </div>`;
+          } else {
+            html += `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Name</div> <div style="font-size:1.05rem">${esc(sec.fields.name || '—')}</div></div>
+              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Email</div> <div style="font-size:1.05rem">${esc(sec.fields.email || '—')}</div></div>
+              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Phone</div> <div style="font-size:1.05rem">${esc(sec.fields.phone || '—')}</div></div>
+              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Location</div> <div style="font-size:1.05rem">${esc(sec.fields.location || '—')}</div></div>
+            </div>`;
+          }
+        } else if (sec.type === 'skills' && Array.isArray(sec.items)) {
+          if (isEditMode) {
+            html += `<textarea id="edit-skills" rows="4" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">${esc(sec.items.join(', '))}</textarea>
+            <div class="muted" style="font-size:0.8rem; margin-top:4px;">Comma separated</div>`;
+          } else {
+            html += `<div style="display:flex; flex-wrap:wrap; gap:8px;">
+              ${sec.items.map(s => `<span class="pill-have" style="background:var(--pine-tint); color:var(--pine); font-weight:500; padding:6px 12px; font-size:0.9rem;">${esc(s)}</span>`).join('')}
+            </div>`;
+          }
+        } else if (Array.isArray(sec.items)) {
+          html += `<div style="display:flex; flex-direction:column; gap:20px;">`;
+          sec.items.forEach((item, idx) => {
+            if (sec.type === 'experience') {
+              if (isEditMode) {
+                 html += `<div style="position:relative; padding-left:16px; border-left:3px solid var(--pine-tint);">
+                   <input type="text" id="edit-exp-role-${idx}" value="${esc(item.role || '')}" placeholder="Role" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">
+                   <input type="text" id="edit-exp-org-${idx}" value="${esc(item.org || '')}" placeholder="Organization" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">
+                   <div style="display:flex; gap:8px; margin-bottom:8px;">
+                     <input type="text" id="edit-exp-start-${idx}" value="${esc(item.start || '')}" placeholder="Start" style="flex:1; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">
+                     <input type="text" id="edit-exp-end-${idx}" value="${esc(item.end || '')}" placeholder="End" style="flex:1; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">
+                   </div>
+                   <textarea id="edit-exp-bullets-${idx}" rows="4" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">${esc((item.bullets || []).join('\n'))}</textarea>
+                 </div>`;
+              } else {
+                html += `<div style="position:relative; padding-left:16px; border-left:3px solid var(--pine-tint);">
+                  <div style="font-size:1.1rem; font-weight:600; color:var(--ink);">${esc(item.role || '')}</div>
+                  <div style="font-size:1rem; color:var(--pine); margin-top:2px;">${esc(item.org || '')}</div>
+                  <div class="mono" style="font-size:0.85rem; color:var(--ink-faint); margin-top:4px;">${esc(item.start || '')} - ${esc(item.end || 'Present')}</div>
+                  ${item.bullets && item.bullets.length ? `<ul style="margin-top:12px; padding-left:16px; font-size:0.95rem; color:var(--ink-soft); line-height:1.5;">` + item.bullets.map(b => `<li style="margin-bottom:6px;">${esc(b)}</li>`).join('') + `</ul>` : ''}
+                </div>`;
+              }
+            } else if (sec.type === 'education') {
+              if (isEditMode) {
+                 html += `<div style="position:relative; padding-left:16px; border-left:3px solid var(--marigold-tint);">
+                   <input type="text" id="edit-edu-deg-${idx}" value="${esc(item.degree || '')}" placeholder="Degree" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">
+                   <input type="text" id="edit-edu-inst-${idx}" value="${esc(item.institution || '')}" placeholder="Institution" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">
+                   <input type="text" id="edit-edu-year-${idx}" value="${esc(item.year || '')}" placeholder="Year" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;">
+                 </div>`;
+              } else {
+                html += `<div style="position:relative; padding-left:16px; border-left:3px solid var(--marigold-tint);">
+                  <div style="font-size:1.1rem; font-weight:600; color:var(--ink);">${esc(item.degree || '')}</div>
+                  <div style="font-size:1rem; color:var(--marigold-2); margin-top:2px;">${esc(item.institution || '')} ${item.year ? `<span class="mono" style="font-size:0.85rem; color:var(--ink-faint); margin-left:8px;">(${esc(item.year)})</span>` : ''}</div>
+                </div>`;
+              }
+            }
+          });
+          html += `</div>`;
+        } else {
+          html += `<pre class="mono" style="font-size:0.85rem; white-space:pre-wrap; background:var(--paper); padding:16px; border-radius:var(--r); border:1px solid var(--line-soft);">${esc(JSON.stringify(sec, null, 2))}</pre>`;
+        }
+        
+        html += `</div>`;
+      });
+      
+      html += `</div>`;
+      return html;
     };
 
-    root.innerHTML = `<div class="card" style="max-width:800px; margin:0 auto;">${renderSections()}</div>`;
+    root.innerHTML = `<div style="max-width:900px; margin:0 auto; padding: 20px 0;">${renderSectionsUI()}</div>`;
     
     if (!sections.length) {
-      $('#profUploadBtn').onclick = async () => {
-        const file = $('#profFile').files[0];
-        const text = $('#profText').value.trim();
+      const handleExtract = async (file, text) => {
         if (!file && !text) { toast("Provide a file or text.", "err"); return; }
-        $('#profUploadBtn').textContent = "Extracting...";
-        $('#profUploadBtn').disabled = true;
+        const btn = file ? $('#profDropzone') : $('#profExtractTextBtn');
+        const oldHtml = btn.innerHTML;
+        if (!file) btn.textContent = "Extracting...";
+        else {
+          $('#profDropzone h3').textContent = "Extracting Profile...";
+          $('#profDropzone .muted').textContent = "This might take a few seconds.";
+        }
+        
         try {
           const res = await Api.uploadResume(file, text);
-          sections = res.sections;
-          toast("Profile extracted.");
-          renderProfile(); // re-render with sections
+          const extracted = res.sections.sections || res.sections;
+          toast("Profile extracted. Review and save below.");
+          renderProfile(extracted); // Re-render with draft sections
         } catch (e) {
           toast(e.message, "err");
-          $('#profUploadBtn').textContent = "Extract Profile";
-          $('#profUploadBtn').disabled = false;
+          if (!file) btn.textContent = "Extract from text";
+          else {
+            btn.innerHTML = oldHtml;
+          }
+        }
+      };
+
+      $('#profFile').onchange = () => {
+        const file = $('#profFile').files[0];
+        if (file) handleExtract(file, '');
+      };
+      
+      const dz = $('#profDropzone');
+      dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('drag'); };
+      dz.ondragleave = (e) => { e.preventDefault(); dz.classList.remove('drag'); };
+      dz.ondrop = (e) => {
+        e.preventDefault(); dz.classList.remove('drag');
+        if (e.dataTransfer.files.length) {
+          $('#profFile').files = e.dataTransfer.files;
+          handleExtract(e.dataTransfer.files[0], '');
+        }
+      };
+
+      $('#profExtractTextBtn').onclick = () => {
+        handleExtract(null, $('#profText').value.trim());
+      };
+    } else if (isEditMode) {
+      $('#profCancelBtn').onclick = () => renderProfile(isDraft ? sections : null, false);
+      $('#profSaveEditBtn').onclick = async () => {
+        $('#profSaveEditBtn').disabled = true;
+        $('#profSaveEditBtn').textContent = "Saving...";
+        try {
+          // Rebuild sections array from DOM
+          const updated = JSON.parse(JSON.stringify(sections)); // deep copy to be safe
+          updated.forEach(sec => {
+            if (sec.type === 'personal') {
+              sec.fields.name = $('#edit-personal-name').value;
+              sec.fields.email = $('#edit-personal-email').value;
+              sec.fields.phone = $('#edit-personal-phone').value;
+              sec.fields.location = $('#edit-personal-location').value;
+            } else if (sec.type === 'skills') {
+              sec.items = $('#edit-skills').value.split(',').map(s => s.trim()).filter(s => s);
+            } else if (sec.type === 'experience') {
+              sec.items.forEach((item, idx) => {
+                item.role = $(`#edit-exp-role-${idx}`).value;
+                item.org = $(`#edit-exp-org-${idx}`).value;
+                item.start = $(`#edit-exp-start-${idx}`).value;
+                item.end = $(`#edit-exp-end-${idx}`).value;
+                item.bullets = $(`#edit-exp-bullets-${idx}`).value.split('\\n').filter(b => b.trim());
+              });
+            } else if (sec.type === 'education') {
+              sec.items.forEach((item, idx) => {
+                item.degree = $(`#edit-edu-deg-${idx}`).value;
+                item.institution = $(`#edit-edu-inst-${idx}`).value;
+                item.year = $(`#edit-edu-year-${idx}`).value;
+              });
+            }
+          });
+          await Api.updateProfile(updated);
+          toast("Profile saved successfully!");
+          renderProfile(null, false); // Reload from server
+        } catch (e) {
+          toast("Save failed.", "err");
+          $('#profSaveEditBtn').disabled = false;
+          $('#profSaveEditBtn').textContent = "Save Changes";
         }
       };
     } else {
-      $('#profSaveBtn').onclick = async () => {
-        try {
-          const updated = JSON.parse($('#profJson').value);
-          await Api.updateProfile(updated);
-          toast("Profile saved successfully!");
-        } catch (e) {
-          toast("Invalid JSON format or save failed.", "err");
+      $('#profEditBtn').onclick = async () => {
+        if (isDraft) {
+          $('#profEditBtn').disabled = true;
+          $('#profEditBtn').textContent = "Saving...";
+          try {
+            await Api.updateProfile(sections);
+            toast("Profile saved successfully!");
+            renderProfile(null, false); // Reload from server to confirm
+          } catch (e) {
+            toast("Save failed.", "err");
+            $('#profEditBtn').disabled = false;
+            $('#profEditBtn').textContent = "Save Extracted Profile";
+          }
+        } else {
+          renderProfile(sections, true); // Enter edit mode
         }
       };
     }
