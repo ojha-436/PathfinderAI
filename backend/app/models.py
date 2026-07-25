@@ -24,6 +24,10 @@ class User(Base):
     acquired = relationship("AcquiredSkill", back_populates="user", cascade="all, delete-orphan")
     snapshots = relationship("ProgressSnapshot", back_populates="user", cascade="all, delete-orphan")
     prefs = relationship("UserPrefs", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    # Apply Assistant (plan-apply.md): master profile + applications + remembered answers.
+    profile = relationship("Profile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    applications = relationship("Application", back_populates="user", cascade="all, delete-orphan")
+    answers = relationship("AnswerBank", back_populates="user", cascade="all, delete-orphan")
 
 class Analysis(Base):
     __tablename__ = "analyses"
@@ -125,3 +129,77 @@ class UserPrefs(Base):
     streak_updated_at = Column(DateTime, nullable=True)
 
     user = relationship("User", back_populates="prefs")
+
+
+# ======================================================================
+# Apply Assistant — "apply once, apply everywhere" (plan-apply.md, Phase A/B)
+# ======================================================================
+class Profile(Base):
+    """The Master Profile — the single source of truth for every generated
+    document (résumé / cover letter / answers) and an alternate input to the
+    existing Grow analysis. Stored as flexible ordered JSON sections so custom
+    sections need no schema change; convenience columns stay indexed for fast
+    autofill lookups. One per user (1:1)."""
+    __tablename__ = "profiles"
+
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    sections_json = Column(JSON, nullable=False, default=list)  # ordered typed sections (+custom)
+    full_name = Column(String, default="")     # convenience columns for autofill
+    email = Column(String, default="")
+    phone = Column(String, default="")
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+                        onupdate=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="profile")
+
+
+class Application(Base):
+    """A job application in the tracker: the JD, its parsed skills, the match
+    read, a status, and the generated documents produced for it."""
+    __tablename__ = "applications"
+
+    id = Column(String, primary_key=True, index=True, default=get_uuid)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    company = Column(String, default="")
+    job_title = Column(String, default="")
+    job_url = Column(String, default="")
+    jd_text = Column(String, nullable=False, default="")
+    jd_skills_json = Column(JSON, default=list)   # canonical required-skill IDs
+    match_json = Column(JSON, default=dict)       # {match_pct, matched, gaps}
+    status = Column(String, nullable=False, default="draft")  # draft | generated | applied
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+                        onupdate=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="applications")
+    docs = relationship("GeneratedDoc", back_populates="application", cascade="all, delete-orphan")
+
+
+class GeneratedDoc(Base):
+    """A generated, grounded document for an application — versioned per kind
+    (the latest row per kind is the current one)."""
+    __tablename__ = "generated_docs"
+
+    id = Column(String, primary_key=True, index=True, default=get_uuid)
+    application_id = Column(String, ForeignKey("applications.id", ondelete="CASCADE"), nullable=False)
+    kind = Column(String, nullable=False)         # resume | cover_letter | answers
+    content_json = Column(JSON, nullable=False, default=dict)
+    format = Column(String, default="json")       # json | html | txt
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    application = relationship("Application", back_populates="docs")
+
+
+class AnswerBank(Base):
+    """Remembered answers to screening questions (Phase D memory) — so a
+    previously-answered question can be reused across applications."""
+    __tablename__ = "answer_bank"
+
+    id = Column(String, primary_key=True, index=True, default=get_uuid)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    question = Column(String, nullable=False)
+    answer = Column(String, nullable=False, default="")
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+                        onupdate=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="answers")

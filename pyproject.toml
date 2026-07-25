@@ -1,0 +1,27 @@
+[tool.ruff]
+# Target Python version
+target-version = "py311"
+
+# Exclude directories
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "backend/migrations",
+    "build",
+    "dist"
+]
+
+[tool.ruff.lint]
+# Enable standard rules
+select = ["E", "F", "W"]
+
+# Ignore rules that the existing codebase deviates from
+ignore = [
+    "E501", # Line too long (we use flexible formatting)
+    "E402", # Module level import not at top of file (used for sys.path adjustments)
+    "W293", # Blank line contains whitespace
+    "E731", # Do not assign a lambda expression
+    "E702", # Multiple statements on one line (semicolon)
+    "F401"  # Imported but unused (used optionally in imports)
+]

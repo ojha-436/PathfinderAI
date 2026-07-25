@@ -1,0 +1,122 @@
+name: Build & Deploy to Google Cloud (CD)
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  ci-checks:
+    name: Run Quality & Test Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: "backend/requirements-dev.txt"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements-dev.txt
+          pip install ruff
+
+      - name: Run Ruff Linter
+        run: ruff check
+
+      - name: Run Pytest Suite
+        working-directory: backend
+        run: python -m pytest tests/ -v
+
+      - name: Run Smoke Pipeline E2E Test
+        run: python tests/smoke_pipeline.py
+
+  deploy:
+    name: Deploy to Cloud Run
+    needs: ci-checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set Environment Variables
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "ENV_NAME=production" >> $GITHUB_ENV
+            echo "SERVICE_NAME=pathfinder" >> $GITHUB_ENV
+            echo "IMAGE_NAME=asia-south1-docker.pkg.dev/pathfinderai-503505/pathfinder-repo/pathfinder-prod" >> $GITHUB_ENV
+          else
+            echo "ENV_NAME=staging" >> $GITHUB_ENV
+            echo "SERVICE_NAME=pathfinder-dev" >> $GITHUB_ENV
+            echo "IMAGE_NAME=asia-south1-docker.pkg.dev/pathfinderai-503505/pathfinder-repo/pathfinder-staging" >> $GITHUB_ENV
+          fi
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker authentication for Artifact Registry
+        run: |
+          gcloud auth configure-docker asia-south1-docker.pkg.dev --quiet
+
+      - name: Build and Tag Docker Image
+        run: |
+          docker build \
+            -t ${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -t ${{ env.IMAGE_NAME }}:latest \
+            .
+
+      - name: Push Image to Artifact Registry
+        run: |
+          docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker push ${{ env.IMAGE_NAME }}:latest
+
+      - name: Deploy to Google Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image=${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --region=asia-south1 \
+            --platform=managed \
+            --service-account=pathfinder-runner@pathfinderai-503505.iam.gserviceaccount.com \
+            --quiet \
+            --allow-unauthenticated \
+            --port=8080 \
+            --memory=512Mi --cpu=1 \
+            --min-instances=1 --max-instances=1 \
+            --startup-probe-type=http \
+            --startup-probe-path=/api/health \
+            --startup-probe-port=8080 \
+            --startup-probe-initial-delay=5 \
+            --startup-probe-period=10 \
+            --startup-probe-failure-threshold=3 \
+            --liveness-probe-type=http \
+            --liveness-probe-path=/api/health \
+            --liveness-probe-port=8080 \
+            --liveness-probe-initial-delay=15 \
+            --liveness-probe-period=15 \
+            --liveness-probe-failure-threshold=3 \
+            --set-env-vars="APP_ENV=${{ env.ENV_NAME }}" \
+            --set-secrets="JWT_SECRET=JWT_SECRET:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,RAPIDAPI_KEY=RAPIDAPI_KEY:latest,ADZUNA_APP_ID=ADZUNA_APP_ID:latest,ADZUNA_APP_KEY=ADZUNA_APP_KEY:latest,SMTP_USER=SMTP_USER:latest,SMTP_PASSWORD=SMTP_PASSWORD:latest,DIGEST_TOKEN=DIGEST_TOKEN:latest,DATABASE_URL=DATABASE_URL:latest"
+
+      - name: Action Deployment Summary
+        run: |
+          echo "### 🚀 Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "- **Service**: \`${{ env.SERVICE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: \`${{ env.ENV_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image Tag**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region**: \`asia-south1\`" >> $GITHUB_STEP_SUMMARY

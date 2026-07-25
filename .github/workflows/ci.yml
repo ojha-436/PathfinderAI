@@ -1,41 +1,38 @@
-name: CI
+name: Code Quality & Testing (CI)
 
 on:
-  push:
-    branches: [main, master, finaliseapp]
   pull_request:
+    branches: [main, develop]
   workflow_dispatch:
 
 jobs:
-  test:
-    name: Tests + grounding audit
+  ci-checks:
+    name: Lint, Format & Test
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
-      - name: Install dev deps
-        run: pip install -r requirements-dev.txt
-      - name: Run test suite
-        run: python -m pytest tests/ -q
+          cache: "pip"
+          cache-dependency-path: "backend/requirements-dev.txt"
 
-  # Optional deploy-on-green — enable by adding these repo secrets and uncommenting:
-  #   GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_SERVICE_ACCOUNT  (Workload Identity Federation)
-  # deploy:
-  #   needs: test
-  #   if: github.ref == 'refs/heads/main'
-  #   runs-on: ubuntu-latest
-  #   permissions: { contents: read, id-token: write }
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: google-github-actions/auth@v2
-  #       with:
-  #         workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-  #         service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-  #     - uses: google-github-actions/setup-gcloud@v2
-  #     - run: gcloud run deploy pathfinder --source . --region asia-south1 --quiet
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements-dev.txt
+          pip install ruff
+
+      - name: Run Ruff Linter
+        run: ruff check
+
+      - name: Run Pytest Suite
+        working-directory: backend
+        run: python -m pytest tests/ -v
+
+      - name: Run Smoke Pipeline E2E Test
+        run: python tests/smoke_pipeline.py
