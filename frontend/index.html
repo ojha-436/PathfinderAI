@@ -6,6 +6,9 @@
   <title>PathFinder — Will your skills survive the next 5 years?</title>
   <meta name="description" content="Upload your resume and get 3 ranked, future-proof career pathways with forecasted demand, salary uplift, an explainable why, and the first 3 courses to start today." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%A7%AD%3C/text%3E%3C/svg%3E" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0e5c48" />
+  <meta name="description" content="PathFinder — grounded, India-first career & reskilling guidance for students and working professionals." />
   <link rel="stylesheet" href="/css/theme.css" />
   <link rel="stylesheet" href="/css/app.css" />
 </head>
@@ -29,7 +32,9 @@
       </span>
       <nav class="nav-links">
         <a href="#/" data-nav class="hide-sm">Home</a>
+        <a href="#/discover" data-nav>Discover</a>
         <a href="#/analyze" data-nav>Analyze</a>
+        <a href="#/goal" data-nav>Career goal</a>
       </nav>
       <div id="navAuth"></div>
     </div>
@@ -249,6 +254,34 @@
       </div>
     </section>
 
+    <!-- ===================== DISCOVER (guided intake) ===================== -->
+    <section id="view-discover" class="view hidden">
+      <div class="section">
+        <div class="wrap" id="discoverRoot"><!-- filled by app.js --></div>
+      </div>
+    </section>
+
+    <!-- ===================== PUBLIC PERSONA CARD ===================== -->
+    <section id="view-card" class="view hidden">
+      <div class="section">
+        <div class="wrap" id="cardRoot"><!-- filled by app.js --></div>
+      </div>
+    </section>
+
+    <!-- ===================== LEGAL (privacy / terms) ===================== -->
+    <section id="view-legal" class="view hidden">
+      <div class="section">
+        <div class="wrap" id="legalRoot"><!-- filled by app.js --></div>
+      </div>
+    </section>
+
+    <!-- ===================== CAREER GOAL (reverse roadmap) ===================== -->
+    <section id="view-goal" class="view hidden">
+      <div class="section">
+        <div class="wrap" id="goalRoot"><!-- filled by app.js --></div>
+      </div>
+    </section>
+
     <!-- ===================== MY LEARNING ===================== -->
     <section id="view-learning" class="view hidden">
       <div class="section">
@@ -284,7 +317,7 @@
       </div>
       <div class="legal">
         <span>© 2026 PathFinder — Career Decision Intelligence · Market: India</span>
-        <span class="mono" id="footMeta">reproducible forecasts · grounded recommendations</span>
+        <span class="foot-links"><a href="#/privacy" data-nav>Privacy</a> · <a href="#/terms" data-nav>Terms</a> · <span class="mono" id="footMeta">grounded recommendations</span></span>
       </div>
     </div>
   </footer>

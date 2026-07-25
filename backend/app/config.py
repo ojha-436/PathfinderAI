@@ -38,6 +38,20 @@ class Settings(BaseSettings):
     ADZUNA_APP_KEY: str = os.getenv("ADZUNA_APP_KEY", "")
     JOBS_COUNTRY: str = os.getenv("JOBS_COUNTRY", "in")         # Adzuna country code (India)
 
+    # Google Sign-In (optional — button appears only when set)
+    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
+
+    # Password reset — links delivered by SMTP when configured; otherwise logged server-side.
+    APP_BASE_URL: str = os.getenv("APP_BASE_URL", "")           # for reset links; else derived from request
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USER: str = os.getenv("SMTP_USER", "")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+    SMTP_FROM: str = os.getenv("SMTP_FROM", "")
+
+    # Weekly digest — Cloud Scheduler calls /api/internal/digest/run with this token.
+    DIGEST_TOKEN: str = os.getenv("DIGEST_TOKEN", "")
+
     model_config = SettingsConfigDict(case_sensitive=True, extra="ignore")
 
     @property
