@@ -1,4 +1,4 @@
-/* PathFinder — SPA controller: routing, auth, analyze flow, results, history. */
+/* PathFinderAI — SPA controller: routing, auth, analyze flow, results, history. */
 
 const ASHA_SAMPLE = `Asha Kulkarni
 Data Entry Operator | Pune, Maharashtra
@@ -231,7 +231,7 @@ function openReset(token) {
     <div class="card modal" style="position:relative">
       <span class="eyebrow">Reset password</span>
       <h2>Set a new password</h2>
-      <p class="muted" style="font-size:.9rem;margin-top:-.4em">Choose a new password for your PathFinder account.</p>
+      <p class="muted" style="font-size:.9rem;margin-top:-.4em">Choose a new password for your PathFinderAI account.</p>
       <form id="rpForm">
         <div class="field"><label>New password <span class="muted">(min 8 characters)</span></label>
           <input type="password" id="rpPass" required autocomplete="new-password" placeholder="••••••••"></div>
@@ -374,7 +374,7 @@ function renderConfirm(res) {
   $('#confirmBody').innerHTML = `
     <span class="eyebrow">${isAi ? '✦ AI-guided path' : (res.source === 'gemini' ? '✦ AI-matched to your goal' : 'Best match')}</span>
     <h2 class="wiz-q" style="margin-top:.15em">${isAi ? "We'll build a plan for" : 'We recommend'} <span class="accent-role">${esc(title)}</span></h2>
-    ${isAi ? `<div class="ai-note"><span class="ai-badge">AI-guided</span> This field is outside PathFinder's grounded data &amp; analytics catalog — we'll generate an AI plan: skills &amp; sequence from Gemini, resources as suggested searches, and figures as estimates to verify.</div>` : ''}
+    ${isAi ? `<div class="ai-note"><span class="ai-badge">AI-guided</span> This field is outside PathFinderAI's grounded data &amp; analytics catalog — we'll generate an AI plan: skills &amp; sequence from Gemini, resources as suggested searches, and figures as estimates to verify.</div>` : ''}
     <p class="wiz-rationale">${esc(res.rationale)}</p>
     <div class="wiz-actions" style="flex-wrap:wrap">
       <button class="btn btn-primary" id="confirmBuild">${isAi ? 'Build my AI-guided roadmap →' : 'Yes, build my roadmap →'}</button>
@@ -604,7 +604,7 @@ function personaCardHTML(card, opts = {}) {
     return `<div class="pc-dir"><div class="pc-dir-role">${esc(x.title)}</div>${x.why ? `<div class="pc-dir-why">${esc(x.why)}</div>` : ''}${meta}${btn}</div>`;
   };
   return `<div class="card persona-card">
-    <span class="eyebrow">✦ Your PathFinder persona${card.field ? ' · ' + esc(card.field) : ''}</span>
+    <span class="eyebrow">✦ Your PathFinderAI persona${card.field ? ' · ' + esc(card.field) : ''}</span>
     <h2 class="pc-headline">${esc(card.headline)}</h2>
     ${card.strengths && card.strengths.length ? `<div class="pc-strengths">${card.strengths.map((s) => `<span class="pill-have">${esc(s)}</span>`).join(' ')}</div>` : ''}
     ${card.directions && card.directions.length ? `<div class="pc-dirs-label">Directions that fit you</div><div class="pc-dirs">${card.directions.map(dir).join('')}</div>` : ''}
@@ -655,7 +655,7 @@ function renderLegal(kind) {
   const privacy = `
     <span class="eyebrow">Last updated July 2026</span>
     <h2 style="margin:.15em 0 .3em">Privacy Policy</h2>
-    <p class="muted">PathFinder is career decision-support. We collect the minimum needed to give you a saved, personalised experience — nothing more.</p>
+    <p class="muted">PathFinderAI is career decision-support. We collect the minimum needed to give you a saved, personalised experience — nothing more.</p>
     <h3>What we store</h3>
     <ul class="legal-list">
       <li>Your <b>email</b> and a <b>salted hash</b> of your password (never the password itself).</li>
@@ -678,8 +678,8 @@ function renderLegal(kind) {
   const terms = `
     <span class="eyebrow">Last updated July 2026</span>
     <h2 style="margin:.15em 0 .3em">Terms of Use</h2>
-    <p class="muted">Please read these terms before relying on PathFinder's guidance.</p>
-    <h3>What PathFinder is — and isn't</h3>
+    <p class="muted">Please read these terms before relying on PathFinderAI's guidance.</p>
+    <h3>What PathFinderAI is — and isn't</h3>
     <ul class="legal-list">
       <li>It provides <b>career decision-support</b> and learning guidance. It is <b>not</b> professional career counselling, financial, or investment advice.</li>
       <li>Outcomes such as jobs or salaries are <b>estimates, not guarantees</b>.</li>
@@ -817,7 +817,7 @@ const PLATFORMS = [
 
 function renderConnect(body) {
   body.innerHTML = `
-    <p class="muted" style="max-width:60ch;margin-bottom:16px">Import your profile from a job platform. Pick one, then paste your profile/skills or upload the profile export it gives you — PathFinder reads your real skills and analyzes them. <span style="color:var(--ink-faint)">(Your data stays yours; nothing is scraped on your behalf.)</span></p>
+    <p class="muted" style="max-width:60ch;margin-bottom:16px">Import your profile from a job platform. Pick one, then paste your profile/skills or upload the profile export it gives you — PathFinderAI reads your real skills and analyzes them. <span style="color:var(--ink-faint)">(Your data stays yours; nothing is scraped on your behalf.)</span></p>
     <div class="paths" style="grid-template-columns:repeat(3,1fr)">
       ${PLATFORMS.map((p) => `<div class="card path-card" data-plat="${p.id}" style="cursor:pointer">
         <div style="font-size:1.8rem">${p.icon}</div>
@@ -1015,7 +1015,7 @@ function renderResults(r) {
     </div>
 
     <div class="card trace-strip" style="margin-top:34px">
-      <h4>🧠 How PathFinder decided — ${r.trace.length}-agent trace</h4>
+      <h4>🧠 How PathFinderAI decided — ${r.trace.length}-agent trace</h4>
       <div class="trace-flow">
         ${r.trace.map((t) => `<div class="trace-node">
           <div class="tn">${esc(t.agent_name)}</div>
@@ -1024,7 +1024,7 @@ function renderResults(r) {
         </div>`).join('')}
       </div>
     </div>
-    <p class="datasource" style="margin-top:14px">Resume analysis via <b>${esc(r.provider_status.skill_extraction === 'gemini' ? 'Gemini' : "PathFinder's engine")}</b> · forecasts &amp; course grounding are reproducible and grounded in real data. Powered by Google Cloud.</p>`;
+    <p class="datasource" style="margin-top:14px">Resume analysis via <b>${esc(r.provider_status.skill_extraction === 'gemini' ? 'Gemini' : "PathFinderAI's engine")}</b> · forecasts &amp; course grounding are reproducible and grounded in real data. Powered by Google Cloud.</p>`;
 
   root.querySelectorAll('.path-card').forEach((c) => c.onclick = () => { State.selected = +c.dataset.i; renderDrill(); highlightCards(); });
   $('#newBtn').onclick = () => { State.result = null; renderAnalyzeIntro(); };

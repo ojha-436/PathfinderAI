@@ -1,6 +1,6 @@
 """ADK harness — demonstrates the 4-agent pipeline as an ADK SequentialAgent
 (SPEC R6). If google-adk is installed it builds a real SequentialAgent whose
-sub-agents wrap PathFinder's four steps; otherwise it runs the identical native
+sub-agents wrap PathFinderAI's four steps; otherwise it runs the identical native
 orchestrator (the serving path). Either way the agent structure and traces match
 what the UI shows — this is the R6 de-risk fallback.
 
@@ -33,7 +33,7 @@ def _adk_available() -> bool:
 
 def run() -> None:
     mode = "ADK SequentialAgent" if _adk_available() else "native orchestrator (ADK fallback, R6)"
-    print(f"=== PathFinder agent pipeline — mode: {mode} ===\n")
+    print(f"=== PathFinderAI agent pipeline — mode: {mode} ===\n")
 
     result = Orchestrator().run_pipeline(text=SAMPLE_RESUME)
 

@@ -47,7 +47,7 @@ def _html_to_text(html: str) -> str:
 
 def _fetch(url: str) -> str:  # pragma: no cover - network
     req = urllib.request.Request(url, headers={
-        "User-Agent": "Mozilla/5.0 (compatible; PathFinderBot/1.0; +https://pathfinder.app)",
+        "User-Agent": "Mozilla/5.0 (compatible; PathFinderAIBot/1.0; +https://pathfinderai.app)",
         "Accept": "text/html,application/xhtml+xml",
     })
     with urllib.request.urlopen(req, timeout=12) as resp:

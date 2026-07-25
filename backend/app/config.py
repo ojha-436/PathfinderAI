@@ -5,14 +5,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # App
-    PROJECT_NAME: str = "PathFinder"
+    PROJECT_NAME: str = "PathFinderAI"
     VERSION: str = "2.0.0"
     API_V1_STR: str = "/api"
     APP_ENV: str = os.getenv("APP_ENV", "development")
     MARKET: str = "India"
 
     # Database — SQLite default; set DATABASE_URL to postgresql:// (Cloud SQL / AlloyDB) in prod.
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./pathfinder.db")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./pathfinderai.db")
 
     # Auth — MUST override JWT_SECRET in production.
     JWT_SECRET: str = os.getenv("JWT_SECRET", "DEV_SECRET_DO_NOT_USE_IN_PROD")

@@ -1,4 +1,4 @@
-/* PathFinder — dependency-free SVG charts (offline-safe, no chart lib). */
+/* PathFinderAI — dependency-free SVG charts (offline-safe, no chart lib). */
 const Charts = (() => {
   const COL = {
     up: '#0e5c48', down: '#bd4a2c', flat: '#3a5566',

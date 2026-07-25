@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy PathFinder to Google Cloud Run.
+# Deploy PathFinderAI to Google Cloud Run.
 # Usage:  ./deploy.sh [PROJECT_ID]   (default: promptwar-501405)
 #   REGION=asia-south1 ./deploy.sh
 set -euo pipefail
@@ -8,7 +8,7 @@ export CLOUDSDK_CORE_DISABLE_PROMPTS=1   # never block on interactive prompts
 
 PROJECT="${1:-promptwar-501405}"
 REGION="${REGION:-asia-south1}"
-SERVICE="${SERVICE:-pathfinder}"
+SERVICE="${SERVICE:-pathfinderai}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
 # Strong session secret (override by exporting JWT_SECRET before running).

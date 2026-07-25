@@ -1,6 +1,6 @@
-# PathFinder — Career Decision Intelligence
+# PathFinderAI — Career Decision Intelligence
 
-> Career decision intelligence that reads your resume, forecasts which of your skills are rising or fading, maps future-proof career pathways, **matches you to real open jobs**, recommends grounded courses, and **tracks your progress** as you close the gaps — for both students and working professionals.
+> Career decision intelligence that reads your resume, forecasts which of your skills are rising or fading, maps future-proof career pathways, **matches you to real open jobs**, recommends grounded courses, and **tracks your progress** as you close the gaps — for both students and working professionals. Powered by AI.
 
 **Live app:** https://pathfinder-383713992026.asia-south1.run.app/#/ · Health: https://pathfinder-383713992026.asia-south1.run.app/api/health
 _Powered by Google Cloud (Cloud Run · Gemini · Cloud SQL), project `promptwar-501405`, region `asia-south1`._
@@ -25,7 +25,7 @@ Every feature runs against real data and real algorithms:
 
 AI capabilities sit behind **pluggable providers**: the app runs fully on deterministic local providers and upgrades to Gemini / Vertex RAG / BQML by setting env vars — no code change. Job data uses **Adzuna** (live) with a curated fallback.
 
-_Selected as a **Top-101 finalist**, Google Cloud Gen AI Academy — APAC Cohort 2 (Education & Lifelong Learning)._
+_PathFinderAI selected as a **Top-101 finalist**, Google Cloud Gen AI Academy — APAC Cohort 2 (Education & Lifelong Learning)._
 
 ---
 
@@ -56,7 +56,7 @@ cd pathfinder/backend && python ../tests/smoke_pipeline.py
 ## Project structure
 
 ```
-pathfinder/
+pathfinderai/
 ├── Dockerfile              # single container: API + static SPA
 ├── deploy.sh               # one-command Cloud Run deploy
 ├── backend/
@@ -101,7 +101,7 @@ pathfinder/
 
 ## Pluggable Google Cloud providers
 
-Each capability has a local default and a GCP implementation activated by env vars (no code change). See [`app/engines/providers.py`](backend/app/engines/providers.py).
+Each capability has a local default and a GCP implementation activated by env vars (no code change). See [`app/engines/providers.py`](backend/app/engines/providers.py). PathFinderAI is fully functional with zero cloud credentials.
 
 | GCP service | Activate with | Falls back to |
 |---|---|---|
@@ -131,11 +131,11 @@ The script enables the required APIs, builds from the `Dockerfile` via Cloud Bui
 The production service persists accounts, saved history, and the learning tracker on **Cloud SQL Postgres** (`pg8000`), so data survives redeploys. `deploy.sh` wires it through when you export the connection:
 
 ```bash
-gcloud sql instances create pathfinder-db --database-version=POSTGRES_15 --tier=db-f1-micro --region=asia-south1
-gcloud sql databases create pathfinder --instance=pathfinder-db
-CONN=<PROJECT>:<REGION>:pathfinder-db
+gcloud sql instances create pathfinderai-db --database-version=POSTGRES_15 --tier=db-f1-micro --region=asia-south1
+gcloud sql databases create pathfinderai --instance=pathfinderai-db
+CONN=<PROJECT>:<REGION>:pathfinderai-db
 CLOUDSQL_CONN="$CONN" \
-DATABASE_URL="postgresql+pg8000://<user>:<pass>@/pathfinder?unix_sock=/cloudsql/$CONN/.s.PGSQL.5432" \
+DATABASE_URL="postgresql+pg8000://<user>:<pass>@/pathfinderai?unix_sock=/cloudsql/$CONN/.s.PGSQL.5432" \
 GEMINI_API_KEY=... ADZUNA_APP_ID=... ADZUNA_APP_KEY=... ./deploy.sh promptwar-501405
 ```
 

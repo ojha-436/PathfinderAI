@@ -133,11 +133,11 @@ def _send_reset_email(to_email: str, link: str) -> None:
     if settings.SMTP_HOST and settings.SMTP_USER:
         try:  # pragma: no cover - depends on external SMTP
             msg = EmailMessage()
-            msg["Subject"] = "Reset your PathFinder password"
+            msg["Subject"] = "Reset your PathFinderAI password"
             msg["From"] = settings.SMTP_FROM or settings.SMTP_USER
             msg["To"] = to_email
             msg.set_content(
-                "Reset your PathFinder password using this link (valid for 30 minutes):\n\n"
+                "Reset your PathFinderAI password using this link (valid for 30 minutes):\n\n"
                 f"{link}\n\nIf you didn't request this, you can safely ignore this email."
             )
             with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as s:
@@ -146,9 +146,9 @@ def _send_reset_email(to_email: str, link: str) -> None:
                 s.send_message(msg)
             return
         except Exception as exc:
-            print(f"[PathFinder] reset email send failed: {exc}", file=sys.stderr)
+            print(f"[PathFinderAI] reset email send failed: {exc}", file=sys.stderr)
     # No SMTP (or send failed) — log the link so it can be retrieved from server logs.
-    print(f"[PathFinder] Password-reset link for {to_email}: {link}", file=sys.stderr)
+    print(f"[PathFinderAI] Password-reset link for {to_email}: {link}", file=sys.stderr)
 
 
 @router.post("/forgot")

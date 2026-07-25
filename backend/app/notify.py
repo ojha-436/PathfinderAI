@@ -27,7 +27,7 @@ def send_email(to_email: str, subject: str, body: str) -> bool:
                 s.send_message(msg)
             return True
         except Exception as exc:
-            print(f"[PathFinder] email send failed ({to_email}): {exc}", file=sys.stderr)
-    print(f"[PathFinder] EMAIL (not sent — no SMTP) to={to_email} subject={subject!r}\n{body}",
+            print(f"[PathFinderAI] email send failed ({to_email}): {exc}", file=sys.stderr)
+    print(f"[PathFinderAI] EMAIL (not sent — no SMTP) to={to_email} subject={subject!r}\n{body}",
           file=sys.stderr)
     return False

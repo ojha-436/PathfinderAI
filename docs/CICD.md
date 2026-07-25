@@ -1,6 +1,6 @@
-# PathFinder CI/CD Architecture & Operations Manual
+# PathFinderAI CI/CD Architecture & Operations Manual
 
-This document details the CI/CD pipeline setup for deploying the PathFinder application to Google Cloud Run from GitHub.
+This document details the CI/CD pipeline setup for deploying the PathFinderAI application to Google Cloud Run from GitHub.
 
 ---
 
@@ -20,7 +20,7 @@ graph TD
     
     E -->|1. Run Quality & Tests| G[ci-checks]
     G -->|2. Authenticate WIF| H[GCP Authentication via OIDC]
-    H -->|3. Build & Push Image| I[Artifact Registry: pathfinder-repo]
+    H -->|3. Build & Push Image| I[Artifact Registry: pathfinderai-repo]
     I -->|4. Deploy Container| J[Cloud Run Service]
     
     J -->|5. Mount Secrets| K[Secret Manager]
@@ -36,11 +36,11 @@ All resources are provisioned in the **`pathfinderai-503505`** Google Cloud proj
 
 | Resource Name | Service | Purpose |
 |---|---|---|
-| `pathfinder-repo` | Artifact Registry | Docker container repository (DOCKER standard format) |
-| `pathfinder` | Cloud Run | Production service environment (built from `main` branch) |
-| `pathfinder-dev` | Cloud Run | Staging/Development service environment (built from `develop` branch) |
+| `pathfinderai-repo` | Artifact Registry | Docker container repository (DOCKER standard format) |
+| `pathfinderai` | Cloud Run | Production service environment (built from `main` branch) |
+| `pathfinderai-dev` | Cloud Run | Staging/Development service environment (built from `develop` branch) |
 | `github-actions-deployer` | IAM Service Account | Deployer SA used by GitHub Actions (authorized via WIF) |
-| `pathfinder-runner` | IAM Service Account | Runtime SA used by Cloud Run container instances to access resources |
+| `pathfinderai-runner` | IAM Service Account | Runtime SA used by Cloud Run container instances to access resources |
 | `github-actions-pool` | Workload Identity Pool | Pool for managing OIDC tokens from GitHub Actions |
 | `github-actions-provider` | Workload Identity Provider | OIDC provider mapping `token.actions.githubusercontent.com` to GCP |
 | Secrets (see below) | Secret Manager | Secure storage for sensitive API keys and configuration |
@@ -61,7 +61,7 @@ Cloud Run retrieves these secrets dynamically on startup as environment variable
 | `SMTP_USER` | SMTP server username | SMTP username |
 | `SMTP_PASSWORD` | SMTP server password | SMTP password |
 | `DIGEST_TOKEN` | Auth token for cron digest endpoint | Secure random string |
-| `DATABASE_URL` | Postgres Database connection URL | `sqlite:///./pathfinder.db` (ephemeral SQLite fallback) |
+| `DATABASE_URL` | Postgres Database connection URL | `sqlite:///./pathfinderai.db` (ephemeral SQLite fallback) |
 
 ---
 
@@ -101,12 +101,12 @@ If the container fails the startup or liveness health check probes on deployment
 To manually roll back to a known stable version:
 1.  List the revisions of the service:
     ```bash
-    gcloud run revisions list --service=pathfinder --region=asia-south1
+    gcloud run revisions list --service=pathfinderai --region=asia-south1
     ```
 2.  Route 100% of traffic to the stable revision (e.g., `pathfinder-00002-abc`):
     ```bash
-    gcloud run services update-traffic pathfinder \
-      --to-revisions=pathfinder-00002-abc=100 \
+    gcloud run services update-traffic pathfinderai \
+      --to-revisions=pathfinderai-00002-abc=100 \
       --region=asia-south1
     ```
 

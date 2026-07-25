@@ -1,4 +1,4 @@
-# PathFinder — Refinement Plan
+# PathFinderAI — Refinement Plan
 
 **Scope:** persona-split dashboards (Student / Professional), a **learning-activity tracker with a closed re-assessment loop**, and a **"real jobs matched to me"** engine sourced from *compliant, verified* job APIs (never scraping LinkedIn/Indeed).
 **Author lens:** senior architect + software engineer. **Branch:** `finaliseapp`. **Status:** Top-101 finalist → productionizing.

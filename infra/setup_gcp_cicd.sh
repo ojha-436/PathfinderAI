@@ -4,7 +4,7 @@ set -euo pipefail
 
 PROJECT_ID="${1:-pathfinderai-503505}"
 REGION="asia-south1"
-REPO_NAME="pathfinder-repo"
+REPO_NAME="pathfinderai-repo"
 GITHUB_REPO="ojha-436/PathfinderAI"
 
 echo "=========================================================="
@@ -39,7 +39,7 @@ if ! gcloud artifacts repositories describe "$REPO_NAME" --location="$REGION" &>
   gcloud artifacts repositories create "$REPO_NAME" \
     --repository-format=docker \
     --location="$REGION" \
-    --description="PathFinder Docker Repository" \
+    --description="PathFinderAI Docker Repository" \
     --quiet
 else
   echo "✔ Artifact Registry repository $REPO_NAME already exists."
@@ -49,13 +49,13 @@ fi
 echo "▶ Setting up Service Accounts..."
 
 # Runtime Service Account for Cloud Run
-RUNNER_SA="pathfinder-runner"
+RUNNER_SA="pathfinderai-runner"
 RUNNER_SA_EMAIL="$RUNNER_SA@$PROJECT_ID.iam.gserviceaccount.com"
 if ! gcloud iam service-accounts describe "$RUNNER_SA_EMAIL" &>/dev/null; then
   echo "▶ Creating runtime service account: $RUNNER_SA..."
   gcloud iam service-accounts create "$RUNNER_SA" \
-    --description="Runtime service account for PathFinder Cloud Run" \
-    --display-name="PathFinder Runner"
+    --description="Runtime service account for PathFinderAI Cloud Run" \
+    --display-name="PathFinderAI Runner"
 else
   echo "✔ Runtime service account $RUNNER_SA already exists."
 fi
@@ -177,7 +177,7 @@ for SECRET in "${SECRETS[@]}"; do
     elif [ "$SECRET" = "DIGEST_TOKEN" ]; then
       VAL=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
     elif [ "$SECRET" = "DATABASE_URL" ]; then
-      VAL="sqlite:///./pathfinder.db"
+      VAL="sqlite:///./pathfinderai.db"
     else
       VAL="placeholder"
     fi

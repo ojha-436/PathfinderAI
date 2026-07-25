@@ -53,12 +53,12 @@ jobs:
         run: |
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "ENV_NAME=production" >> $GITHUB_ENV
-            echo "SERVICE_NAME=pathfinder" >> $GITHUB_ENV
-            echo "IMAGE_NAME=asia-south1-docker.pkg.dev/pathfinderai-503505/pathfinder-repo/pathfinder-prod" >> $GITHUB_ENV
+            echo "SERVICE_NAME=pathfinderai" >> $GITHUB_ENV
+            echo "IMAGE_NAME=asia-south1-docker.pkg.dev/pathfinderai-503505/pathfinderai-repo/pathfinderai-prod" >> $GITHUB_ENV
           else
             echo "ENV_NAME=staging" >> $GITHUB_ENV
-            echo "SERVICE_NAME=pathfinder-dev" >> $GITHUB_ENV
-            echo "IMAGE_NAME=asia-south1-docker.pkg.dev/pathfinderai-503505/pathfinder-repo/pathfinder-staging" >> $GITHUB_ENV
+            echo "SERVICE_NAME=pathfinderai-dev" >> $GITHUB_ENV
+            echo "IMAGE_NAME=asia-south1-docker.pkg.dev/pathfinderai-503505/pathfinderai-repo/pathfinderai-staging" >> $GITHUB_ENV
           fi
 
       - name: Authenticate to Google Cloud
@@ -92,7 +92,7 @@ jobs:
             --image=${{ env.IMAGE_NAME }}:${{ github.sha }} \
             --region=asia-south1 \
             --platform=managed \
-            --service-account=pathfinder-runner@pathfinderai-503505.iam.gserviceaccount.com \
+            --service-account=pathfinderai-runner@pathfinderai-503505.iam.gserviceaccount.com \
             --quiet \
             --allow-unauthenticated \
             --port=8080 \

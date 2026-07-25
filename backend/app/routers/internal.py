@@ -30,8 +30,8 @@ def _compose(user: User, streak: int, snap: Optional[ProgressSnapshot], complete
         lines.append(f"Your readiness for {snap.role_name} is at {snap.coverage_pct}%.")
     if completed_total:
         lines.append(f"You've completed {completed_total} course{'s' if completed_total != 1 else ''} so far. Nice work.")
-    lines += ["", f"Pick up where you left off: {base}/#/learning" if base else "Open PathFinder → My learning to continue.",
-              "", "— PathFinder", "You can turn off this weekly digest anytime in My learning."]
+    lines += ["", f"Pick up where you left off: {base}/#/learning" if base else "Open PathFinderAI → My learning to continue.",
+              "", "— PathFinderAI", "You can turn off this weekly digest anytime in My learning."]
     return "\n".join(lines)
 
 
@@ -59,7 +59,7 @@ def run_digest(token: Optional[str] = Query(None), x_digest_token: Optional[str]
         snap = (db.query(ProgressSnapshot).filter(ProgressSnapshot.user_id == user.id)
                 .order_by(ProgressSnapshot.taken_at.desc()).first())
         body = _compose(user, streak, snap, len(completed))
-        ok = send_email(user.email, "Your weekly PathFinder progress", body)
+        ok = send_email(user.email, "Your weekly PathFinderAI progress", body)
         sent += 1 if ok else 0
         logged += 0 if ok else 1
         p.last_digest_at = now

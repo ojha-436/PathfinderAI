@@ -1,4 +1,4 @@
-/* PathFinder API client + token/session management. */
+/* PathFinderAI API client + token/session management. */
 const API = '/api';
 
 const Store = {

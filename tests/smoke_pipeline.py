@@ -18,6 +18,8 @@ PDF = os.path.join(os.path.dirname(__file__), "../backend/app/data/sample_resume
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     with open(PDF, "rb") as f:
         text = extract_text_from_pdf(f.read())
     assert text.strip(), "No text extracted from sample PDF"

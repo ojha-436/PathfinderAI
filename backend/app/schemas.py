@@ -179,7 +179,7 @@ class SkillInfo(BaseModel):
 
 
 class MetaResponse(BaseModel):
-    app: str = "PathFinder"
+    app: str = "PathFinderAI"
     version: str
     market: str
     provider_status: Dict[str, str]

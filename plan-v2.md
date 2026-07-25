@@ -1,6 +1,6 @@
-# PathFinder — Plan v2: Demo → Full Working Platform
+# PathFinderAI — Plan v2: Demo → Full Working Platform
 
-**Scope of this plan:** take PathFinder from "finalist prototype that works" to a **production-grade consumer platform** by adding three retention-and-guidance features, on top of a hardening layer (migrations, secrets, email, tests, CI/CD, observability).
+**Scope of this plan:** take PathFinderAI from "finalist prototype that works" to a **production-grade consumer platform** by adding three retention-and-guidance features, on top of a hardening layer (migrations, secrets, email, tests, CI/CD, observability).
 
 **The three features (this plan's headline):**
 1. **Goal-first reverse roadmap** — *"I want to become X"* → a sequenced, grounded, India-priced learning plan. (Highest value-per-effort; the engine already computes every part.)

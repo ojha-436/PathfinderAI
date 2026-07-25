@@ -16,6 +16,8 @@ USER = ["excel", "attention_to_detail", "communication", "data_entry", "customer
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     raw, source = jobs.search_jobs("data quality analyst", "Pune", num=12)
     assert raw, "no jobs returned"
     print(f"source: {source} · jobs: {len(raw)}")

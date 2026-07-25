@@ -1,7 +1,7 @@
-# PathFinder — Plan: Apply Assistant ("Apply once, apply everywhere")
+# PathFinderAI — Plan: Apply Assistant ("Apply once, apply everywhere")
 
 **Value proposition:** *Turn a 20-minute application into a 2-minute review.*
-Upload your résumé once → PathFinder builds a structured, editable master profile → paste a job → get a grounded, ATS-friendly résumé + tailored cover letter + suggested answers → review → (with the browser extension) auto-fill and submit yourself.
+Upload your résumé once → PathFinderAI builds a structured, editable master profile → paste a job → get a grounded, ATS-friendly résumé + tailored cover letter + suggested answers → review → (with the browser extension) auto-fill and submit yourself.
 
 **One profile, two superpowers:** the same master profile feeds **Grow** (the existing roadmap/forecast) and **Apply** (this). That integration — honest tailoring *plus* an honest match/gap read — is the wedge no auto-apply tool has.
 
@@ -77,7 +77,7 @@ master profile + (pasted JD text | fetched public JD)
 ## 5. Browser extension (Phase C — separate track)
 
 A Chrome MV3 extension is the only compliant way to auto-fill third-party forms.
-- Content script detects form fields on a job page; maps them to master-profile values via the PathFinder API (user's token).
+- Content script detects form fields on a job page; maps them to master-profile values via the PathFinderAI API (user's token).
 - Surfaces the generated résumé/cover letter/answers for the current JD.
 - Fills fields → **user reviews → user clicks submit.** No auto-submit.
 - Popup: login, pick which profile/answers, one-click fill.

@@ -1,6 +1,6 @@
-# PathFinder — Apply Assistant Architecture
+# PathFinderAI — Apply Assistant Architecture
 
-Companion to [ARCHITECTURE.md](../ARCHITECTURE.md) and [plan-apply.md](plan-apply.md). Describes how the "apply once, apply everywhere" feature slots into the existing stack **without** breaking the grounded, zero-fabrication design.
+Companion to [ARCHITECTURE.md](../ARCHITECTURE.md) and [plan-apply.md](plan-apply.md). Describes how the "apply once, apply everywhere" feature slots into the PathFinderAI stack **without** breaking the grounded, zero-fabrication design.
 
 ## 1. Where it fits — one profile, two superpowers
 
@@ -145,7 +145,7 @@ flowchart LR
     CS[Content script<br/>detect + map fields] --> F
     POP[Popup<br/>login · pick answers]
   end
-  CS -->|token| API[(PathFinder API<br/>/api/profile, /api/apply)]
+  CS -->|token| API[(PathFinderAI API<br/>/api/profile, /api/apply)]
   API --> CS
   F -.user reviews + clicks submit.-> DONE[Submitted by user]
 ```

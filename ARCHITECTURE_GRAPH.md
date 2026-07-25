@@ -1,4 +1,4 @@
-# PathFinder — Architecture & Tech-Stack Graph
+# PathFinderAI — Architecture & Tech-Stack Graph
 
 > This graph maps every component, the data flow between them, and the technology behind each. It renders on GitHub and in Notion. Companion: [SPEC.md](../SPEC.md) · [ARCHITECTURE.md](../ARCHITECTURE.md) · [README.md](README.md).
 

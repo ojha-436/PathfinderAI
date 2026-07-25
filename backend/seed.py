@@ -1,4 +1,4 @@
-"""Initialise PathFinder: create DB tables and materialise the demand series.
+"""Initialise PathFinderAI: create DB tables and materialise the demand series.
 
 Run once before serving:  python -m seed   (from the backend/ directory)
 
@@ -36,6 +36,8 @@ def materialise_demand_series() -> str:
 
 
 def main() -> None:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     print("• Creating database tables…")
     Base.metadata.create_all(bind=engine)
 

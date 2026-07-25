@@ -1,4 +1,4 @@
-# PathFinder v2 — single-container image (API + static SPA) for Cloud Run.
+# PathFinderAI v2 — single-container image (API + static SPA) for Cloud Run.
 # Build context = pathfinder/  (so both backend/ and frontend/ are copied).
 FROM python:3.11-slim
 

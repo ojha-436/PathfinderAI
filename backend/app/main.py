@@ -1,4 +1,4 @@
-"""PathFinder v2 — FastAPI app.
+"""PathFinderAI v2 — FastAPI app.
 
 Serves the JSON API under /api and the static SPA at /. One origin, one Cloud Run
 container. API routers are registered before the static mount so /api/* always wins.
