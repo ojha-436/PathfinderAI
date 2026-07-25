@@ -696,7 +696,7 @@ function renderLegal(kind) {
 }
 
 /* ---------------- router ---------------- */
-const VIEWS = ['landing', 'analyze', 'discover', 'card', 'goal', 'history', 'learning', 'legal'];
+const VIEWS = ['landing', 'analyze', 'discover', 'card', 'goal', 'history', 'learning', 'legal', 'profile', 'apply'];
 function showView(name) {
   VIEWS.forEach((v) => $(`#view-${v}`).classList.toggle('hidden', v !== name));
   window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
@@ -724,6 +724,14 @@ function route() {
   if (hash.startsWith('#/learning')) {
     if (!Store.user) { toast('Log in to see your learning.'); State.pendingAfterAuth = () => (location.hash = '#/learning'); openAuth('login'); location.hash = '#/'; return; }
     showView('learning'); renderLearning(); return;
+  }
+  if (hash.startsWith('#/profile')) {
+    if (!Store.user) { toast('Log in to manage your profile.'); State.pendingAfterAuth = () => (location.hash = '#/profile'); openAuth('login'); location.hash = '#/'; return; }
+    showView('profile'); renderProfile(); return;
+  }
+  if (hash.startsWith('#/apply')) {
+    if (!Store.user) { toast('Log in to use Apply Studio.'); State.pendingAfterAuth = () => (location.hash = '#/apply'); openAuth('login'); location.hash = '#/'; return; }
+    showView('apply'); renderApply(); return;
   }
   showView('landing');
 }
@@ -1318,6 +1326,213 @@ function progressCard(pr, title) {
     ${rows}${acq}
     ${pr.completed_count === 0 ? '<p class="muted" style="font-size:.82rem;margin-top:8px">Mark a tracked course "Completed" to see your coverage jump.</p>' : ''}
   </div>`;
+}
+
+/* ---------------- Apply Assistant: Profile (Phase A) ---------------- */
+async function renderProfile() {
+  const root = $('#profileRoot');
+  root.innerHTML = `<div class="card" style="padding:40px; text-align:center">
+    <h2>Loading profile...</h2>
+  </div>`;
+  try {
+    const profile = await Api.getProfile();
+    let sections = profile.sections_json || [];
+    
+    const renderSections = () => {
+      if (!sections.length) {
+        return `<div class="empty-state">
+          <p>You don't have a master profile yet.</p>
+          <div class="field">
+            <label>Upload Resume (PDF/TXT) or paste text</label>
+            <input type="file" id="profFile" accept=".pdf,.txt">
+            <textarea id="profText" placeholder="Or paste your resume text here..." rows="4" style="margin-top:8px"></textarea>
+          </div>
+          <button class="btn btn-primary" id="profUploadBtn">Extract Profile</button>
+        </div>`;
+      }
+      return `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h2 style="margin:0">Master Profile</h2>
+          <button class="btn btn-primary" id="profSaveBtn">Save Changes</button>
+        </div>
+        <p class="muted">Your profile is used to ground all AI-generated application materials.</p>
+        <div id="profSections">
+          <textarea id="profJson" rows="20" style="width:100%; font-family:monospace; font-size:12px;">${esc(JSON.stringify(sections, null, 2))}</textarea>
+        </div>`;
+    };
+
+    root.innerHTML = `<div class="card" style="max-width:800px; margin:0 auto;">${renderSections()}</div>`;
+    
+    if (!sections.length) {
+      $('#profUploadBtn').onclick = async () => {
+        const file = $('#profFile').files[0];
+        const text = $('#profText').value.trim();
+        if (!file && !text) { toast("Provide a file or text.", "err"); return; }
+        $('#profUploadBtn').textContent = "Extracting...";
+        $('#profUploadBtn').disabled = true;
+        try {
+          const res = await Api.uploadResume(file, text);
+          sections = res.sections;
+          toast("Profile extracted.");
+          renderProfile(); // re-render with sections
+        } catch (e) {
+          toast(e.message, "err");
+          $('#profUploadBtn').textContent = "Extract Profile";
+          $('#profUploadBtn').disabled = false;
+        }
+      };
+    } else {
+      $('#profSaveBtn').onclick = async () => {
+        try {
+          const updated = JSON.parse($('#profJson').value);
+          await Api.updateProfile(updated);
+          toast("Profile saved successfully!");
+        } catch (e) {
+          toast("Invalid JSON format or save failed.", "err");
+        }
+      };
+    }
+  } catch (e) {
+    root.innerHTML = `<div class="card err-msg">Failed to load profile.</div>`;
+  }
+}
+
+/* ---------------- Apply Assistant: Apply Studio (Phase B) ---------------- */
+async function renderApply() {
+  const root = $('#applyRoot');
+  root.innerHTML = `<div class="card" style="text-align:center; padding:40px;"><h2>Loading Apply Studio...</h2></div>`;
+  try {
+    const apps = await Api.getApplications();
+    const listHtml = apps.length ? apps.map(a => `
+      <div class="card learn-item" style="cursor:pointer" data-appid="${esc(a.id)}">
+        <div class="li-body">
+          <div class="hi-title">${esc(a.job_title)}</div>
+          <div class="hi-date mono">${esc(a.company)} &middot; Match: ${a.match_pct}% &middot; Status: ${a.status}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm">View →</button>
+      </div>`).join('') : '<p class="muted">No applications yet.</p>';
+      
+    root.innerHTML = `<div class="card" style="max-width:800px; margin:0 auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 style="margin:0">Apply Studio</h2>
+        <button class="btn btn-primary" id="newAppBtn">New Application</button>
+      </div>
+      <div class="hist-list">${listHtml}</div>
+    </div>`;
+    
+    root.querySelectorAll('[data-appid]').forEach(el => {
+      el.onclick = () => renderApplicationDetail(el.dataset.appid);
+    });
+    
+    $('#newAppBtn').onclick = () => {
+      root.innerHTML = `<div class="card" style="max-width:800px; margin:0 auto;">
+        <h2>New Application</h2>
+        <div class="field">
+          <label>Job Description URL or pasted text</label>
+          <input type="text" id="newAppUrl" placeholder="https://...">
+          <textarea id="newAppText" rows="6" placeholder="Or paste the full job description here..." style="margin-top:8px"></textarea>
+        </div>
+        <div class="field">
+          <label>Company Name (optional)</label>
+          <input type="text" id="newAppCompany">
+        </div>
+        <div class="field">
+          <label>Job Title (optional)</label>
+          <input type="text" id="newAppTitle">
+        </div>
+        <button class="btn btn-primary" id="extractBtn">Extract & Match</button>
+        <button class="btn btn-ghost" onclick="renderApply()">Cancel</button>
+      </div>`;
+      
+      $('#extractBtn').onclick = async () => {
+        const url = $('#newAppUrl').value.trim();
+        const text = $('#newAppText').value.trim();
+        if (!url && !text) { toast("Provide a URL or text.", "err"); return; }
+        $('#extractBtn').disabled = true; $('#extractBtn').textContent = "Extracting...";
+        try {
+          const res = await Api.extractJd(url, text);
+          if (res.extracted.blocked) {
+             toast(res.extracted.message, "err");
+             $('#extractBtn').disabled = false; $('#extractBtn').textContent = "Extract & Match";
+             return;
+          }
+          const saved = await Api.createApplication({
+            company: $('#newAppCompany').value.trim() || res.extracted.source || 'Unknown',
+            job_title: $('#newAppTitle').value.trim() || 'Role',
+            job_url: url,
+            jd_text: res.extracted.jd_text,
+            jd_skills: res.skills,
+            match: res.match,
+            status: 'draft'
+          });
+          toast("Application matched & saved!");
+          renderApplicationDetail(saved.id);
+        } catch (e) {
+          toast(e.message, "err");
+          $('#extractBtn').disabled = false; $('#extractBtn').textContent = "Extract & Match";
+        }
+      };
+    };
+  } catch (e) {
+    root.innerHTML = `<div class="card err-msg">Failed to load Apply Studio.</div>`;
+  }
+}
+
+async function renderApplicationDetail(id) {
+  const root = $('#applyRoot');
+  root.innerHTML = `<div class="card" style="text-align:center; padding:40px;"><h2>Loading...</h2></div>`;
+  try {
+    const app = await Api.getApplication(id);
+    const m = app.match || {};
+    
+    let docsHtml = '';
+    if (app.docs && app.docs.length) {
+      docsHtml = `<div style="margin-top:24px;"><h3>Generated Documents</h3>` + app.docs.map(d => {
+        return `<div class="card" style="background:var(--sand); margin-bottom:12px;">
+          <h4>${esc(d.kind)}</h4>
+          <pre style="white-space:pre-wrap; font-size:12px; margin-top:8px">${esc(JSON.stringify(d.content, null, 2))}</pre>
+        </div>`;
+      }).join('') + `</div>`;
+    }
+    
+    root.innerHTML = `<div class="card" style="max-width:800px; margin:0 auto;">
+      <button class="btn btn-ghost btn-sm" onclick="renderApply()" style="margin-bottom:16px;">← Back</button>
+      <h2 style="margin:0">${esc(app.job_title)} at ${esc(app.company)}</h2>
+      <div class="mono" style="color:var(--pine); font-weight:bold; margin-top:4px;">Match: ${m.match_pct || 0}%</div>
+      
+      <div style="margin-top:16px;">
+        <strong>Missing Skills:</strong> ${m.gaps && m.gaps.length ? m.gaps.join(', ') : 'None!'}
+      </div>
+      
+      <div class="field" style="margin-top:24px;">
+        <label>Screening Questions (optional, one per line)</label>
+        <textarea id="appQs" rows="3" placeholder="e.g. How many years of Python experience do you have?"></textarea>
+      </div>
+      
+      <button class="btn btn-primary" id="generateBtn">Generate Tailored Docs (Resume + Cover Letter + Answers)</button>
+      ${docsHtml}
+    </div>`;
+    
+    $('#generateBtn').onclick = async () => {
+      const qsRaw = $('#appQs').value.trim();
+      const qs = qsRaw ? qsRaw.split('\\n').map(s => s.trim()).filter(Boolean) : [];
+      $('#generateBtn').disabled = true; $('#generateBtn').textContent = "Generating... (this takes ~15s)";
+      try {
+        await Api.generateApplyDocs({
+          application_id: app.id,
+          kinds: ["resume", "cover_letter", "answers"],
+          questions: qs
+        });
+        toast("Documents generated & grounded!");
+        renderApplicationDetail(app.id); // reload view
+      } catch (e) {
+        toast(e.message, "err");
+        $('#generateBtn').disabled = false; $('#generateBtn').textContent = "Generate Tailored Docs";
+      }
+    };
+  } catch (e) {
+    toast(e.message, "err");
+    renderApply();
+  }
 }
 
 /* ---------------- boot ---------------- */

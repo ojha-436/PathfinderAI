@@ -21,7 +21,7 @@ from app.database import Base, engine
 from app.engines import datasets as ds
 from app.engines import providers
 from app.routers import (analysis, auth, catalog, history, intake, internal,
-                         jobs, learning, meta, roadmap)
+                         jobs, learning, meta, roadmap, profile, apply)
 
 # Create tables on boot (idempotent). Datasets load lazily on first import.
 Base.metadata.create_all(bind=engine)
@@ -117,6 +117,8 @@ app.include_router(roadmap.router, prefix=f"{settings.API_V1_STR}/roadmap", tags
 app.include_router(intake.router, prefix=f"{settings.API_V1_STR}/intake", tags=["intake"])
 app.include_router(internal.router, prefix=f"{settings.API_V1_STR}/internal", tags=["internal"])
 app.include_router(meta.router, prefix=f"{settings.API_V1_STR}/meta", tags=["meta"])
+app.include_router(profile.router, prefix=f"{settings.API_V1_STR}/profile", tags=["profile"])
+app.include_router(apply.router, prefix=f"{settings.API_V1_STR}/apply", tags=["apply"])
 
 # Static SPA (landing + app). html=True serves index.html at "/".
 _frontend = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend"))

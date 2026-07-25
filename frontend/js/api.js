@@ -125,4 +125,29 @@ const Api = {
     method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ card }),
   }).then(handle),
   sharedCard: (token) => fetch(`${API}/intake/card/shared/${encodeURIComponent(token)}`).then(handle),
+
+  // Apply Assistant: Master Profile (Phase A)
+  getProfile: () => fetch(`${API}/profile/`, { headers: authHeaders() }).then(handle),
+  updateProfile: (sections) => fetch(`${API}/profile/`, {
+    method: 'PUT', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(sections),
+  }).then(handle),
+  uploadResume: (file, text = '') => {
+    const fd = new FormData();
+    if (file) fd.append('file', file);
+    if (text) fd.append('text', text);
+    return fetch(`${API}/profile/from-resume`, { method: 'POST', headers: authHeaders(), body: fd }).then(handle);
+  },
+
+  // Apply Assistant: Apply Studio (Phase B)
+  getApplications: () => fetch(`${API}/apply/`, { headers: authHeaders() }).then(handle),
+  getApplication: (id) => fetch(`${API}/apply/${id}`, { headers: authHeaders() }).then(handle),
+  createApplication: (data) => fetch(`${API}/apply/`, {
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(data),
+  }).then(handle),
+  extractJd: (url, jd_text) => fetch(`${API}/apply/extract`, {
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ url, jd_text }),
+  }).then(handle),
+  generateApplyDocs: (data) => fetch(`${API}/apply/generate`, {
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(data),
+  }).then(handle),
 };
