@@ -227,6 +227,54 @@ def _parse_skills(block: List[str], full_text: str) -> List[str]:
     return out[:40]
 
 
+def _parse_projects(block: List[str]) -> List[Dict[str, Any]]:
+    items: List[Dict[str, Any]] = []
+    cur: Optional[Dict[str, Any]] = None
+    for raw in block:
+        line = raw.strip()
+        if not line:
+            continue
+        url_m = _URL_RE.search(line)
+        link = url_m.group(0) if url_m else ""
+        if _BULLET_RE.match(line):
+            detail = _BULLET_RE.sub("", line).strip()
+            if cur:
+                cur["detail"] = (cur["detail"] + " " + detail).strip()
+                if link and not cur.get("link"):
+                    cur["link"] = link
+            else:
+                items.append({"heading": detail, "tech_stack": "", "detail": "", "link": link})
+        else:
+            if cur:
+                items.append(cur)
+            cur = {"heading": line, "tech_stack": "", "detail": "", "link": link}
+    if cur:
+        items.append(cur)
+    return items
+
+
+def _parse_certifications(block: List[str]) -> List[Dict[str, Any]]:
+    items: List[Dict[str, Any]] = []
+    for raw in block:
+        line = raw.strip()
+        if not line:
+            continue
+        line = _BULLET_RE.sub("", line).strip()
+        year = ""
+        ym = _YEAR_RE.search(line)
+        if ym:
+            year = ym.group(0)
+        url_m = _URL_RE.search(line)
+        link = url_m.group(0) if url_m else ""
+        
+        parts = re.split(r"\s*[-–—|]\s*|\s+by\s+|\s+from\s+", line, maxsplit=1)
+        heading = parts[0].strip()
+        issuer = parts[1].strip() if len(parts) > 1 else ""
+        issuer = _YEAR_RE.sub("", issuer).strip(" -–—|")
+        items.append({"heading": heading, "issuer": issuer, "year": year, "link": link})
+    return items
+
+
 def _generic_items(block: List[str]) -> List[Dict[str, str]]:
     """Projects / certifications / custom → {heading, detail} entries."""
     items: List[Dict[str, str]] = []
@@ -318,6 +366,14 @@ def _local_build(resume_text: str) -> Dict[str, Any]:
             seen_skills = True
             if skills:
                 sections.append({"type": "skills", "title": _TITLE["skills"], "items": skills})
+        elif btype == "projects":
+            items = _parse_projects(blines)
+            if items:
+                sections.append({"type": "projects", "title": _TITLE["projects"], "items": items})
+        elif btype == "certifications":
+            items = _parse_certifications(blines)
+            if items:
+                sections.append({"type": "certifications", "title": _TITLE["certifications"], "items": items})
         else:
             items = _generic_items(blines)
             if items:
@@ -342,12 +398,14 @@ def _gemini_build(resume_text: str) -> Optional[Dict[str, Any]]:  # pragma: no c
     model = genai.GenerativeModel(getattr(settings, "GEMINI_MODEL", "gemini-2.5-flash"))
     schema_hint = (
         'Return ONLY JSON: {"sections":[...]} where each section is one of: '
-        '{"type":"personal","title":"Personal","fields":{"name","email","phone","location","links":[]}}, '
+        '{"type":"personal","title":"Personal","fields":{"name":"","email":"","mobile":"","city":"","country":"","github":"","linkedin":"","portfolio":""}}, '
         '{"type":"summary","title":"Summary","text":""}, '
-        '{"type":"experience","title":"Experience","items":[{"role","org","start","end","bullets":[]}]}, '
-        '{"type":"education","title":"Education","items":[{"degree","institution","year","score"}]}, '
+        '{"type":"experience","title":"Experience","items":[{"role":"","org":"","start":"","end":"","bullets":[]}]}, '
+        '{"type":"education","title":"Education","items":[{"degree":"","institution":"","year":"","score":""}]}, '
         '{"type":"skills","title":"Skills","items":["skill", ...]}, '
-        'or {"type":"<name>","title":"<Title>","items":[{"heading","detail"}]} for anything else.'
+        '{"type":"projects","title":"Projects","items":[{"heading":"","tech_stack":"","detail":"","link":""}]}, '
+        '{"type":"certifications","title":"Certifications","items":[{"heading":"","issuer":"","year":"","link":""}]}, '
+        'or {"type":"<name>","title":"<Title>","items":[{"heading":"","detail":""}]} for anything else.'
     )
     prompt = (
         "You are a résumé PARSER. Structure the résumé below into ordered sections. "

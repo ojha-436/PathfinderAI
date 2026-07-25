@@ -1331,9 +1331,29 @@ function progressCard(pr, title) {
 }
 
 /* ---------------- Apply Assistant: Profile (Phase A) ---------------- */
-async function renderProfile(draftSections = null, isEditMode = false, activeTab = 'all') {
+const ICONS = {
+  all: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:6px;"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>`,
+  personal: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:6px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  summary: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:6px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+  experience: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:6px;"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
+  education: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:6px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
+  skills: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:6px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+  projects: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:6px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
+  certifications: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:6px;"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>`,
+  phone: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+  location: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  globe: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+  upload: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+  edit: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+  plus: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  trash: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+  check: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>`,
+  x: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
+};
+
+async function renderProfile(draftSections = null, editingSecType = null, activeTab = 'all', showReupload = false) {
   const root = $('#profileRoot');
-  if (!draftSections) {
+  if (!draftSections && editingSecType === null) {
     root.innerHTML = `<div class="card" style="padding:40px; text-align:center">
       <h2>Loading profile...</h2>
     </div>`;
@@ -1341,57 +1361,56 @@ async function renderProfile(draftSections = null, isEditMode = false, activeTab
   
   try {
     let sections = draftSections;
-    let isDraft = !!draftSections && !isEditMode;
+    let isDraft = !!draftSections && editingSecType === null;
     
-    if (!draftSections && !isEditMode) {
+    if (!draftSections && editingSecType === null) {
       const profile = await Api.getProfile();
       sections = profile.sections_json || [];
     }
-    
+
+    const renderUploadBox = () => `
+      <div class="card" style="max-width:800px; margin:0 auto 24px auto; background:rgba(255,255,255,0.9); border:1px solid rgba(13,148,136,0.3); border-radius:16px; padding:24px; box-shadow:0 8px 30px rgba(0,0,0,0.06);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="margin:0; font-family:'Inter', sans-serif; color:#0f172a; font-size:1.2rem;">Upload / Re-upload Resume</h3>
+          ${sections.length ? `<button class="btn btn-ghost btn-sm" id="closeReuploadBtn">${ICONS.x} Close</button>` : ''}
+        </div>
+        <div class="dropzone" id="profDropzone" style="margin-bottom: 20px; position:relative; padding:24px; border:2px dashed rgba(13,148,136,0.3); border-radius:12px; text-align:center;">
+          <div class="big" style="margin-bottom: 8px; color: #0d9488;">${ICONS.upload}</div>
+          <h4 style="margin:0 0 4px 0; font-family:'Inter', sans-serif;">Drag & drop your resume here</h4>
+          <p class="muted" style="font-size: 0.85rem; margin-bottom:12px;">PDF or TXT up to 5MB</p>
+          <button class="btn btn-primary btn-sm" id="profBrowseBtn" style="position:relative; z-index:10;">Browse Files</button>
+          <input type="file" id="profFile" accept=".pdf,.txt" style="position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer;">
+        </div>
+        <div style="text-align: left;">
+          <label class="muted" style="font-size: 0.8rem; display:block; margin-bottom:6px; font-weight:600; text-transform:uppercase;">Or paste resume text</label>
+          <textarea class="paste" id="profText" placeholder="Paste your resume text here..." rows="3" style="width:100%; padding:10px; border:1px solid rgba(109,122,119,0.3); border-radius:8px; box-sizing:border-box;"></textarea>
+          <button class="btn btn-ghost btn-sm" id="profExtractTextBtn" style="margin-top: 10px; width:100%; border:1px solid rgba(13,148,136,0.3); color:#0d9488;">Extract from text</button>
+        </div>
+      </div>`;
+
     const renderSectionsUI = () => {
-      if (!sections.length) {
-        return `<div class="empty-state" style="max-width:600px; margin:0 auto; text-align:center;">
-          <h2 style="font-family:var(--font-display); margin-bottom: 8px;">Create your Master Profile</h2>
-          <p class="muted" style="margin-bottom: 32px;">Upload your resume to extract your skills, experience, and education. We'll use this to match you with future-proof roles.</p>
-          
-          <div class="dropzone" id="profDropzone" style="margin-bottom: 24px; position:relative;">
-            <div class="big" style="margin-bottom: 12px; font-size: 2.8rem; color: var(--pine);">📄</div>
-            <h3 style="font-family:var(--font-display);">Drag & drop your resume here</h3>
-            <p class="muted" style="font-size: 0.9rem;">PDF or TXT up to 5MB</p>
-            <div class="or">OR</div>
-            <button class="btn btn-primary" id="profBrowseBtn" style="position:relative; z-index:10;">Browse Files</button>
-            <input type="file" id="profFile" accept=".pdf,.txt" style="position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer;">
-          </div>
-          
-          <div style="text-align: left;">
-            <label class="muted" style="font-size: 0.85rem; display:block; margin-bottom:8px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Or paste text directly</label>
-            <textarea class="paste" id="profText" placeholder="Paste your resume text here..." rows="4"></textarea>
-            <button class="btn btn-ghost" id="profExtractTextBtn" style="margin-top: 12px; width:100%;">Extract from text</button>
-          </div>
-        </div>`;
+      if (!sections.length || showReupload) {
+        return renderUploadBox();
       }
       
       const tabs = [
-        { id: 'all', label: '✨ All Sections' },
-        { id: 'personal', label: '👤 Personal Details' },
-        { id: 'summary', label: '📄 Summary' },
-        { id: 'experience', label: '💼 Experience' },
-        { id: 'education', label: '🎓 Education' },
-        { id: 'skills', label: '⚡ Skills' },
-        { id: 'projects', label: '🚀 Projects & Extra' }
+        { id: 'all', label: `${ICONS.all} All` },
+        { id: 'personal', label: `${ICONS.personal} Personal` },
+        { id: 'summary', label: `${ICONS.summary} Summary` },
+        { id: 'experience', label: `${ICONS.experience} Experience` },
+        { id: 'education', label: `${ICONS.education} Education` },
+        { id: 'skills', label: `${ICONS.skills} Skills` },
+        { id: 'projects', label: `${ICONS.projects} Projects` },
+        { id: 'certifications', label: `${ICONS.certifications} Certifications` }
       ];
 
       let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <h2 style="margin:0; font-family:var(--font-display);">Master Profile ${isDraft ? '<span class="pill-have" style="background:var(--terracotta);color:white;margin-left:8px;font-size:0.8rem; vertical-align:middle;">Unsaved Draft</span>' : ''}</h2>
+          <h2 style="margin:0; font-family:'Inter', sans-serif; font-size:28px; font-weight:700; color:#0f172a;">Master Profile ${isDraft ? '<span class="pill-have" style="background:#e11d48;color:white;margin-left:8px;font-size:0.75rem; vertical-align:middle; padding:4px 10px; border-radius:999px;">Unsaved Draft</span>' : ''}</h2>
           <div>
-            ${isEditMode 
-              ? `<button class="btn btn-ghost" id="profCancelBtn" style="margin-right:8px;">Cancel</button>
-                 <button class="btn btn-primary" id="profSaveEditBtn">Save Changes</button>`
-              : `<button class="btn btn-primary" id="profEditBtn">${isDraft ? 'Save Extracted Profile' : 'Edit Profile'}</button>`
-            }
+            <button class="btn btn-ghost btn-sm" id="profReuploadBtn" style="border:1px solid rgba(13,148,136,0.3); color:#0d9488;">${ICONS.upload} Re-upload Resume</button>
           </div>
         </div>
-        <p class="muted" style="margin-bottom:20px;">This data grounds all AI-generated application materials to prevent hallucinations.</p>
+        <p class="muted" style="margin-bottom:20px; font-size:0.95rem;">This data grounds all AI-generated application materials to prevent hallucinations.</p>
 
         <!-- Section Navigation Tabs -->
         <div class="prof-tabs-bar" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:12px; margin-bottom:28px; border-bottom:1px solid rgba(13, 148, 136, 0.2);">
@@ -1407,17 +1426,28 @@ async function renderProfile(draftSections = null, isEditMode = false, activeTab
         if (activeTab === 'experience') return sec.type === 'experience';
         if (activeTab === 'education') return sec.type === 'education';
         if (activeTab === 'skills') return sec.type === 'skills';
-        if (activeTab === 'projects') return ['personal', 'summary', 'experience', 'education', 'skills'].indexOf(sec.type) === -1 || sec.type === 'projects' || sec.type === 'certifications';
+        if (activeTab === 'projects') return sec.type === 'projects';
+        if (activeTab === 'certifications') return sec.type === 'certifications';
         return true;
       });
 
       if (!visibleSections.length) {
-        html += `<div class="card" style="text-align:center; padding:32px; color:#64748b;">No items in this section tab yet. Click "Edit Profile" to add.</div>`;
+        html += `<div class="card" style="text-align:center; padding:32px; color:#64748b; background:rgba(255,255,255,0.8); border-radius:16px;">No items in this section tab yet. Click "Edit Section" to add content.</div>`;
       }
         
       visibleSections.forEach(sec => {
+        const isEditingThisSec = editingSecType === sec.type;
         html += `<div class="card" style="border:1px solid rgba(13, 148, 136, 0.2); background:rgba(255,255,255,0.85); backdrop-filter:blur(20px); box-shadow:0 4px 20px rgba(0,0,0,0.04); border-radius:16px; padding:28px;">
-          <h3 style="margin:0 0 20px 0; color:#0d9488; border-bottom:1px solid rgba(13, 148, 136, 0.15); padding-bottom:12px; font-family:'Inter', sans-serif; font-size:1.3rem; font-weight:700;">${esc(sec.title)}</h3>`;
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(13, 148, 136, 0.15); padding-bottom:12px; margin-bottom:20px;">
+            <h3 style="margin:0; color:#0d9488; font-family:'Inter', sans-serif; font-size:1.3rem; font-weight:700; display:flex; align-items:center; gap:8px;">${ICONS[sec.type] || ICONS.projects} ${esc(sec.title)}</h3>
+            <div style="display:flex; gap:8px;">
+              ${isEditingThisSec 
+                ? `<button class="btn btn-ghost btn-sm sec-cancel-btn" data-type="${sec.type}">${ICONS.x} Cancel</button>
+                   <button class="btn btn-primary btn-sm sec-save-btn" data-type="${sec.type}">${ICONS.check} Save Section</button>`
+                : `<button class="btn btn-ghost btn-sm sec-edit-btn" data-type="${sec.type}" style="border:1px solid rgba(13,148,136,0.3); color:#0d9488;">${ICONS.edit} Edit Section</button>`
+              }
+            </div>
+          </div>`;
         
         if (sec.type === 'personal' && sec.fields) {
           const mob = sec.fields.mobile || sec.fields.phone || '';
@@ -1428,11 +1458,11 @@ async function renderProfile(draftSections = null, isEditMode = false, activeTab
           const port = sec.fields.portfolio || '';
           const locStr = [cityVal, countryVal].filter(Boolean).join(', ') || sec.fields.location || '—';
 
-          if (isEditMode) {
+          if (isEditingThisSec) {
              html += `<div style="display:flex; flex-direction:column; gap:20px;">
                <!-- Card 1: Contact Information -->
                <div style="background:rgba(248, 250, 252, 0.9); border:1px solid rgba(13, 148, 136, 0.15); border-radius:12px; padding:20px;">
-                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600;">📞 Contact Information</h4>
+                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600; display:flex; align-items:center;">${ICONS.phone} Contact Information</h4>
                  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
                    <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Full Name</div> <input type="text" id="edit-personal-name" value="${esc(sec.fields.name || '')}" placeholder="John Doe" style="width:100%; padding:9px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
                    <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Mobile / Phone</div> <input type="text" id="edit-personal-mobile" value="${esc(mob)}" placeholder="+1 234 567 8900" style="width:100%; padding:9px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
@@ -1442,7 +1472,7 @@ async function renderProfile(draftSections = null, isEditMode = false, activeTab
 
                <!-- Card 2: Location Details -->
                <div style="background:rgba(248, 250, 252, 0.9); border:1px solid rgba(13, 148, 136, 0.15); border-radius:12px; padding:20px;">
-                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600;">📍 Location & Region</h4>
+                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600; display:flex; align-items:center;">${ICONS.location} Location & Region</h4>
                  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
                    <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">City</div> <input type="text" id="edit-personal-city" value="${esc(cityVal)}" placeholder="San Francisco" style="width:100%; padding:9px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
                    <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Country</div> <input type="text" id="edit-personal-country" value="${esc(countryVal)}" placeholder="USA" style="width:100%; padding:9px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
@@ -1451,7 +1481,7 @@ async function renderProfile(draftSections = null, isEditMode = false, activeTab
 
                <!-- Card 3: Web & Profiles -->
                <div style="background:rgba(248, 250, 252, 0.9); border:1px solid rgba(13, 148, 136, 0.15); border-radius:12px; padding:20px;">
-                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600;">🌐 Web & Social Links</h4>
+                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600; display:flex; align-items:center;">${ICONS.globe} Web & Social Links</h4>
                  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
                    <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">GitHub Profile</div> <input type="text" id="edit-personal-github" value="${esc(gh)}" placeholder="https://github.com/username" style="width:100%; padding:9px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
                    <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">LinkedIn Profile</div> <input type="text" id="edit-personal-linkedin" value="${esc(li)}" placeholder="https://linkedin.com/in/username" style="width:100%; padding:9px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
@@ -1463,7 +1493,7 @@ async function renderProfile(draftSections = null, isEditMode = false, activeTab
              html += `<div style="display:flex; flex-direction:column; gap:20px;">
                <!-- Card 1: Contact Information -->
                <div style="background:rgba(248, 250, 252, 0.9); border:1px solid rgba(13, 148, 136, 0.15); border-radius:12px; padding:20px;">
-                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600;">📞 Contact Information</h4>
+                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600; display:flex; align-items:center;">${ICONS.phone} Contact Information</h4>
                  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
                    <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Full Name</div> <div style="font-size:1.1rem; font-weight:600; color:#0f172a;">${esc(sec.fields.name || '—')}</div></div>
                    <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Mobile / Phone</div> <div style="font-size:1.05rem; color:#0f172a;">${esc(mob || '—')}</div></div>
@@ -1473,7 +1503,7 @@ async function renderProfile(draftSections = null, isEditMode = false, activeTab
 
                <!-- Card 2: Location Details -->
                <div style="background:rgba(248, 250, 252, 0.9); border:1px solid rgba(13, 148, 136, 0.15); border-radius:12px; padding:20px;">
-                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600;">📍 Location & Region</h4>
+                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600; display:flex; align-items:center;">${ICONS.location} Location & Region</h4>
                  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
                    <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">City</div> <div style="font-size:1.05rem; color:#0f172a;">${esc(cityVal || '—')}</div></div>
                    <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Country</div> <div style="font-size:1.05rem; color:#0f172a;">${esc(countryVal || '—')}</div></div>
@@ -1483,7 +1513,7 @@ async function renderProfile(draftSections = null, isEditMode = false, activeTab
 
                <!-- Card 3: Web & Profiles -->
                <div style="background:rgba(248, 250, 252, 0.9); border:1px solid rgba(13, 148, 136, 0.15); border-radius:12px; padding:20px;">
-                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600;">🌐 Web & Social Links</h4>
+                 <h4 style="margin:0 0 14px 0; color:#0d9488; font-family:'Inter', sans-serif; font-size:0.95rem; font-weight:600; display:flex; align-items:center;">${ICONS.globe} Web & Social Links</h4>
                  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
                    <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">GitHub</div> <div style="font-size:1rem;">${gh ? `<a href="${esc(gh)}" target="_blank" style="color:#0d9488; text-decoration:none; font-weight:500;">${esc(gh)} ↗</a>` : '—'}</div></div>
                    <div><div class="muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:600; margin-bottom:4px;">LinkedIn</div> <div style="font-size:1rem;">${li ? `<a href="${esc(li)}" target="_blank" style="color:#0d9488; text-decoration:none; font-weight:500;">${esc(li)} ↗</a>` : '—'}</div></div>
@@ -1493,7 +1523,7 @@ async function renderProfile(draftSections = null, isEditMode = false, activeTab
              </div>`;
           }
         } else if (sec.type === 'skills' && Array.isArray(sec.items)) {
-          if (isEditMode) {
+          if (isEditingThisSec) {
             html += `<textarea id="edit-skills" rows="4" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; font:inherit; background:var(--paper); box-sizing:border-box;">${esc(sec.items.join(', '))}</textarea>
             <div class="muted" style="font-size:0.8rem; margin-top:6px;">Comma separated skill tags</div>`;
           } else {
@@ -1501,62 +1531,161 @@ async function renderProfile(draftSections = null, isEditMode = false, activeTab
               ${sec.items.map(s => `<span class="pill-have" style="background:rgba(13, 148, 136, 0.1); color:#0d9488; border:1px solid rgba(13,148,136,0.2); font-weight:500; padding:8px 16px; border-radius:999px; font-size:0.95rem;">${esc(s)}</span>`).join('')}
             </div>`;
           }
-        } else if (Array.isArray(sec.items)) {
-          html += `<div style="display:flex; flex-direction:column; gap:20px;">`;
-          sec.items.forEach((item, idx) => {
-            if (sec.type === 'experience') {
-              if (isEditMode) {
-                 html += `<div style="position:relative; padding:16px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #0d9488;">
-                   <input type="text" id="edit-exp-role-${idx}" value="${esc(item.role || '')}" placeholder="Role Title" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">
-                   <input type="text" id="edit-exp-org-${idx}" value="${esc(item.org || '')}" placeholder="Organization / Company" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">
-                   <div style="display:flex; gap:8px; margin-bottom:8px;">
-                     <input type="text" id="edit-exp-start-${idx}" value="${esc(item.start || '')}" placeholder="Start Date" style="flex:1; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">
-                     <input type="text" id="edit-exp-end-${idx}" value="${esc(item.end || '')}" placeholder="End Date" style="flex:1; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">
-                   </div>
-                   <textarea id="edit-exp-bullets-${idx}" rows="4" placeholder="Bullet points (one per line)" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">${esc((item.bullets || []).join('\n'))}</textarea>
-                 </div>`;
-              } else {
-                html += `<div style="position:relative; padding:20px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #0d9488; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
-                  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <div>
-                      <div style="font-size:1.15rem; font-weight:700; color:#0f172a;">${esc(item.role || '')}</div>
-                      <div style="font-size:1rem; color:#0d9488; font-weight:600; margin-top:2px;">${esc(item.org || '')}</div>
-                    </div>
-                    <div class="mono" style="font-size:0.85rem; background:rgba(13, 148, 136, 0.1); color:#0d9488; padding:4px 10px; border-radius:6px; font-weight:500;">${esc(item.start || '')} - ${esc(item.end || 'Present')}</div>
-                  </div>
-                  ${item.bullets && item.bullets.length ? `<ul style="margin-top:14px; padding-left:20px; font-size:0.95rem; color:#334155; line-height:1.6;">` + item.bullets.map(b => `<li style="margin-bottom:6px;">${esc(b)}</li>`).join('') + `</ul>` : ''}
-                </div>`;
-              }
-            } else if (sec.type === 'education') {
-              if (isEditMode) {
-                 html += `<div style="position:relative; padding:16px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #f59e0b;">
-                   <input type="text" id="edit-edu-deg-${idx}" value="${esc(item.degree || '')}" placeholder="Degree Title" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">
-                   <input type="text" id="edit-edu-inst-${idx}" value="${esc(item.institution || '')}" placeholder="Institution" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">
-                   <input type="text" id="edit-edu-year-${idx}" value="${esc(item.year || '')}" placeholder="Year" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; background:var(--paper); box-sizing:border-box;">
-                 </div>`;
-              } else {
-                html += `<div style="position:relative; padding:20px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #f59e0b; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
-                  <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                      <div style="font-size:1.15rem; font-weight:700; color:#0f172a;">${esc(item.degree || '')}</div>
-                      <div style="font-size:1rem; color:#d97706; font-weight:600; margin-top:2px;">${esc(item.institution || '')}</div>
-                    </div>
-                    ${item.year ? `<div class="mono" style="font-size:0.85rem; background:rgba(245, 158, 11, 0.1); color:#d97706; padding:4px 10px; border-radius:6px; font-weight:500;">${esc(item.year)}</div>` : ''}
-                  </div>
-                </div>`;
-              }
-            } else {
-              const h = item.heading || (typeof item === 'string' ? item : '');
-              const d = item.detail || '';
-              html += `<div style="padding:16px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border:1px solid rgba(109,122,119,0.2);">
-                <div style="font-size:1rem; font-weight:600; color:#0f172a;">${esc(h)}</div>
-                ${d ? `<div style="font-size:0.9rem; color:#475569; margin-top:4px;">${esc(d)}</div>` : ''}
+        } else if (sec.type === 'education') {
+          const items = sec.items || [];
+          if (isEditingThisSec) {
+            html += `<div style="display:flex; flex-direction:column; gap:16px;">`;
+            items.forEach((item, idx) => {
+              html += `<div style="position:relative; padding:16px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #f59e0b; border:1px solid rgba(245,158,11,0.2);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                  <span style="font-weight:600; font-size:0.85rem; color:#d97706;">Degree Entry #${idx + 1}</span>
+                  <button class="btn btn-ghost btn-sm remove-item-btn" data-sectype="education" data-idx="${idx}" style="color:#e11d48; padding:2px 8px;">${ICONS.trash} Remove</button>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:8px;">
+                  <div><div class="muted" style="font-size:0.75rem;">Degree Name</div><input type="text" id="edit-edu-deg-${idx}" value="${esc(item.degree || '')}" placeholder="B.S. Computer Science" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;"></div>
+                  <div><div class="muted" style="font-size:0.75rem;">Institution / University</div><input type="text" id="edit-edu-inst-${idx}" value="${esc(item.institution || '')}" placeholder="Stanford University" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;"></div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                  <div><div class="muted" style="font-size:0.75rem;">Graduation Year</div><input type="text" id="edit-edu-year-${idx}" value="${esc(item.year || '')}" placeholder="2022" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;"></div>
+                  <div><div class="muted" style="font-size:0.75rem;">Score / GPA</div><input type="text" id="edit-edu-score-${idx}" value="${esc(item.score || '')}" placeholder="3.8 / 4.0 or 85%" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;"></div>
+                </div>
               </div>`;
-            }
-          });
-          html += `</div>`;
+            });
+            html += `<button class="btn btn-ghost btn-sm add-item-btn" data-sectype="education" style="border:1px dashed #d97706; color:#d97706; width:100%; padding:10px;">${ICONS.plus} Add Degree Entry</button></div>`;
+          } else {
+            html += `<div style="display:flex; flex-direction:column; gap:16px;">`;
+            items.forEach(item => {
+              html += `<div style="position:relative; padding:20px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #f59e0b; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div>
+                    <div style="font-size:1.15rem; font-weight:700; color:#0f172a;">${esc(item.degree || 'Degree')}</div>
+                    <div style="font-size:1rem; color:#d97706; font-weight:600; margin-top:2px;">${esc(item.institution || 'University')}</div>
+                  </div>
+                  <div style="text-align:right;">
+                    ${item.year ? `<div class="mono" style="font-size:0.85rem; background:rgba(245, 158, 11, 0.1); color:#d97706; padding:4px 10px; border-radius:6px; font-weight:500;">Year: ${esc(item.year)}</div>` : ''}
+                    ${item.score ? `<div style="font-size:0.85rem; color:#64748b; margin-top:4px;">Score: ${esc(item.score)}</div>` : ''}
+                  </div>
+                </div>
+              </div>`;
+            });
+            html += `</div>`;
+          }
+        } else if (sec.type === 'projects') {
+          const items = sec.items || [];
+          if (isEditingThisSec) {
+            html += `<div style="display:flex; flex-direction:column; gap:16px;">`;
+            items.forEach((item, idx) => {
+              html += `<div style="position:relative; padding:16px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #0284c7; border:1px solid rgba(2,132,199,0.2);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                  <span style="font-weight:600; font-size:0.85rem; color:#0284c7;">Project Entry #${idx + 1}</span>
+                  <button class="btn btn-ghost btn-sm remove-item-btn" data-sectype="projects" data-idx="${idx}" style="color:#e11d48; padding:2px 8px;">${ICONS.trash} Remove</button>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:8px;">
+                  <div><div class="muted" style="font-size:0.75rem;">Project Title</div><input type="text" id="edit-proj-head-${idx}" value="${esc(item.heading || '')}" placeholder="AI Pathfinder" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;"></div>
+                  <div><div class="muted" style="font-size:0.75rem;">Tech Stack / Role</div><input type="text" id="edit-proj-tech-${idx}" value="${esc(item.tech_stack || '')}" placeholder="Python, React, FastAPI" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;"></div>
+                </div>
+                <div style="margin-bottom:8px;"><div class="muted" style="font-size:0.75rem;">Description / Details</div><textarea id="edit-proj-detail-${idx}" rows="3" placeholder="Project description and key outcomes..." style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;">${esc(item.detail || '')}</textarea></div>
+                <div><div class="muted" style="font-size:0.75rem;">Project Link / Demo URL</div><input type="text" id="edit-proj-link-${idx}" value="${esc(item.link || '')}" placeholder="https://github.com/myproject" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;"></div>
+              </div>`;
+            });
+            html += `<button class="btn btn-ghost btn-sm add-item-btn" data-sectype="projects" style="border:1px dashed #0284c7; color:#0284c7; width:100%; padding:10px;">${ICONS.plus} Add Project Entry</button></div>`;
+          } else {
+            html += `<div style="display:flex; flex-direction:column; gap:16px;">`;
+            items.forEach(item => {
+              html += `<div style="position:relative; padding:20px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #0284c7; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                  <div>
+                    <div style="font-size:1.15rem; font-weight:700; color:#0f172a;">${esc(item.heading || 'Project Name')}</div>
+                    ${item.tech_stack ? `<div style="font-size:0.85rem; color:#0284c7; font-weight:600; margin-top:2px;">Tech Stack: ${esc(item.tech_stack)}</div>` : ''}
+                  </div>
+                  ${item.link ? `<a href="${esc(item.link)}" target="_blank" style="color:#0284c7; font-size:0.85rem; font-weight:600; text-decoration:none;">View Project ↗</a>` : ''}
+                </div>
+                ${item.detail ? `<div style="font-size:0.95rem; color:#334155; margin-top:10px; line-height:1.5;">${esc(item.detail)}</div>` : ''}
+              </div>`;
+            });
+            html += `</div>`;
+          }
+        } else if (sec.type === 'certifications') {
+          const items = sec.items || [];
+          if (isEditingThisSec) {
+            html += `<div style="display:flex; flex-direction:column; gap:16px;">`;
+            items.forEach((item, idx) => {
+              html += `<div style="position:relative; padding:16px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #8b5cf6; border:1px solid rgba(139,92,246,0.2);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                  <span style="font-weight:600; font-size:0.85rem; color:#8b5cf6;">Certification #${idx + 1}</span>
+                  <button class="btn btn-ghost btn-sm remove-item-btn" data-sectype="certifications" data-idx="${idx}" style="color:#e11d48; padding:2px 8px;">${ICONS.trash} Remove</button>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:8px;">
+                  <div><div class="muted" style="font-size:0.75rem;">Certification Name</div><input type="text" id="edit-cert-head-${idx}" value="${esc(item.heading || '')}" placeholder="AWS Solutions Architect" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;"></div>
+                  <div><div class="muted" style="font-size:0.75rem;">Issuing Organization</div><input type="text" id="edit-cert-issuer-${idx}" value="${esc(item.issuer || '')}" placeholder="Amazon Web Services" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;"></div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                  <div><div class="muted" style="font-size:0.75rem;">Issue Year / Date</div><input type="text" id="edit-cert-year-${idx}" value="${esc(item.year || '')}" placeholder="2023" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;"></div>
+                  <div><div class="muted" style="font-size:0.75rem;">Credential Link / ID</div><input type="text" id="edit-cert-link-${idx}" value="${esc(item.link || '')}" placeholder="https://aws.amazon.com/verify/123" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;"></div>
+                </div>
+              </div>`;
+            });
+            html += `<button class="btn btn-ghost btn-sm add-item-btn" data-sectype="certifications" style="border:1px dashed #8b5cf6; color:#8b5cf6; width:100%; padding:10px;">${ICONS.plus} Add Certification Entry</button></div>`;
+          } else {
+            html += `<div style="display:flex; flex-direction:column; gap:16px;">`;
+            items.forEach(item => {
+              html += `<div style="position:relative; padding:20px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #8b5cf6; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div>
+                    <div style="font-size:1.15rem; font-weight:700; color:#0f172a;">${esc(item.heading || 'Certification Title')}</div>
+                    ${item.issuer ? `<div style="font-size:0.95rem; color:#8b5cf6; font-weight:600; margin-top:2px;">Issued by: ${esc(item.issuer)}</div>` : ''}
+                  </div>
+                  <div style="text-align:right;">
+                    ${item.year ? `<div class="mono" style="font-size:0.85rem; background:rgba(139, 92, 246, 0.1); color:#8b5cf6; padding:4px 10px; border-radius:6px; font-weight:500;">Year: ${esc(item.year)}</div>` : ''}
+                    ${item.link ? `<a href="${esc(item.link)}" target="_blank" style="color:#8b5cf6; font-size:0.85rem; font-weight:600; text-decoration:none; display:block; margin-top:4px;">Credential ↗</a>` : ''}
+                  </div>
+                </div>
+              </div>`;
+            });
+            html += `</div>`;
+          }
+        } else if (sec.type === 'experience') {
+          const items = sec.items || [];
+          if (isEditingThisSec) {
+            html += `<div style="display:flex; flex-direction:column; gap:16px;">`;
+            items.forEach((item, idx) => {
+              html += `<div style="position:relative; padding:16px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #0d9488;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                  <span style="font-weight:600; font-size:0.85rem; color:#0d9488;">Experience Entry #${idx + 1}</span>
+                  <button class="btn btn-ghost btn-sm remove-item-btn" data-sectype="experience" data-idx="${idx}" style="color:#e11d48; padding:2px 8px;">${ICONS.trash} Remove</button>
+                </div>
+                <input type="text" id="edit-exp-role-${idx}" value="${esc(item.role || '')}" placeholder="Role Title" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;">
+                <input type="text" id="edit-exp-org-${idx}" value="${esc(item.org || '')}" placeholder="Organization / Company" style="width:100%; margin-bottom:8px; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;">
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                  <input type="text" id="edit-exp-start-${idx}" value="${esc(item.start || '')}" placeholder="Start Date" style="flex:1; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;">
+                  <input type="text" id="edit-exp-end-${idx}" value="${esc(item.end || '')}" placeholder="End Date" style="flex:1; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;">
+                </div>
+                <textarea id="edit-exp-bullets-${idx}" rows="4" placeholder="Bullet points (one per line)" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; box-sizing:border-box;">${esc((item.bullets || []).join('\n'))}</textarea>
+              </div>`;
+            });
+            html += `<button class="btn btn-ghost btn-sm add-item-btn" data-sectype="experience" style="border:1px dashed #0d9488; color:#0d9488; width:100%; padding:10px;">${ICONS.plus} Add Experience Entry</button></div>`;
+          } else {
+            html += `<div style="display:flex; flex-direction:column; gap:16px;">`;
+            items.forEach(item => {
+              html += `<div style="position:relative; padding:20px; background:rgba(248, 250, 252, 0.9); border-radius:12px; border-left:4px solid #0d9488; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                  <div>
+                    <div style="font-size:1.15rem; font-weight:700; color:#0f172a;">${esc(item.role || '')}</div>
+                    <div style="font-size:1rem; color:#0d9488; font-weight:600; margin-top:2px;">${esc(item.org || '')}</div>
+                  </div>
+                  <div class="mono" style="font-size:0.85rem; background:rgba(13, 148, 136, 0.1); color:#0d9488; padding:4px 10px; border-radius:6px; font-weight:500;">${esc(item.start || '')} - ${esc(item.end || 'Present')}</div>
+                </div>
+                ${item.bullets && item.bullets.length ? `<ul style="margin-top:14px; padding-left:20px; font-size:0.95rem; color:#334155; line-height:1.6;">` + item.bullets.map(b => `<li style="margin-bottom:6px;">${esc(b)}</li>`).join('') + `</ul>` : ''}
+              </div>`;
+            });
+            html += `</div>`;
+          }
         } else if (sec.type === 'summary') {
-          html += `<div style="font-size:1rem; line-height:1.6; color:#334155; background:rgba(248, 250, 252, 0.9); padding:20px; border-radius:12px; border:1px solid rgba(13, 148, 136, 0.15);">${esc(sec.text || '')}</div>`;
+          if (isEditingThisSec) {
+            html += `<textarea id="edit-summary-text" rows="5" style="width:100%; padding:12px; border:1px solid var(--line); border-radius:8px; font:inherit; background:var(--paper); box-sizing:border-box;">${esc(sec.text || '')}</textarea>`;
+          } else {
+            html += `<div style="font-size:1rem; line-height:1.6; color:#334155; background:rgba(248, 250, 252, 0.9); padding:20px; border-radius:12px; border:1px solid rgba(13, 148, 136, 0.15);">${esc(sec.text || '')}</div>`;
+          }
         } else {
           html += `<pre class="mono" style="font-size:0.85rem; white-space:pre-wrap; background:var(--paper); padding:16px; border-radius:var(--r); border:1px solid var(--line-soft);">${esc(JSON.stringify(sec, null, 2))}</pre>`;
         }
@@ -1568,11 +1697,184 @@ async function renderProfile(draftSections = null, isEditMode = false, activeTab
       return html;
     };
 
-    root.innerHTML = `<div style="max-width:900px; margin:0 auto; padding: 20px 0;">${renderSectionsUI()}</div>`;
+    root.innerHTML = `<div style="max-width:950px; margin:0 auto; padding: 20px 0;">${renderSectionsUI()}</div>`;
 
+    // Bind tab switcher
     root.querySelectorAll('.prof-tab-btn').forEach(btn => {
-      btn.onclick = () => renderProfile(sections, isEditMode, btn.dataset.tab);
+      btn.onclick = () => renderProfile(sections, editingSecType, btn.dataset.tab, false);
     });
+
+    // Bind Re-upload button
+    const reupBtn = $('#profReuploadBtn');
+    if (reupBtn) {
+      reupBtn.onclick = () => renderProfile(sections, editingSecType, activeTab, !showReupload);
+    }
+    const closeReupBtn = $('#closeReuploadBtn');
+    if (closeReupBtn) {
+      closeReupBtn.onclick = () => renderProfile(sections, editingSecType, activeTab, false);
+    }
+
+    // Bind Section Edit buttons
+    root.querySelectorAll('.sec-edit-btn').forEach(btn => {
+      btn.onclick = () => renderProfile(sections, btn.dataset.type, activeTab, false);
+    });
+
+    // Bind Section Cancel buttons
+    root.querySelectorAll('.sec-cancel-btn').forEach(btn => {
+      btn.onclick = () => renderProfile(isDraft ? sections : null, null, activeTab, false);
+    });
+
+    // Bind Section Add Entry buttons
+    root.querySelectorAll('.add-item-btn').forEach(btn => {
+      btn.onclick = () => {
+        const stype = btn.dataset.sectype;
+        const targetSec = sections.find(s => s.type === stype);
+        if (targetSec && Array.isArray(targetSec.items)) {
+          if (stype === 'education') targetSec.items.push({ degree: '', institution: '', year: '', score: '' });
+          else if (stype === 'experience') targetSec.items.push({ role: '', org: '', start: '', end: '', bullets: [] });
+          else if (stype === 'projects') targetSec.items.push({ heading: '', tech_stack: '', detail: '', link: '' });
+          else if (stype === 'certifications') targetSec.items.push({ heading: '', issuer: '', year: '', link: '' });
+          renderProfile(sections, stype, activeTab, false);
+        }
+      };
+    });
+
+    // Bind Section Remove Entry buttons
+    root.querySelectorAll('.remove-item-btn').forEach(btn => {
+      btn.onclick = () => {
+        const stype = btn.dataset.sectype;
+        const idx = parseInt(btn.dataset.idx, 10);
+        const targetSec = sections.find(s => s.type === stype);
+        if (targetSec && Array.isArray(targetSec.items)) {
+          targetSec.items.splice(idx, 1);
+          renderProfile(sections, stype, activeTab, false);
+        }
+      };
+    });
+
+    // Bind Section Save buttons
+    root.querySelectorAll('.sec-save-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const stype = btn.dataset.type;
+        btn.disabled = true;
+        btn.textContent = "Saving...";
+        
+        try {
+          const updated = JSON.parse(JSON.stringify(sections));
+          const sec = updated.find(s => s.type === stype);
+
+          if (sec) {
+            if (stype === 'personal') {
+              sec.fields.name = $('#edit-personal-name').value.trim();
+              sec.fields.mobile = $('#edit-personal-mobile').value.trim();
+              sec.fields.phone = $('#edit-personal-mobile').value.trim();
+              sec.fields.email = $('#edit-personal-email').value.trim();
+              sec.fields.city = $('#edit-personal-city').value.trim();
+              sec.fields.country = $('#edit-personal-country').value.trim();
+              sec.fields.location = [sec.fields.city, sec.fields.country].filter(Boolean).join(', ');
+              sec.fields.github = $('#edit-personal-github').value.trim();
+              sec.fields.linkedin = $('#edit-personal-linkedin').value.trim();
+              sec.fields.portfolio = $('#edit-personal-portfolio').value.trim();
+              sec.fields.links = [sec.fields.github, sec.fields.linkedin, sec.fields.portfolio].filter(Boolean);
+            } else if (stype === 'summary') {
+              sec.text = $('#edit-summary-text').value.trim();
+            } else if (stype === 'skills') {
+              sec.items = $('#edit-skills').value.split(',').map(s => s.trim()).filter(Boolean);
+            } else if (stype === 'experience') {
+              sec.items.forEach((item, idx) => {
+                item.role = $(`#edit-exp-role-${idx}`).value.trim();
+                item.org = $(`#edit-exp-org-${idx}`).value.trim();
+                item.start = $(`#edit-exp-start-${idx}`).value.trim();
+                item.end = $(`#edit-exp-end-${idx}`).value.trim();
+                item.bullets = $(`#edit-exp-bullets-${idx}`).value.split('\n').filter(b => b.trim());
+              });
+            } else if (stype === 'education') {
+              sec.items.forEach((item, idx) => {
+                item.degree = $(`#edit-edu-deg-${idx}`).value.trim();
+                item.institution = $(`#edit-edu-inst-${idx}`).value.trim();
+                item.year = $(`#edit-edu-year-${idx}`).value.trim();
+                item.score = $(`#edit-edu-score-${idx}`) ? $(`#edit-edu-score-${idx}`).value.trim() : '';
+              });
+            } else if (stype === 'projects') {
+              sec.items.forEach((item, idx) => {
+                item.heading = $(`#edit-proj-head-${idx}`).value.trim();
+                item.tech_stack = $(`#edit-proj-tech-${idx}`).value.trim();
+                item.detail = $(`#edit-proj-detail-${idx}`).value.trim();
+                item.link = $(`#edit-proj-link-${idx}`).value.trim();
+              });
+            } else if (stype === 'certifications') {
+              sec.items.forEach((item, idx) => {
+                item.heading = $(`#edit-cert-head-${idx}`).value.trim();
+                item.issuer = $(`#edit-cert-issuer-${idx}`).value.trim();
+                item.year = $(`#edit-cert-year-${idx}`).value.trim();
+                item.link = $(`#edit-cert-link-${idx}`).value.trim();
+              });
+            }
+          }
+
+          await Api.updateProfile(updated);
+          toast(`${sec ? sec.title : 'Section'} saved successfully!`);
+          renderProfile(null, null, activeTab, false);
+        } catch (e) {
+          toast("Save failed: " + e.message, "err");
+          btn.disabled = false;
+          btn.textContent = "Save Section";
+        }
+      };
+    });
+
+    // Handle extraction dropzone/paste if shown
+    if (!sections.length || showReupload) {
+      const handleExtract = async (file, text) => {
+        if (!file && !text) { toast("Provide a file or text.", "err"); return; }
+        const btn = file ? $('#profBrowseBtn') : $('#profExtractTextBtn');
+        const oldText = btn.textContent;
+        btn.textContent = "Extracting...";
+        
+        try {
+          const res = await Api.uploadResume(file, text);
+          const extracted = res.sections.sections || res.sections;
+          toast("Profile extracted successfully! Review your sections below.");
+          renderProfile(extracted, null, activeTab, false);
+        } catch (e) {
+          toast(e.message, "err");
+          btn.textContent = oldText;
+        }
+      };
+
+      const fileInput = $('#profFile');
+      if (fileInput) {
+        fileInput.onchange = () => {
+          const file = fileInput.files[0];
+          if (file) handleExtract(file, '');
+        };
+      }
+
+      const dz = $('#profDropzone');
+      if (dz) {
+        dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('drag'); };
+        dz.ondragleave = (e) => { e.preventDefault(); dz.classList.remove('drag'); };
+        dz.ondrop = (e) => {
+          e.preventDefault(); dz.classList.remove('drag');
+          if (e.dataTransfer.files.length) {
+            $('#profFile').files = e.dataTransfer.files;
+            handleExtract(e.dataTransfer.files[0], '');
+          }
+        };
+      }
+
+      const extBtn = $('#profExtractTextBtn');
+      if (extBtn) {
+        extBtn.onclick = () => {
+          handleExtract(null, $('#profText').value.trim());
+        };
+      }
+    }
+
+  } catch (e) {
+    root.innerHTML = `<div class="card err-msg">Failed to load profile.</div>`;
+  }
+}
     
     if (!sections.length) {
       const handleExtract = async (file, text) => {
