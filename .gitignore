@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments (never commit — regenerated from requirements.txt)
+venv/
+.venv/
+env/
+ENV/
+
+# Local dev database (ephemeral SQLite; prod uses Cloud SQL)
+*.db
+*.sqlite3
+
+# Secrets / local config
+.env
+.env.*
+.jwt_secret
+digest_token
+*.local
+
+# Node (if ever added)
+node_modules/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

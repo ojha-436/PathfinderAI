@@ -51,16 +51,24 @@ def _recommend(found_ids: List[str], limit: int = 3) -> List[str]:
     return [s["id"] for s in rising[:limit]]
 
 
-def extract_profile(text: str) -> Dict[str, Any]:
+def match_skill_ids(text: str) -> List[str]:
+    """Canonical skill IDs found in free text, in taxonomy order (deterministic).
+    Shared by resume extraction and job-description parsing."""
     tl = " " + re.sub(r"\s+", " ", (text or "").lower()) + " "
-
-    # Skills — iterate taxonomy in order for deterministic result ordering.
-    found_ids: List[str] = []
+    out: List[str] = []
     for s in ds.SKILLS:
         for alias in [s["name"]] + s.get("aliases", []):
             if re.search(_boundary(alias), tl):
-                found_ids.append(s["id"])
+                out.append(s["id"])
                 break
+    return out
+
+
+def extract_profile(text: str) -> Dict[str, Any]:
+    tl = " " + re.sub(r"\s+", " ", (text or "").lower()) + " "
+
+    # Skills — canonical IDs in taxonomy order (deterministic).
+    found_ids: List[str] = match_skill_ids(text)
 
     # Roles
     role_ids: List[str] = []

@@ -37,6 +37,17 @@ const Api = {
       body: JSON.stringify({ email, password }),
     }).then(handle),
 
+  authConfig: () => fetch(`${API}/auth/config`).then(handle),
+  googleLogin: (credential) => fetch(`${API}/auth/google`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential }),
+  }).then(handle),
+  forgotPassword: (email) => fetch(`${API}/auth/forgot`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }),
+  }).then(handle),
+  resetPassword: (token, password) => fetch(`${API}/auth/reset`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, password }),
+  }).then(handle),
+
   login: (email, password) =>
     fetch(`${API}/auth/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -66,4 +77,52 @@ const Api = {
   deleteAnalysis: (id) => fetch(`${API}/history/${id}`, { method: 'DELETE', headers: authHeaders() }).then(handle),
 
   skills: () => fetch(`${API}/catalog/skills`).then(handle),
+
+  // Professional dashboard — job matching
+  matchJobs: (body) => fetch(`${API}/jobs/match`, {
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body),
+  }).then(handle),
+
+  // Learning tracker (Phase 3)
+  learning: () => fetch(`${API}/learning/`, { headers: authHeaders() }).then(handle),
+  addLearning: (item) => fetch(`${API}/learning/`, {
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(item),
+  }).then(handle),
+  patchLearning: (id, status) => fetch(`${API}/learning/${id}`, {
+    method: 'PATCH', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ status }),
+  }).then(handle),
+  deleteLearning: (id) => fetch(`${API}/learning/${id}`, { method: 'DELETE', headers: authHeaders() }).then(handle),
+  progress: (analysisId) => fetch(`${API}/learning/progress?analysis_id=${encodeURIComponent(analysisId)}`, { headers: authHeaders() }).then(handle),
+  journey: () => fetch(`${API}/learning/journey`, { headers: authHeaders() }).then(handle),
+  getPrefs: () => fetch(`${API}/learning/prefs`, { headers: authHeaders() }).then(handle),
+  putPrefs: (body) => fetch(`${API}/learning/prefs`, {
+    method: 'PUT', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body),
+  }).then(handle),
+
+  updatePersona: (persona) => fetch(`${API}/auth/me`, {
+    method: 'PATCH', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ persona }),
+  }).then(handle),
+
+  // Goal-first reverse roadmap (Phase 1, v2)
+  roles: () => fetch(`${API}/catalog/roles`).then(handle),
+  resolveGoal: (body) => fetch(`${API}/roadmap/resolve`, {
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body),
+  }).then(handle),
+  createRoadmap: (body) => fetch(`${API}/roadmap/`, {
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body),
+  }).then(handle),
+  listRoadmaps: () => fetch(`${API}/roadmap/`, { headers: authHeaders() }).then(handle),
+  adoptRoadmap: (id) => fetch(`${API}/roadmap/${encodeURIComponent(id)}/adopt`, {
+    method: 'POST', headers: authHeaders(),
+  }).then(handle),
+
+  // Guided intake + persona card (Phase 2, v2)
+  intakeQuestions: () => fetch(`${API}/intake/questions`).then(handle),
+  intakeAnalyze: (answers) => fetch(`${API}/intake/analyze`, {
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ answers }),
+  }).then(handle),
+  shareCard: (card) => fetch(`${API}/intake/card/share`, {
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ card }),
+  }).then(handle),
+  sharedCard: (token) => fetch(`${API}/intake/card/shared/${encodeURIComponent(token)}`).then(handle),
 };

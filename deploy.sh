@@ -34,6 +34,47 @@ if [ -n "${GEMINI_API_KEY:-}" ]; then
 else
   echo "▶ Gemini: not set — using local extractor"
 fi
+if [ -n "${RAPIDAPI_KEY:-}" ]; then
+  ENV_VARS="${ENV_VARS},RAPIDAPI_KEY=${RAPIDAPI_KEY}"
+  echo "▶ JSearch (RapidAPI): key set"
+fi
+if [ -n "${ADZUNA_APP_ID:-}" ] && [ -n "${ADZUNA_APP_KEY:-}" ]; then
+  ENV_VARS="${ENV_VARS},ADZUNA_APP_ID=${ADZUNA_APP_ID},ADZUNA_APP_KEY=${ADZUNA_APP_KEY}"
+  echo "▶ Adzuna: keys set"
+fi
+if [ -n "${APP_BASE_URL:-}" ]; then
+  ENV_VARS="${ENV_VARS},APP_BASE_URL=${APP_BASE_URL}"
+  echo "▶ App base URL: ${APP_BASE_URL} (used for password-reset links)"
+fi
+if [ -n "${GOOGLE_CLIENT_ID:-}" ]; then
+  ENV_VARS="${ENV_VARS},GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}"
+  echo "▶ Google Sign-In: ENABLED"
+else
+  echo "▶ Google Sign-In: not set — button hidden until GOOGLE_CLIENT_ID provided"
+fi
+# SMTP relay for password-reset email (any provider: Brevo/SendGrid/Resend/Gmail).
+# Without it the reset link is written to server logs instead of emailed.
+if [ -n "${SMTP_HOST:-}" ] && [ -n "${SMTP_USER:-}" ]; then
+  ENV_VARS="${ENV_VARS},SMTP_HOST=${SMTP_HOST},SMTP_PORT=${SMTP_PORT:-587},SMTP_USER=${SMTP_USER},SMTP_PASSWORD=${SMTP_PASSWORD:-},SMTP_FROM=${SMTP_FROM:-}"
+  echo "▶ Email: SMTP relay via ${SMTP_HOST} (reset + weekly digest)"
+else
+  echo "▶ Email: log-only (no SMTP configured)"
+fi
+if [ -n "${DIGEST_TOKEN:-}" ]; then
+  ENV_VARS="${ENV_VARS},DIGEST_TOKEN=${DIGEST_TOKEN}"
+  echo "▶ Weekly digest: endpoint enabled (Cloud Scheduler token set)"
+fi
+if [ -n "${DATABASE_URL:-}" ]; then
+  ENV_VARS="${ENV_VARS},DATABASE_URL=${DATABASE_URL}"
+  echo "▶ Database: Cloud SQL / Postgres (DATABASE_URL set)"
+else
+  echo "▶ Database: on-container SQLite (ephemeral — resets on redeploy)"
+fi
+CLOUDSQL_FLAG=""
+if [ -n "${CLOUDSQL_CONN:-}" ]; then
+  CLOUDSQL_FLAG="--add-cloudsql-instances=${CLOUDSQL_CONN}"
+  echo "▶ Cloud SQL instance: ${CLOUDSQL_CONN}"
+fi
 
 echo "▶ Building & deploying from source (uses ./Dockerfile)…"
 gcloud run deploy "$SERVICE" \
@@ -45,6 +86,7 @@ gcloud run deploy "$SERVICE" \
   --port 8080 \
   --memory 512Mi --cpu 1 \
   --min-instances 1 --max-instances 1 \
+  ${CLOUDSQL_FLAG} \
   --set-env-vars "${ENV_VARS}"
 
 URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format 'value(status.url)')"
@@ -52,7 +94,11 @@ echo ""
 echo "✅ Deployed: $URL"
 echo "   Health : $URL/api/health"
 echo ""
-echo "NOTE: This deploy uses on-container SQLite pinned to a single instance —"
-echo "      accounts/history persist while the instance is warm but reset on redeploy."
-echo "      For durable persistence, set DATABASE_URL to a Cloud SQL Postgres DSN"
-echo "      and add --add-cloudsql-instances (see README 'Durable persistence')."
+if [ -n "${DATABASE_URL:-}" ]; then
+  echo "NOTE: Durable persistence via Cloud SQL Postgres — accounts/history survive redeploys."
+else
+  echo "NOTE: This deploy uses on-container SQLite pinned to a single instance —"
+  echo "      accounts/history persist while the instance is warm but reset on redeploy."
+  echo "      For durable persistence, set DATABASE_URL to a Cloud SQL Postgres DSN"
+  echo "      and add --add-cloudsql-instances (see README 'Durable persistence')."
+fi

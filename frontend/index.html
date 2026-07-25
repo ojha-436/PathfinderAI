@@ -6,6 +6,9 @@
   <title>PathFinder — Will your skills survive the next 5 years?</title>
   <meta name="description" content="Upload your resume and get 3 ranked, future-proof career pathways with forecasted demand, salary uplift, an explainable why, and the first 3 courses to start today." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%A7%AD%3C/text%3E%3C/svg%3E" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0e5c48" />
+  <meta name="description" content="PathFinder — grounded, India-first career & reskilling guidance for students and working professionals." />
   <link rel="stylesheet" href="/css/theme.css" />
   <link rel="stylesheet" href="/css/app.css" />
 </head>
@@ -29,7 +32,9 @@
       </span>
       <nav class="nav-links">
         <a href="#/" data-nav class="hide-sm">Home</a>
+        <a href="#/discover" data-nav>Discover</a>
         <a href="#/analyze" data-nav>Analyze</a>
+        <a href="#/goal" data-nav>Career goal</a>
       </nav>
       <div id="navAuth"></div>
     </div>
@@ -55,15 +60,16 @@
         <div class="wrap">
           <div class="hero-grid">
             <div class="reveal">
-              <span class="eyebrow">AI Career &amp; Reskilling Decision Advisor</span>
+              <span class="eyebrow">Career Decision Intelligence</span>
               <h1 style="margin-top:.3em">Will your skills survive the <span class="accent">next five years?</span></h1>
-              <p class="lede">Upload your resume. PathFinder forecasts which of your skills are rising or dying in your market, then maps 3 future-proof pathways — with the payoff, the reason, and the first courses to start today.</p>
+              <p class="lede">PathFinder reads your resume, forecasts which skills are rising or fading in your market, maps future-proof career pathways, matches you to real open jobs, and tracks your progress as you close the gaps.</p>
               <div class="hero-cta">
                 <button class="btn btn-primary" data-nav="#/analyze">Analyze my resume →</button>
-                <button class="btn btn-ghost" id="tryAshaBtn">Try Asha's sample</button>
+                <button class="btn btn-ghost" id="tryAshaBtn">See a live example</button>
               </div>
               <div class="hero-note">
-                <span>🔒</span> Create a free account to save your history — or continue as a guest.
+                <svg class="icon" style="width:15px;height:15px;color:var(--pine)" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Free account to save your career map — or continue as a guest anytime.
               </div>
             </div>
 
@@ -85,31 +91,150 @@
         </div>
       </div>
 
-      <!-- How it works -->
+      <!-- Trust / credibility bar -->
+      <div class="trustbar">
+        <div class="wrap">
+          <span class="trust-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg> Powered by Google Cloud</span>
+          <span class="trust-sep" aria-hidden="true"></span>
+          <span class="trust-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15l-1.9-4.1L5.5 9l4.6-1.4L12 3z"/></svg> Gemini AI</span>
+          <span class="trust-sep" aria-hidden="true"></span>
+          <span class="trust-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Real-time job data</span>
+          <span class="trust-sep" aria-hidden="true"></span>
+          <span class="trust-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Grounded &amp; explainable</span>
+          <span class="trust-sep" aria-hidden="true"></span>
+          <span class="trust-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Secure accounts</span>
+        </div>
+      </div>
+
+      <!-- Features -->
       <div class="section">
         <div class="wrap">
-          <span class="eyebrow">How PathFinder decides</span>
-          <h2>A four-agent decision pipeline</h2>
-          <p class="muted" style="max-width:52ch">Not a chatbot. A transparent pipeline that predicts, detects, explains, and recommends — every number traceable to a dataset row or model output.</p>
-          <div class="agents-row">
-            <div class="card agent-step reveal"><div class="ico">🧭</div><div class="num">AGENT 01</div><h3>SkillsExtractor</h3><p>Reads your resume and maps it to a canonical skill profile.</p></div>
-            <div class="card agent-step reveal" style="animation-delay:.08s"><div class="ico">📈</div><div class="num">AGENT 02</div><h3>MarketAnalyst</h3><p>Forecasts 3-year demand per skill — rising or declining.</p></div>
-            <div class="card agent-step reveal" style="animation-delay:.16s"><div class="ico">🗺️</div><div class="num">AGENT 03</div><h3>PathwayPlanner</h3><p>Matches your profile to future-proof roles by skill coverage.</p></div>
-            <div class="card agent-step reveal" style="animation-delay:.24s"><div class="ico">🎯</div><div class="num">AGENT 04</div><h3>ROIForecaster</h3><p>Ranks by payoff and grounds the first 3 real courses.</p></div>
+          <div class="section-head center">
+            <span class="eyebrow">One platform, end to end</span>
+            <h2>Everything you need to make a confident reskilling decision</h2>
+            <p class="lede">From "which of my skills are fading?" to "here's a real job I can get and exactly what to learn" — with your progress tracked the whole way.</p>
+          </div>
+          <div class="feature-grid">
+            <div class="card feature-card reveal">
+              <div class="feature-ic"><svg class="icon" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+              <h3>Skill-demand forecasting</h3>
+              <p>See which of your skills are rising or declining over the next three years — from a real, reproducible market-demand model, not a guess.</p>
+            </div>
+            <div class="card feature-card reveal" style="animation-delay:.06s">
+              <div class="feature-ic"><svg class="icon" viewBox="0 0 24 24"><polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21 1 6"/><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/></svg></div>
+              <h3>Ranked career pathways</h3>
+              <p>Three future-proof roles ranked by skill fit, demand growth, salary uplift and time-to-ready — each with an explainable "why this fits you".</p>
+            </div>
+            <div class="card feature-card reveal" style="animation-delay:.12s">
+              <div class="feature-ic amber"><svg class="icon" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+              <h3>Real job matching</h3>
+              <p>Live open roles matched to your skills with a fit score, the exact skills to learn to qualify, and a direct link to apply.</p>
+            </div>
+            <div class="card feature-card reveal" style="animation-delay:.06s">
+              <div class="feature-ic"><svg class="icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+              <h3>Learning tracker</h3>
+              <p>Track recommended courses and watch your pathway match climb as you complete them — a closed loop from learning to opportunity.</p>
+            </div>
+            <div class="card feature-card reveal" style="animation-delay:.12s">
+              <div class="feature-ic"><svg class="icon" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+              <h3>Grounded courses</h3>
+              <p>Curated free (Government · YouTube) and paid courses mapped to your exact gaps — real links only, never fabricated.</p>
+            </div>
+            <div class="card feature-card reveal" style="animation-delay:.18s">
+              <div class="feature-ic amber"><svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <h3>Two tailored experiences</h3>
+              <p>A Student view for courses &amp; higher studies, and a Professional view for real jobs — powered by the same intelligence engine.</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Pillars -->
+      <!-- How it works -->
       <div class="section" style="padding-top:0">
         <div class="wrap">
-          <div class="pillars">
-            <div class="card pillar reveal"><h3>🔮 Predict, don't guess</h3><p>A real forecasting model over a curated India labour-market series — reproducible, not an LLM hunch.</p></div>
-            <div class="card pillar reveal" style="animation-delay:.1s"><h3>🧾 Explain everything</h3><p>Every pathway shows skill overlap, demand trend, salary basis, and its data source. Decision support, not a black box.</p></div>
-            <div class="card pillar reveal" style="animation-delay:.2s"><h3>📚 Grounded courses</h3><p>Recommendations come only from a real course catalog — zero hallucinated links.</p></div>
+          <div class="section-head center">
+            <span class="eyebrow">How it works</span>
+            <h2>Predict → detect → explain → recommend → track</h2>
           </div>
-          <div class="center" style="margin-top:40px">
-            <button class="btn btn-primary" data-nav="#/analyze">Start my analysis →</button>
+          <div class="flow-steps">
+            <div class="flow-step reveal"><div class="fnum mono">1</div><h4>Build your profile</h4><p>Upload a resume, connect a platform, or enter your skills.</p></div>
+            <div class="flow-step reveal" style="animation-delay:.06s"><div class="fnum mono">2</div><h4>Forecast demand</h4><p>See every skill trending up or down in your market.</p></div>
+            <div class="flow-step reveal" style="animation-delay:.12s"><div class="fnum mono">3</div><h4>Get pathways</h4><p>Three ranked, explainable future-proof roles.</p></div>
+            <div class="flow-step reveal" style="animation-delay:.18s"><div class="fnum mono">4</div><h4>Match real jobs</h4><p>Live openings plus what to learn to qualify.</p></div>
+            <div class="flow-step reveal" style="animation-delay:.24s"><div class="fnum mono">5</div><h4>Track progress</h4><p>Complete courses and watch your match grow.</p></div>
+          </div>
+          <p class="center muted" style="font-size:.86rem;margin-top:28px">The intelligence behind it: a transparent multi-agent pipeline on Google Cloud &amp; Gemini — every number traceable to real data or a model output.</p>
+        </div>
+      </div>
+
+      <!-- Two experiences -->
+      <div class="section" style="padding-top:0">
+        <div class="wrap">
+          <div class="section-head center">
+            <span class="eyebrow">Tailored to you</span>
+            <h2>Two experiences, one intelligence engine</h2>
+          </div>
+          <div class="exp-split">
+            <div class="card exp-col stu reveal">
+              <div class="exp-head">
+                <div class="exp-ic"><svg class="icon" viewBox="0 0 24 24"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/></svg></div>
+                <div><span class="eyebrow" style="color:var(--marigold-2)">For students</span><h3 style="margin:0">Plan what to study</h3></div>
+              </div>
+              <ul class="exp-list">
+                <li><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Courses matched to your skills — free &amp; paid</li>
+                <li><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Higher-studies &amp; program opportunities</li>
+                <li><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> The most in-demand skills in your field</li>
+                <li><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> A study plan you can track to completion</li>
+              </ul>
+            </div>
+            <div class="card exp-col pro reveal" style="animation-delay:.1s">
+              <div class="exp-head">
+                <div class="exp-ic"><svg class="icon" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+                <div><span class="eyebrow">For working professionals</span><h3 style="margin:0">Move to a better role</h3></div>
+              </div>
+              <ul class="exp-list">
+                <li><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Real open jobs matched to your skills</li>
+                <li><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> A fit score and the exact skills to qualify</li>
+                <li><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Salary uplift &amp; time-to-ready per pathway</li>
+                <li><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Track upskilling and watch your match rise</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Why trust it -->
+      <div class="section" style="padding-top:0">
+        <div class="wrap">
+          <div class="section-head center">
+            <span class="eyebrow">Built to be trusted</span>
+            <h2>Decision intelligence, not a black box</h2>
+          </div>
+          <div class="pillars">
+            <div class="card pillar reveal">
+              <h3><svg class="icon" style="color:var(--pine)" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> Grounded in real data</h3>
+              <p>Courses and jobs come only from real sources — zero fabricated links. The AI narrates; it never invents numbers.</p>
+            </div>
+            <div class="card pillar reveal" style="animation-delay:.1s">
+              <h3><svg class="icon" style="color:var(--pine)" viewBox="0 0 24 24"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15l-1.9-4.1L5.5 9l4.6-1.4L12 3z"/></svg> Explainable &amp; reproducible</h3>
+              <p>Every pathway shows skill coverage, demand trend, salary basis and its data source. The same input always gives the same result.</p>
+            </div>
+            <div class="card pillar reveal" style="animation-delay:.2s">
+              <h3><svg class="icon" style="color:var(--pine)" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Secure &amp; private</h3>
+              <p>Your resume isn't stored after parsing. Create an account to save your work, and delete any analysis — or your whole account — anytime.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA band -->
+      <div class="section">
+        <div class="wrap">
+          <div class="cta-band reveal">
+            <span class="eyebrow" style="color:#bfe0d5">Start free</span>
+            <h2>Map your future-proof career today</h2>
+            <p>See which skills to keep, which to grow, the roles worth aiming for, and the real jobs you can reach — in under two minutes.</p>
+            <button class="btn btn-primary" data-nav="#/analyze">Analyze my resume →</button>
           </div>
         </div>
       </div>
@@ -129,6 +254,41 @@
       </div>
     </section>
 
+    <!-- ===================== DISCOVER (guided intake) ===================== -->
+    <section id="view-discover" class="view hidden">
+      <div class="section">
+        <div class="wrap" id="discoverRoot"><!-- filled by app.js --></div>
+      </div>
+    </section>
+
+    <!-- ===================== PUBLIC PERSONA CARD ===================== -->
+    <section id="view-card" class="view hidden">
+      <div class="section">
+        <div class="wrap" id="cardRoot"><!-- filled by app.js --></div>
+      </div>
+    </section>
+
+    <!-- ===================== LEGAL (privacy / terms) ===================== -->
+    <section id="view-legal" class="view hidden">
+      <div class="section">
+        <div class="wrap" id="legalRoot"><!-- filled by app.js --></div>
+      </div>
+    </section>
+
+    <!-- ===================== CAREER GOAL (reverse roadmap) ===================== -->
+    <section id="view-goal" class="view hidden">
+      <div class="section">
+        <div class="wrap" id="goalRoot"><!-- filled by app.js --></div>
+      </div>
+    </section>
+
+    <!-- ===================== MY LEARNING ===================== -->
+    <section id="view-learning" class="view hidden">
+      <div class="section">
+        <div class="wrap" id="learningRoot"><!-- filled by app.js --></div>
+      </div>
+    </section>
+
   </main>
 
   <!-- FOOTER -->
@@ -136,8 +296,10 @@
     <div class="wrap">
       <div class="cols">
         <div>
-          <a class="brand" href="#/" data-nav style="font-size:1.1rem">🧭 PathFinder</a>
-          <p style="margin-top:10px;max-width:34ch">Lifelong-learning decision intelligence for the individual. Built for the Google Cloud Gen AI Academy (APAC C2), Education &amp; Lifelong Learning track.</p>
+          <a class="brand" href="#/" data-nav style="font-size:1.1rem">
+            <svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="16" cy="16" r="15" stroke="var(--pine)" stroke-width="1.5"/><path d="M16 4 L20 18 L16 15 L12 18 Z" fill="var(--terracotta)"/><path d="M16 28 L12 14 L16 17 L20 14 Z" fill="var(--pine)"/></svg>
+            PathFinder</a>
+          <p style="margin-top:10px;max-width:36ch">Career decision intelligence that helps anyone decide what to learn next — and reach the roles worth aiming for. Powered by Google Cloud &amp; Gemini.</p>
         </div>
         <div>
           <h4>Data sources</h4>
@@ -154,8 +316,8 @@
         </div>
       </div>
       <div class="legal">
-        <span>© 2026 PathFinder. Market: India (v1).</span>
-        <span class="mono" id="footMeta">local engine · reproducible forecasts</span>
+        <span>© 2026 PathFinder — Career Decision Intelligence · Market: India</span>
+        <span class="foot-links"><a href="#/privacy" data-nav>Privacy</a> · <a href="#/terms" data-nav>Terms</a> · <span class="mono" id="footMeta">grounded recommendations</span></span>
       </div>
     </div>
   </footer>

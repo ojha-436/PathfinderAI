@@ -71,3 +71,38 @@ def retrieve_courses(role_id: str, user_skill_ids: List[str], per_track: int = 3
             break
 
     return free + paid  # free-track first; each item carries its own `track`
+
+
+def courses_for_skills(skill_ids: List[str], per_track: int = 2) -> List[Dict[str, Any]]:
+    """Grounded courses that teach a given set of (gap) skills, split Free/Paid.
+    Used by the job-match flow to recommend how to qualify for a role."""
+    want = list(dict.fromkeys(skill_ids))
+    want_set = set(want)
+    if not want_set:
+        return []
+    scored = []
+    for c in ds.COURSES:
+        covered = set(c.get("skills", [])) & want_set
+        if not covered:
+            continue
+        score = len(covered) + c.get("rating", 0.0) * 0.02
+        scored.append((score, covered, c))
+    scored.sort(key=lambda x: (-x[0], -x[2].get("rating", 0.0), x[2]["id"]))
+    free: List[Dict[str, Any]] = []
+    paid: List[Dict[str, Any]] = []
+    for _score, covered, c in scored:
+        is_free = track_of(c["provider"]) == "free_gov"
+        bucket = free if is_free else paid
+        if len(bucket) >= per_track:
+            continue
+        focus = sorted(covered, key=lambda s: want.index(s) if s in want else 99)
+        bucket.append({
+            "id": c["id"], "title": c["title"], "provider": c["provider"], "url": c["url"],
+            "skills": c.get("skills", []), "level": c.get("level", "Beginner"),
+            "hours": c.get("hours", 0), "cost": c.get("cost", ""), "free": bool(c.get("free", False)),
+            "rating": c.get("rating", 0.0), "track": track_of(c["provider"]),
+            "match_reason": "Builds " + ", ".join(ds.SKILL_NAME.get(s, s) for s in focus[:3]),
+        })
+        if len(free) >= per_track and len(paid) >= per_track:
+            break
+    return free + paid

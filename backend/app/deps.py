@@ -23,7 +23,9 @@ def get_optional_user(db: Session = Depends(get_db), token: str = Depends(oauth2
     payload = decode_access_token(token)
     if not payload:
         return None
-    
+    if payload.get("purpose"):          # reset/special-purpose tokens are not session tokens
+        return None
+
     user_id: str = payload.get("sub")
     if user_id is None:
         return None

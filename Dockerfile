@@ -21,6 +21,7 @@ COPY frontend/ /app/frontend/
 WORKDIR /app/backend
 EXPOSE 8080
 
-# Create tables + materialise the demand series, then serve.
+# Materialise datasets, apply DB migrations (idempotent; safe on existing prod),
+# then serve. create_all in main.py remains as a create-missing-tables safety net.
 # Cloud Run injects $PORT (default 8080).
-CMD ["sh", "-c", "python -m seed && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "python -m seed && alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]
