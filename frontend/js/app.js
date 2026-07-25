@@ -1389,19 +1389,34 @@ async function renderProfile(draftSections = null, isEditMode = false) {
           <h3 style="margin:0 0 16px 0; color:var(--pine); border-bottom:1px solid var(--line-soft); padding-bottom:12px; font-family:var(--font-display); font-size:1.4rem;">${esc(sec.title)}</h3>`;
         
         if (sec.type === 'personal' && sec.fields) {
+          const mob = sec.fields.mobile || sec.fields.phone || '';
+          const cityVal = sec.fields.city || (sec.fields.location ? sec.fields.location.split(',')[0].trim() : '');
+          const countryVal = sec.fields.country || (sec.fields.location && sec.fields.location.includes(',') ? sec.fields.location.split(',')[1].trim() : '');
+          const gh = sec.fields.github || '';
+          const li = sec.fields.linkedin || '';
+          const port = sec.fields.portfolio || '';
+
           if (isEditMode) {
-             html += `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Name</div> <input type="text" id="edit-personal-name" value="${esc(sec.fields.name || '')}" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
-               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Email</div> <input type="text" id="edit-personal-email" value="${esc(sec.fields.email || '')}" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
-               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Phone</div> <input type="text" id="edit-personal-phone" value="${esc(sec.fields.phone || '')}" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
-               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Location</div> <input type="text" id="edit-personal-location" value="${esc(sec.fields.location || '')}" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+             html += `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Full Name</div> <input type="text" id="edit-personal-name" value="${esc(sec.fields.name || '')}" placeholder="John Doe" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Mobile / Phone</div> <input type="text" id="edit-personal-mobile" value="${esc(mob)}" placeholder="+1 234 567 8900" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Email Address</div> <input type="text" id="edit-personal-email" value="${esc(sec.fields.email || '')}" placeholder="user@example.com" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">City</div> <input type="text" id="edit-personal-city" value="${esc(cityVal)}" placeholder="San Francisco" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Country</div> <input type="text" id="edit-personal-country" value="${esc(countryVal)}" placeholder="USA" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">GitHub Profile</div> <input type="text" id="edit-personal-github" value="${esc(gh)}" placeholder="https://github.com/username" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">LinkedIn Profile</div> <input type="text" id="edit-personal-linkedin" value="${esc(li)}" placeholder="https://linkedin.com/in/username" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
+               <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Portfolio Website</div> <input type="text" id="edit-personal-portfolio" value="${esc(port)}" placeholder="https://myportfolio.com" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:4px; font:inherit; background:var(--paper); box-sizing:border-box;"></div>
              </div>`;
           } else {
-            html += `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Name</div> <div style="font-size:1.05rem">${esc(sec.fields.name || '—')}</div></div>
-              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Email</div> <div style="font-size:1.05rem">${esc(sec.fields.email || '—')}</div></div>
-              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Phone</div> <div style="font-size:1.05rem">${esc(sec.fields.phone || '—')}</div></div>
-              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Location</div> <div style="font-size:1.05rem">${esc(sec.fields.location || '—')}</div></div>
+            const locStr = [cityVal, countryVal].filter(Boolean).join(', ') || sec.fields.location || '—';
+            html += `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Full Name</div> <div style="font-size:1.05rem; font-weight:600; color:var(--ink);">${esc(sec.fields.name || '—')}</div></div>
+              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Mobile</div> <div style="font-size:1.05rem; color:var(--ink);">${esc(mob || '—')}</div></div>
+              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Email</div> <div style="font-size:1.05rem; color:var(--ink);">${esc(sec.fields.email || '—')}</div></div>
+              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Location</div> <div style="font-size:1.05rem; color:var(--ink);">${esc(locStr)}</div></div>
+              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">GitHub</div> <div style="font-size:1.05rem;">${gh ? `<a href="${esc(gh)}" target="_blank" style="color:var(--pine); text-decoration:none; font-weight:500;">${esc(gh)}</a>` : '—'}</div></div>
+              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">LinkedIn</div> <div style="font-size:1.05rem;">${li ? `<a href="${esc(li)}" target="_blank" style="color:var(--pine); text-decoration:none; font-weight:500;">${esc(li)}</a>` : '—'}</div></div>
+              <div><div class="muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">Portfolio Website</div> <div style="font-size:1.05rem;">${port ? `<a href="${esc(port)}" target="_blank" style="color:var(--pine); text-decoration:none; font-weight:500;">${esc(port)}</a>` : '—'}</div></div>
             </div>`;
           }
         } else if (sec.type === 'skills' && Array.isArray(sec.items)) {
@@ -1518,10 +1533,17 @@ async function renderProfile(draftSections = null, isEditMode = false) {
           const updated = JSON.parse(JSON.stringify(sections)); // deep copy to be safe
           updated.forEach(sec => {
             if (sec.type === 'personal') {
-              sec.fields.name = $('#edit-personal-name').value;
-              sec.fields.email = $('#edit-personal-email').value;
-              sec.fields.phone = $('#edit-personal-phone').value;
-              sec.fields.location = $('#edit-personal-location').value;
+              sec.fields.name = $('#edit-personal-name').value.trim();
+              sec.fields.mobile = $('#edit-personal-mobile').value.trim();
+              sec.fields.phone = $('#edit-personal-mobile').value.trim();
+              sec.fields.email = $('#edit-personal-email').value.trim();
+              sec.fields.city = $('#edit-personal-city').value.trim();
+              sec.fields.country = $('#edit-personal-country').value.trim();
+              sec.fields.location = [sec.fields.city, sec.fields.country].filter(Boolean).join(', ');
+              sec.fields.github = $('#edit-personal-github').value.trim();
+              sec.fields.linkedin = $('#edit-personal-linkedin').value.trim();
+              sec.fields.portfolio = $('#edit-personal-portfolio').value.trim();
+              sec.fields.links = [sec.fields.github, sec.fields.linkedin, sec.fields.portfolio].filter(Boolean);
             } else if (sec.type === 'skills') {
               sec.items = $('#edit-skills').value.split(',').map(s => s.trim()).filter(s => s);
             } else if (sec.type === 'experience') {

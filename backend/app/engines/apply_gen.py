@@ -42,12 +42,31 @@ def _by_type(profile: Dict[str, Any], t: str) -> List[Dict[str, Any]]:
 def _personal(profile: Dict[str, Any]) -> Dict[str, Any]:
     secs = _by_type(profile, "personal")
     fields = secs[0].get("fields", {}) if secs else {}
+    city = fields.get("city") or ""
+    country = fields.get("country") or ""
+    loc = fields.get("location") or ""
+    if not loc and (city or country):
+        loc = ", ".join([c for c in [city, country] if c])
+    
+    github = fields.get("github") or ""
+    linkedin = fields.get("linkedin") or ""
+    portfolio = fields.get("portfolio") or ""
+    links = fields.get("links") or []
+    if not links:
+        links = [l for l in [github, linkedin, portfolio] if l]
+
     return {
         "name": fields.get("name") or profile.get("full_name") or "",
         "email": fields.get("email") or profile.get("email") or "",
-        "phone": fields.get("phone") or profile.get("phone") or "",
-        "location": fields.get("location") or "",
-        "links": fields.get("links") or [],
+        "phone": fields.get("mobile") or fields.get("phone") or profile.get("phone") or "",
+        "mobile": fields.get("mobile") or fields.get("phone") or profile.get("phone") or "",
+        "city": city,
+        "country": country,
+        "location": loc,
+        "github": github,
+        "linkedin": linkedin,
+        "portfolio": portfolio,
+        "links": links,
         "headline": fields.get("headline") or "",
     }
 

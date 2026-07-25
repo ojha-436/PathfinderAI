@@ -90,11 +90,39 @@ def _extract_contact(text: str) -> Dict[str, Any]:
     phone_m = _PHONE_RE.search(text)
     phone = phone_m.group(0).strip() if phone_m else ""
     links = []
+    github = ""
+    linkedin = ""
+    portfolio = ""
     for m in _URL_RE.finditer(text):
         u = m.group(0).rstrip(".,);")
         if u not in links:
             links.append(u)
-    return {"email": email, "phone": phone, "links": links}
+        if "github.com" in u.lower() and not github:
+            github = u
+        elif "linkedin.com" in u.lower() and not linkedin:
+            linkedin = u
+        elif not portfolio and "github.com" not in u.lower() and "linkedin.com" not in u.lower():
+            portfolio = u
+
+    city = ""
+    country = ""
+    loc_m = re.search(r"\b([A-Z][a-zA-Z\s]+),\s*([A-Z][a-zA-Z\s]+)\b", text[:600])
+    if loc_m:
+        city = loc_m.group(1).strip()
+        country = loc_m.group(2).strip()
+
+    return {
+        "email": email,
+        "phone": phone,
+        "mobile": phone,
+        "city": city,
+        "country": country,
+        "github": github,
+        "linkedin": linkedin,
+        "portfolio": portfolio,
+        "links": links
+    }
+
 
 
 def _parse_experience(block: List[str]) -> List[Dict[str, Any]]:
@@ -233,8 +261,19 @@ def _local_build(resume_text: str) -> Dict[str, Any]:
 
     sections: List[Dict[str, Any]] = [{
         "type": "personal", "title": "Personal",
-        "fields": {"name": name, "email": contact["email"], "phone": contact["phone"],
-                   "location": location, "links": contact["links"]},
+        "fields": {
+            "name": name,
+            "email": contact["email"],
+            "mobile": contact["phone"],
+            "phone": contact["phone"],
+            "city": contact["city"],
+            "country": contact["country"],
+            "location": f"{contact['city']}, {contact['country']}".strip(" ,") if (contact['city'] or contact['country']) else location,
+            "github": contact["github"],
+            "linkedin": contact["linkedin"],
+            "portfolio": contact["portfolio"],
+            "links": contact["links"]
+        },
     }]
 
     seen_skills = False
