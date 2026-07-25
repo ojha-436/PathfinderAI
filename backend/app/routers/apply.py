@@ -143,6 +143,7 @@ def generate_docs(
     app_id = data.get("application_id")
     kinds = data.get("kinds", ["resume", "cover_letter"])
     questions = data.get("questions", [])
+    tailor_mode = data.get("tailor_mode", "moderate")
     
     app_record = db.query(Application).filter(Application.id == app_id, Application.user_id == current_user.id).first()
     if not app_record:
@@ -170,7 +171,8 @@ def generate_docs(
             role=app_record.job_title,
             matched_skills=matched,
             gap_skills=gaps,
-            questions=questions
+            questions=questions,
+            tailor_mode=tailor_mode
         )
         
         # Save or update doc
@@ -228,4 +230,24 @@ def export_doc(
             txt = apply_gen._cover_letter_txt(doc.content_json)
             return PlainTextResponse(txt)
             
+    if fmt == "pdf":
+        from fastapi.responses import Response
+        if kind == "resume":
+            pdf_bytes = apply_gen._resume_pdf(doc.content_json)
+        elif kind == "cover_letter":
+            pdf_bytes = apply_gen._cover_letter_pdf(doc.content_json)
+        else:
+            raise HTTPException(400, "PDF not supported for this kind")
+        return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{kind}.pdf"'})
+
+    if fmt == "docx":
+        from fastapi.responses import Response
+        if kind == "resume":
+            docx_bytes = apply_gen._resume_docx(doc.content_json)
+        elif kind == "cover_letter":
+            docx_bytes = apply_gen._cover_letter_docx(doc.content_json)
+        else:
+            raise HTTPException(400, "DOCX not supported for this kind")
+        return Response(content=docx_bytes, media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document", headers={"Content-Disposition": f'attachment; filename="{kind}.docx"'})
+
     return {"content": doc.content_json}

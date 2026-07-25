@@ -261,9 +261,8 @@ def _local_generate(kind: str, profile, company, role, matched, gaps, questions)
 
 
 # ---------------------------------------------------------------- Gemini drafts
-def _gemini_prose(kind: str, profile, jd_text, company, role, matched, questions) -> Optional[Dict[str, Any]]:  # pragma: no cover
-    """Ask Gemini to reword — grounded. Only used for the free-text kinds; the
-    résumé stays a structured local assembly (safest for ATS + grounding)."""
+def _gemini_prose(kind: str, profile, jd_text, company, role, matched, gaps, questions, tailor_mode="moderate") -> Optional[Dict[str, Any]]:  # pragma: no cover
+    """Ask Gemini to generate or reword — grounded. Now supports resume tailoring."""
     import json as _json
 
     import google.generativeai as genai
@@ -278,8 +277,13 @@ def _gemini_prose(kind: str, profile, jd_text, company, role, matched, questions
         "education": _education(profile),
         "matched_skills": matched, "company": company, "role": role,
     }
-    rule = ("HARD RULE: use ONLY facts in PROFILE_FACTS. Never invent an employer, title, "
-            "date, degree, or number. Reword and emphasize toward the JOB, nothing more.")
+    
+    if tailor_mode == "aggressive":
+        rule = ("HARD RULE: You MUST inject missing skills from the job description into the output to guarantee a 100% ATS match, even if the candidate doesn't have them in their profile facts. You can fabricate skills, but NEVER invent an employer, title, date, degree, or number.")
+    else:
+        rule = ("HARD RULE: use ONLY facts in PROFILE_FACTS. Never invent an employer, title, "
+                "date, degree, number, or skill. Reword and emphasize toward the JOB, nothing more.")
+
     if kind == "cover_letter":
         prompt = (f"{rule}\nWrite a concise 3-paragraph cover letter. Return ONLY JSON "
                   '{"greeting","company","role","paragraphs":["","",""],"signoff","name"}.\n'
@@ -289,6 +293,11 @@ def _gemini_prose(kind: str, profile, jd_text, company, role, matched, questions
         prompt = (f"{rule}\nAnswer each screening question briefly and honestly. Return ONLY JSON "
                   '{"items":[{"question","answer"}]}.\n'
                   f"QUESTIONS:\n{_json.dumps(qs)}\nPROFILE_FACTS:\n{_json.dumps(facts)[:9000]}\n\nJOB:\n{(jd_text or '')[:3000]}")
+    elif kind == "resume":
+        facts["missing_skills_from_jd"] = gaps
+        prompt = (f"{rule}\nGenerate a tailored resume in JSON matching exactly this schema: "
+                  '{"name": "...", "headline": "...", "contact": {"email":"","phone":"","location":"","links":[]}, "summary": "...", "sections": [{"heading":"Skills","kind":"skills","items":[]}, {"heading":"Experience","kind":"experience","items":[{"role":"","org":"","start":"","end":"","bullets":["",""]}]}, {"heading":"Education","kind":"education","items":[{"degree":"","institution":"","year":""}]}], "keyword_alignment": [], "ats_note": ""}.\n'
+                  f"PROFILE_FACTS:\n{_json.dumps(facts)[:9000]}\n\nJOB:\n{(jd_text or '')[:4000]}")
     else:
         return None
     resp = model.generate_content(prompt, generation_config={"temperature": 0.2, "response_mime_type": "application/json"})
@@ -301,7 +310,8 @@ def generate(profile: Dict[str, Any], jd_text: str, kind: str, *,
              company: str = "", role: str = "",
              matched_skills: Optional[List[str]] = None,
              gap_skills: Optional[List[str]] = None,
-             questions: Optional[List[str]] = None) -> Dict[str, Any]:
+             questions: Optional[List[str]] = None,
+             tailor_mode: str = "moderate") -> Dict[str, Any]:
     """Produce a grounded document. Returns {"content", "grounding"} where grounding
     records the provider, whether it was verified, and any flagged (rejected) claims."""
     if kind not in KINDS:
@@ -313,14 +323,14 @@ def generate(profile: Dict[str, Any], jd_text: str, kind: str, *,
     content = _local_generate(kind, profile, company, role, matched, gaps, questions)
     flagged: List[str] = []
 
-    # Gemini rewording for the free-text kinds only, behind the verifier gate.
-    if settings.GEMINI_API_KEY and kind in ("cover_letter", "answers"):
+    # Gemini generation for all kinds
+    if settings.GEMINI_API_KEY:
         try:
-            draft = _gemini_prose(kind, profile, jd_text, company, role, matched, questions)
+            draft = _gemini_prose(kind, profile, jd_text, company, role, matched, gaps, questions, tailor_mode)
             if draft:
                 check = verify_grounding(draft, profile, company)
                 if check["clean"]:
-                    content, provider = draft, "gemini"
+                    content, provider = draft, f"gemini ({tailor_mode})"
                 else:
                     flagged = check["flagged"]  # rejected → keep the grounded local version
                     print(f"[PathFinder] apply_gen {kind}: rejected Gemini draft, "
@@ -479,3 +489,81 @@ def _html_doc(title: str, body: str) -> str:
         "p{margin:6px 0}.signoff{margin-top:20px}@media print{body{margin:0}}"
         f"</style></head><body>{body}</body></html>"
     )
+
+def _resume_pdf(c: Dict[str, Any]) -> bytes:
+    import io
+    from xhtml2pdf import pisa
+    html_content = _resume_html(c)
+    dest = io.BytesIO()
+    pisa.CreatePDF(io.StringIO(html_content), dest)
+    return dest.getvalue()
+
+def _cover_letter_pdf(c: Dict[str, Any]) -> bytes:
+    import io
+    from xhtml2pdf import pisa
+    html_content = _cover_letter_html(c)
+    dest = io.BytesIO()
+    pisa.CreatePDF(io.StringIO(html_content), dest)
+    return dest.getvalue()
+
+def _resume_docx(c: Dict[str, Any]) -> bytes:
+    import io
+    from docx import Document
+    doc = Document()
+    
+    if c.get("name"):
+        doc.add_heading(c["name"], level=1)
+    
+    ct = c.get("contact", {})
+    contact_bits = [ct.get("email", ""), ct.get("phone", ""), ct.get("location", "")] + (ct.get("links") or [])
+    contact_bits = [b for b in contact_bits if b]
+    if contact_bits:
+        doc.add_paragraph(" | ".join(contact_bits))
+        
+    if c.get("headline"):
+        doc.add_paragraph(c["headline"])
+        
+    if c.get("summary"):
+        doc.add_heading("Summary", level=2)
+        doc.add_paragraph(c["summary"])
+        
+    for sec in c.get("sections", []):
+        doc.add_heading(sec.get("heading", ""), level=2)
+        kind = sec.get("kind")
+        if kind == "skills":
+            doc.add_paragraph(" · ".join(str(x) for x in sec.get("items", [])))
+        elif kind == "experience":
+            for it in sec.get("items", []):
+                head = " — ".join([x for x in [it.get("role", ""), it.get("org", "")] if x])
+                dates = " ".join([x for x in [it.get("start", ""), it.get("end", "")] if x])
+                doc.add_paragraph(f"{head}" + (f" ({dates})" if dates else ""), style='List Bullet')
+                for b in it.get("bullets", []):
+                    doc.add_paragraph(b, style='List Bullet 2')
+        elif kind == "education":
+            for it in sec.get("items", []):
+                bits = [it.get("degree", ""), it.get("institution", ""), it.get("year", ""), it.get("score", "")]
+                doc.add_paragraph(", ".join([x for x in bits if x]), style='List Bullet')
+        else:
+            for it in sec.get("items", []):
+                if isinstance(it, str):
+                    doc.add_paragraph(it, style='List Bullet')
+                else:
+                    h, d = it.get("heading", ""), it.get("detail", "")
+                    doc.add_paragraph(f"{h}" + (f": {d}" if d else ""), style='List Bullet')
+                    
+    dest = io.BytesIO()
+    doc.save(dest)
+    return dest.getvalue()
+
+def _cover_letter_docx(c: Dict[str, Any]) -> bytes:
+    import io
+    from docx import Document
+    doc = Document()
+    doc.add_paragraph(c.get('greeting','Dear Hiring Manager,'))
+    for p in c.get("paragraphs", []):
+        doc.add_paragraph(p)
+    doc.add_paragraph(c.get('signoff','Sincerely,'))
+    doc.add_paragraph(c.get('name',''))
+    dest = io.BytesIO()
+    doc.save(dest)
+    return dest.getvalue()

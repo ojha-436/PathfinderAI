@@ -1580,18 +1580,18 @@ async function renderApply() {
   try {
     const apps = await Api.getApplications();
     const listHtml = apps.length ? apps.map(a => `
-      <div class="card learn-item" style="cursor:pointer" data-appid="${esc(a.id)}">
+      <div class="card learn-item" style="cursor:pointer; background:rgba(255, 255, 255, 0.7); backdrop-filter:blur(20px); border:1px solid rgba(13, 148, 136, 0.2); box-shadow:0 4px 15px rgba(0,0,0,0.05); border-radius:12px; margin-bottom:12px; padding:16px; display:flex; justify-content:space-between; align-items:center; transition:transform 0.2s, box-shadow 0.2s;" data-appid="${esc(a.id)}" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(13,148,136,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.05)';">
         <div class="li-body">
-          <div class="hi-title">${esc(a.job_title)}</div>
-          <div class="hi-date mono">${esc(a.company)} &middot; Match: ${a.match_pct}% &middot; Status: ${a.status}</div>
+          <div class="hi-title" style="font-family:'Inter', sans-serif; font-size:18px; font-weight:600; color:#0f172a; margin-bottom:4px;">${esc(a.job_title)}</div>
+          <div class="hi-date mono" style="font-family:'JetBrains Mono', monospace; font-size:12px; color:#5c647a;">${esc(a.company)} &middot; Match: ${a.match_pct}% &middot; Status: ${a.status}</div>
         </div>
-        <button class="btn btn-ghost btn-sm">View →</button>
-      </div>`).join('') : '<p class="muted">No applications yet.</p>';
+        <button class="btn btn-ghost btn-sm" style="color:#0d9488; font-family:'Inter', sans-serif; font-weight:500;">View →</button>
+      </div>`).join('') : '<p style="text-align:center; color:#5c647a; font-family:\\\'Inter\\\', sans-serif;">No applications yet.</p>';
       
-    root.innerHTML = `<div class="card" style="max-width:800px; margin:0 auto;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h2 style="margin:0">Apply Studio</h2>
-        <button class="btn btn-primary" id="newAppBtn">New Application</button>
+    root.innerHTML = `<div class="card" style="max-width:800px; margin:0 auto; background:rgba(248, 249, 255, 0.9); backdrop-filter:blur(40px); border:1px solid rgba(13, 148, 136, 0.15); border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,0.08); padding:40px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid rgba(13, 148, 136, 0.2); padding-bottom:16px; margin-bottom:24px;">
+        <h2 style="margin:0; font-family:'Inter', sans-serif; font-size:32px; font-weight:700; color:#0f172a; letter-spacing:-0.01em;">Apply Studio</h2>
+        <button class="btn btn-primary" id="newAppBtn" style="background:linear-gradient(135deg, #0d9488 0%, #00685f 100%); border:none; padding:10px 20px; border-radius:8px; font-family:'Inter', sans-serif; font-weight:600; box-shadow:0 4px 15px rgba(13, 148, 136, 0.3); color:white; cursor:pointer;">New Application</button>
       </div>
       <div class="hist-list">${listHtml}</div>
     </div>`;
@@ -1601,23 +1601,30 @@ async function renderApply() {
     });
     
     $('#newAppBtn').onclick = () => {
-      root.innerHTML = `<div class="card" style="max-width:800px; margin:0 auto;">
-        <h2>New Application</h2>
-        <div class="field">
-          <label>Job Description URL or pasted text</label>
-          <input type="text" id="newAppUrl" placeholder="https://...">
-          <textarea id="newAppText" rows="6" placeholder="Or paste the full job description here..." style="margin-top:8px"></textarea>
+      root.innerHTML = `<div class="card" style="max-width:800px; margin:0 auto; background:rgba(248, 249, 255, 0.9); backdrop-filter:blur(40px); border:1px solid rgba(13, 148, 136, 0.15); border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,0.08); padding:40px;">
+        <h2 style="margin:0 0 24px 0; font-family:'Inter', sans-serif; font-size:32px; font-weight:700; color:#0f172a; letter-spacing:-0.01em; border-bottom:2px solid rgba(13, 148, 136, 0.2); padding-bottom:16px;">New Application</h2>
+        
+        <div class="field" style="margin-bottom:24px;">
+          <label style="font-family:'JetBrains Mono', monospace; font-size:12px; color:#5c647a; font-weight:500; display:block; margin-bottom:4px;">JOB DESCRIPTION URL OR PASTED TEXT</label>
+          <input type="text" id="newAppUrl" placeholder="https://..." style="width:100%; padding:12px; border:1px solid rgba(109, 122, 119, 0.3); border-radius:8px; font-family:'Inter', sans-serif; background:rgba(255,255,255,0.7); box-sizing:border-box;">
+          <textarea id="newAppText" rows="6" placeholder="Or paste the full job description here..." style="width:100%; padding:12px; border:1px solid rgba(109, 122, 119, 0.3); border-radius:8px; font-family:'Inter', sans-serif; background:rgba(255,255,255,0.7); box-sizing:border-box; margin-top:8px;"></textarea>
         </div>
-        <div class="field">
-          <label>Company Name (optional)</label>
-          <input type="text" id="newAppCompany">
+        
+        <div style="display:flex; gap:16px; margin-bottom:32px;">
+          <div class="field" style="flex:1;">
+            <label style="font-family:'JetBrains Mono', monospace; font-size:12px; color:#5c647a; font-weight:500; display:block; margin-bottom:4px;">COMPANY NAME (OPTIONAL)</label>
+            <input type="text" id="newAppCompany" style="width:100%; padding:12px; border:1px solid rgba(109, 122, 119, 0.3); border-radius:8px; font-family:'Inter', sans-serif; background:rgba(255,255,255,0.7); box-sizing:border-box;">
+          </div>
+          <div class="field" style="flex:1;">
+            <label style="font-family:'JetBrains Mono', monospace; font-size:12px; color:#5c647a; font-weight:500; display:block; margin-bottom:4px;">JOB TITLE (OPTIONAL)</label>
+            <input type="text" id="newAppTitle" style="width:100%; padding:12px; border:1px solid rgba(109, 122, 119, 0.3); border-radius:8px; font-family:'Inter', sans-serif; background:rgba(255,255,255,0.7); box-sizing:border-box;">
+          </div>
         </div>
-        <div class="field">
-          <label>Job Title (optional)</label>
-          <input type="text" id="newAppTitle">
+        
+        <div style="display:flex; gap:12px; justify-content:flex-end;">
+          <button class="btn btn-ghost" onclick="renderApply()" style="color:#64748b; font-family:'Inter', sans-serif; padding:10px 20px; cursor:pointer;">Cancel</button>
+          <button class="btn btn-primary" id="extractBtn" style="background:linear-gradient(135deg, #0d9488 0%, #00685f 100%); border:none; padding:10px 24px; border-radius:8px; font-family:'Inter', sans-serif; font-weight:600; box-shadow:0 4px 15px rgba(13, 148, 136, 0.3); color:white; cursor:pointer;">Extract & Match</button>
         </div>
-        <button class="btn btn-primary" id="extractBtn">Extract & Match</button>
-        <button class="btn btn-ghost" onclick="renderApply()">Cancel</button>
       </div>`;
       
       $('#extractBtn').onclick = async () => {
@@ -1663,41 +1670,68 @@ async function renderApplicationDetail(id) {
     
     let docsHtml = '';
     if (app.docs && app.docs.length) {
-      docsHtml = `<div style="margin-top:24px;"><h3>Generated Documents</h3>` + app.docs.map(d => {
-        return `<div class="card" style="background:var(--sand); margin-bottom:12px;">
-          <h4>${esc(d.kind)}</h4>
-          <pre style="white-space:pre-wrap; font-size:12px; margin-top:8px">${esc(JSON.stringify(d.content, null, 2))}</pre>
+      docsHtml = `<div style="margin-top:32px;">
+        <h3 style="color:var(--primary); font-family:'Inter', sans-serif; font-weight:600; margin-bottom:16px;">Generated Documents</h3>
+        <div style="display:flex; flex-direction:column; gap:16px;">` + app.docs.map(d => {
+        return `<div class="card" style="background:rgba(255, 255, 255, 0.7); backdrop-filter:blur(20px); border:1px solid rgba(13, 148, 136, 0.2); box-shadow:0 10px 30px rgba(0,0,0,0.05); border-radius:12px; padding:24px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(13, 148, 136, 0.1); padding-bottom:12px; margin-bottom:16px;">
+            <h4 style="margin:0; color:#0f172a; font-family:'Inter', sans-serif; font-size:18px;">${esc(d.kind.replace('_', ' ').toUpperCase())}</h4>
+            <div style="display:flex; gap:8px;">
+              <button onclick="Api.exportApplyDoc('${app.id}', '${esc(d.kind)}', 'pdf')" class="btn btn-sm" style="background:#0d9488; color:white; border-radius:8px; border:none; padding:6px 12px; font-family:'Inter', sans-serif; cursor:pointer;">Export PDF</button>
+              <button onclick="Api.exportApplyDoc('${app.id}', '${esc(d.kind)}', 'docx')" class="btn btn-sm" style="background:transparent; color:#0d9488; border:1px solid #0d9488; border-radius:8px; padding:6px 12px; font-family:'Inter', sans-serif; cursor:pointer;">Export DOCX</button>
+            </div>
+          </div>
+          <pre style="white-space:pre-wrap; font-size:13px; font-family:'JetBrains Mono', monospace; background:rgba(248, 249, 255, 0.8); border:1px solid rgba(109, 122, 119, 0.2); border-radius:8px; padding:16px; max-height:400px; overflow-y:auto; color:#333;">${esc(JSON.stringify(d.content, null, 2))}</pre>
         </div>`;
-      }).join('') + `</div>`;
+      }).join('') + `</div></div>`;
     }
     
-    root.innerHTML = `<div class="card" style="max-width:800px; margin:0 auto;">
-      <button class="btn btn-ghost btn-sm" onclick="renderApply()" style="margin-bottom:16px;">← Back</button>
-      <h2 style="margin:0">${esc(app.job_title)} at ${esc(app.company)}</h2>
-      <div class="mono" style="color:var(--pine); font-weight:bold; margin-top:4px;">Match: ${m.match_pct || 0}%</div>
+    root.innerHTML = `<div class="card" style="max-width:800px; margin:0 auto; background:rgba(248, 249, 255, 0.9); backdrop-filter:blur(40px); border:1px solid rgba(13, 148, 136, 0.15); border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,0.08); padding:40px;">
+      <button class="btn btn-ghost btn-sm" onclick="renderApply()" style="margin-bottom:24px; color:#64748b; font-family:'Inter', sans-serif;">← Back to Applications</button>
       
-      <div style="margin-top:16px;">
-        <strong>Missing Skills:</strong> ${m.gaps && m.gaps.length ? m.gaps.join(', ') : 'None!'}
+      <div style="border-bottom:2px solid rgba(13, 148, 136, 0.2); padding-bottom:16px; margin-bottom:24px;">
+        <h2 style="margin:0; font-family:'Inter', sans-serif; font-size:32px; font-weight:700; color:#0f172a; letter-spacing:-0.01em;">${esc(app.job_title)}</h2>
+        <h3 style="margin:4px 0 0 0; font-family:'Inter', sans-serif; font-size:20px; font-weight:500; color:#38bdf8;">at ${esc(app.company)}</h3>
       </div>
       
-      <div class="field" style="margin-top:24px;">
-        <label>Screening Questions (optional, one per line)</label>
-        <textarea id="appQs" rows="3" placeholder="e.g. How many years of Python experience do you have?"></textarea>
+      <div style="display:flex; gap:12px; align-items:center; font-family:'JetBrains Mono', monospace; font-size:12px; margin-bottom:24px;">
+        <span style="background:rgba(13, 148, 136, 0.1); color:#0d9488; padding:4px 10px; border-radius:999px; font-weight:600;">AI Precision: ${m.match_pct || 0}% Match</span>
       </div>
       
-      <button class="btn btn-primary" id="generateBtn">Generate Tailored Docs (Resume + Cover Letter + Answers)</button>
+      <div class="field" style="margin-bottom:24px; background:rgba(255, 255, 255, 0.6); padding:16px; border-radius:12px; border:1px solid rgba(109, 122, 119, 0.2);">
+        <label style="font-family:'JetBrains Mono', monospace; font-size:12px; color:#5c647a; font-weight:500; display:block; margin-bottom:4px;">MISSING SKILLS</label>
+        <p style="margin:0; font-family:'Inter', sans-serif; font-size:14px; color:#0f172a;">${m.gaps && m.gaps.length ? m.gaps.join(', ') : 'None! 100% Match.'}</p>
+      </div>
+      
+      <div class="field" style="margin-bottom:24px;">
+        <label style="font-family:'JetBrains Mono', monospace; font-size:12px; color:#5c647a; font-weight:500; display:block; margin-bottom:4px;">SCREENING QUESTIONS (OPTIONAL)</label>
+        <textarea id="appQs" rows="3" placeholder="e.g. How many years of Python experience do you have?" style="width:100%; padding:12px; border:1px solid rgba(109, 122, 119, 0.3); border-radius:8px; font-family:'Inter', sans-serif; background:rgba(255,255,255,0.7); box-sizing:border-box;"></textarea>
+      </div>
+      
+      <div class="field" style="margin-bottom:32px;">
+        <label style="font-family:'JetBrains Mono', monospace; font-size:12px; color:#5c647a; font-weight:500; display:block; margin-bottom:4px;">TAILORING STRATEGY</label>
+        <select id="tailorMode" style="width:100%; padding:12px; border:1px solid rgba(13, 148, 136, 0.4); border-radius:8px; font-family:'Inter', sans-serif; font-size:14px; background:rgba(255,255,255,0.8); color:#0f172a; outline:none; box-shadow:0 0 0 2px rgba(13,148,136,0.1); box-sizing:border-box;">
+          <option value="moderate">Moderate (Strict Grounding - Use my actual skills)</option>
+          <option value="aggressive">Aggressive (ATS Hacking - Inject missing JD keywords)</option>
+        </select>
+      </div>
+      
+      <button class="btn btn-primary" id="generateBtn" style="width:100%; background:linear-gradient(135deg, #0d9488 0%, #00685f 100%); border:none; padding:14px; border-radius:8px; font-family:'Inter', sans-serif; font-weight:600; font-size:16px; box-shadow:0 4px 15px rgba(13, 148, 136, 0.3); color:white; cursor:pointer;">Generate Tailored Docs</button>
+      
       ${docsHtml}
     </div>`;
     
     $('#generateBtn').onclick = async () => {
       const qsRaw = $('#appQs').value.trim();
       const qs = qsRaw ? qsRaw.split('\\n').map(s => s.trim()).filter(Boolean) : [];
+      const mode = $('#tailorMode').value;
       $('#generateBtn').disabled = true; $('#generateBtn').textContent = "Generating... (this takes ~15s)";
       try {
         await Api.generateApplyDocs({
           application_id: app.id,
           kinds: ["resume", "cover_letter", "answers"],
-          questions: qs
+          questions: qs,
+          tailor_mode: mode
         });
         toast("Documents generated & grounded!");
         renderApplicationDetail(app.id); // reload view

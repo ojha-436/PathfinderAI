@@ -150,4 +150,20 @@ const Api = {
   generateApplyDocs: (data) => fetch(`${API}/apply/generate`, {
     method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(data),
   }).then(handle),
+  exportApplyDoc: async (appId, kind, fmt) => {
+    const res = await fetch(`${API}/apply/${appId}/export?kind=${kind}&fmt=${fmt}`, {
+      headers: authHeaders()
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Export failed');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${kind}.${fmt}`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
 };
