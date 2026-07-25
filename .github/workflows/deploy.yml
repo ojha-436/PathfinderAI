@@ -98,18 +98,8 @@ jobs:
             --port=8080 \
             --memory=512Mi --cpu=1 \
             --min-instances=1 --max-instances=1 \
-            --startup-probe-type=http \
-            --startup-probe-path=/api/health \
-            --startup-probe-port=8080 \
-            --startup-probe-initial-delay=5 \
-            --startup-probe-period=10 \
-            --startup-probe-failure-threshold=3 \
-            --liveness-probe-type=http \
-            --liveness-probe-path=/api/health \
-            --liveness-probe-port=8080 \
-            --liveness-probe-initial-delay=15 \
-            --liveness-probe-period=15 \
-            --liveness-probe-failure-threshold=3 \
+            --startup-probe=httpGet.path=/api/health,httpGet.port=8080,initialDelaySeconds=5,periodSeconds=10,failureThreshold=3 \
+            --liveness-probe=httpGet.path=/api/health,httpGet.port=8080,periodSeconds=15,failureThreshold=3 \
             --set-env-vars="APP_ENV=${{ env.ENV_NAME }}" \
             --set-secrets="JWT_SECRET=JWT_SECRET:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,RAPIDAPI_KEY=RAPIDAPI_KEY:latest,ADZUNA_APP_ID=ADZUNA_APP_ID:latest,ADZUNA_APP_KEY=ADZUNA_APP_KEY:latest,SMTP_USER=SMTP_USER:latest,SMTP_PASSWORD=SMTP_PASSWORD:latest,DIGEST_TOKEN=DIGEST_TOKEN:latest,DATABASE_URL=DATABASE_URL:latest"
 
