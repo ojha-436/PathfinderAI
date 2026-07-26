@@ -33,6 +33,15 @@
       ],
       "js": ["content.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "http://localhost:8099/*",
+        "http://127.0.0.1:8099/*",
+        "https://*.pathfinder.app/*"
+      ],
+      "js": ["detect.js"],
+      "run_at": "document_start"
     }
   ]
 }

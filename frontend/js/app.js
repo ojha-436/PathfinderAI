@@ -2125,6 +2125,75 @@ async function renderProfile(draftSections = null, editingSecType = null, active
   }
 }
 
+/* ---------------- Apply Assistant: extension install + detection ---------------- */
+const EXT_STORE_URL = ''; // set to the Chrome Web Store listing URL once published → banner links straight there
+function extBrowser() {
+  const ua = navigator.userAgent;
+  if (navigator.brave) return 'brave';
+  if (/Edg\//.test(ua)) return 'edge';
+  if (/OPR\//.test(ua)) return 'opera';
+  if (/Firefox\//.test(ua)) return 'firefox';
+  if (/Chrome\//.test(ua)) return 'chrome';
+  if (/Safari\//.test(ua)) return 'safari';
+  return 'other';
+}
+function extSupported() { return ['chrome', 'edge', 'brave', 'opera'].includes(extBrowser()); }
+function extInstalled() { return !!document.documentElement.getAttribute('data-pf-apply'); }
+
+function renderExtBanner(host) {
+  if (!host) return;
+  if (extInstalled()) {
+    host.innerHTML = `<div class="ext-banner installed">
+      <span class="eb-ic">${svgIcon('check', 20)}</span>
+      <div class="eb-txt"><b>PathFinder Apply is installed</b><span>Open any job posting and click ⚡ Autofill — you review &amp; submit.</span></div>
+      <div class="eb-act"><button class="btn btn-ghost btn-sm" id="extSeeHow">How it works</button></div></div>`;
+    $('#extSeeHow').onclick = () => openExtensionGuide();
+    return;
+  }
+  if (localStorage.getItem('pf_ext_dismissed')) { host.innerHTML = ''; return; }
+  const supported = extSupported();
+  const cta = EXT_STORE_URL ? 'Add to Chrome' : 'Get the extension';
+  host.innerHTML = `<div class="ext-banner">
+      <span class="eb-ic">${svgIcon('bolt', 20)}</span>
+      <div class="eb-txt"><b>Apply faster with the browser extension</b><span>${supported
+        ? 'Autofill any application — Greenhouse, Lever, Workday and more — from your profile. You review &amp; submit.'
+        : 'Available for Chrome, Edge &amp; Brave. Autofill applications from your profile — you review &amp; submit.'}</span></div>
+      <div class="eb-act">${supported ? `<button class="btn btn-primary btn-sm" id="extAdd">${cta}</button>` : ''}<button class="btn btn-ghost btn-sm" id="extSeeHow">See how it works</button><button class="btn btn-ghost btn-sm" id="extDismiss">Got it</button></div>
+    </div>`;
+  if ($('#extAdd')) $('#extAdd').onclick = () => { if (EXT_STORE_URL) window.open(EXT_STORE_URL, '_blank', 'noopener'); else openInstallExtension(); };
+  $('#extSeeHow').onclick = () => openExtensionGuide();
+  $('#extDismiss').onclick = () => { localStorage.setItem('pf_ext_dismissed', '1'); host.innerHTML = ''; };
+}
+// Flip the banner to "installed" live if the extension announces itself while the page is open.
+window.addEventListener('pf-apply-installed', () => { const h = document.getElementById('extBannerHost'); if (h) renderExtBanner(h); });
+
+function openInstallExtension() {
+  const back = document.createElement('div');
+  back.className = 'modal-back';
+  back.innerHTML = `<div class="card modal ext-install" role="dialog" aria-modal="true">
+      <button class="close-x" id="eiX" aria-label="Close">×</button>
+      <span class="eyebrow">Browser extension</span>
+      <h2 style="margin:.1em 0 .5em">Add PathFinder Apply to your browser</h2>
+      ${EXT_STORE_URL ? '' : '<div class="ei-note">One-click Chrome Web Store install is coming soon. For now, add it in four quick steps (Chrome, Edge or Brave):</div>'}
+      <ol class="ei-steps">
+        <li><b>Download</b> the extension and unzip it.<div style="margin-top:8px"><a class="btn btn-primary btn-sm" href="/api/extension/download">${svgIcon('download', 14, 'vertical-align:-2px;margin-right:5px')}Download extension (.zip)</a></div></li>
+        <li>Open <code>chrome://extensions</code> and turn on <b>Developer mode</b> (top-right).</li>
+        <li>Click <b>Load unpacked</b> and select the unzipped <code>pathfinder-apply</code> folder.</li>
+        <li>Pin it, open the popup, and <b>sign in</b> with your PathFinder account.</li>
+      </ol>
+      <div class="eg-foot">
+        <span class="muted" style="font-size:.8rem">Chrome · Edge · Brave (desktop)${extSupported() ? '' : ' — your current browser is not supported'}.</span>
+        <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" id="eiHow">How it works</button><button class="btn btn-primary btn-sm" id="eiDone">Done</button></div>
+      </div>
+    </div>`;
+  document.body.appendChild(back);
+  const close = () => back.remove();
+  back.onclick = (e) => { if (e.target === back) close(); };
+  back.querySelector('#eiX').onclick = close;
+  back.querySelector('#eiDone').onclick = close;
+  back.querySelector('#eiHow').onclick = () => { close(); openExtensionGuide(); };
+}
+
 /* ---------------- Apply Assistant: browser-extension how-to (animated) ---------------- */
 function openExtensionGuide() {
   const STEPS = [
@@ -2209,17 +2278,8 @@ async function renderApply() {
       <div class="hist-list">${listHtml}</div>
     </div>`;
 
-    // Extension CTA — dismissible banner (progressive disclosure: how-to is one click away).
-    const host = $('#extBannerHost');
-    if (host && !localStorage.getItem('pf_ext_dismissed')) {
-      host.innerHTML = `<div class="ext-banner">
-        <span class="eb-ic">${svgIcon('bolt', 20)}</span>
-        <div class="eb-txt"><b>Apply faster with the browser extension</b><span>Autofill any application — Greenhouse, Lever, Workday and more — from your profile. You review &amp; submit.</span></div>
-        <div class="eb-act"><button class="btn btn-primary btn-sm" id="extSeeHow">See how it works</button><button class="btn btn-ghost btn-sm" id="extDismiss">Got it</button></div>
-      </div>`;
-      $('#extSeeHow').onclick = () => openExtensionGuide();
-      $('#extDismiss').onclick = () => { localStorage.setItem('pf_ext_dismissed', '1'); host.innerHTML = ''; };
-    }
+    // Extension CTA — adapts to browser + install state (progressive disclosure).
+    renderExtBanner($('#extBannerHost'));
     $('#extHowLink').onclick = () => openExtensionGuide();
 
     root.querySelectorAll('[data-appid]').forEach(el => {
