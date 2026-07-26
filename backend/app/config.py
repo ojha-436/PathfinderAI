@@ -52,7 +52,10 @@ class Settings(BaseSettings):
     # Weekly digest — Cloud Scheduler calls /api/internal/digest/run with this token.
     DIGEST_TOKEN: str = os.getenv("DIGEST_TOKEN", "")
 
-    model_config = SettingsConfigDict(case_sensitive=True, extra="ignore")
+    # Loads a gitignored backend/.env if present (e.g. GEMINI_API_KEY=...), so secrets
+    # live in one local file — never in source or committed config.
+    model_config = SettingsConfigDict(case_sensitive=True, extra="ignore",
+                                      env_file=".env", env_file_encoding="utf-8")
 
     @property
     def max_upload_bytes(self) -> int:

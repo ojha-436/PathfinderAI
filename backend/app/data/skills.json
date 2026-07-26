@@ -1,7 +1,7 @@
 {
   "_meta": {
     "market": "India",
-    "domain": "clerical/admin/data-entry → data-adjacent roles",
+    "domain": "clerical/admin/data-entry → data-adjacent roles, plus software engineering, mechanical/design engineering, and product/UX fields",
     "unit": "demand index (100 = baseline job-posting volume at month 0)",
     "series_months": 36,
     "method": "Curated taxonomy (O*NET/ESCO-aligned). Monthly demand series are generated deterministically from documented per-skill parameters (base, annualized trend direction grounded in well-established India labour-market signals, small seasonal + deterministic micro-variation). Direction of trend (rising vs declining) reflects real, widely-reported shifts: manual clerical work declining, data/BI/automation skills rising. Synthetic where noted; fully reproducible.",
@@ -49,6 +49,37 @@
     {"id": "data_storytelling", "name": "Data Storytelling", "category": "rising", "aliases": ["data storytelling", "storytelling with data", "insight communication", "presenting data"], "demand": {"base": 70, "monthly_growth": 0.0110, "seasonal_amp": 0.015, "noise_amp": 0.015}},
     {"id": "project_coordination", "name": "Project Coordination", "category": "rising", "aliases": ["project coordination", "project management", "coordination", "pmo", "agile"], "demand": {"base": 84, "monthly_growth": 0.0075, "seasonal_amp": 0.02, "noise_amp": 0.015}},
     {"id": "quality_assurance", "name": "Quality Assurance", "category": "rising", "aliases": ["quality assurance", "qa", "quality control", "qc", "testing"], "demand": {"base": 82, "monthly_growth": 0.0090, "seasonal_amp": 0.02, "noise_amp": 0.015}},
-    {"id": "database_fundamentals", "name": "Database Fundamentals", "category": "rising", "aliases": ["database", "databases", "dbms", "rdbms", "database management"], "demand": {"base": 78, "monthly_growth": 0.0115, "seasonal_amp": 0.02, "noise_amp": 0.015}}
+    {"id": "database_fundamentals", "name": "Database Fundamentals", "category": "rising", "aliases": ["database", "databases", "dbms", "rdbms", "database management"], "demand": {"base": 78, "monthly_growth": 0.0115, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+
+    {"id": "javascript", "name": "JavaScript", "category": "software", "aliases": ["javascript", "js", "es6", "vanilla js"], "demand": {"base": 96, "monthly_growth": 0.0090, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "typescript", "name": "TypeScript", "category": "software", "aliases": ["typescript", "ts"], "demand": {"base": 82, "monthly_growth": 0.0150, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "react", "name": "React", "category": "software", "aliases": ["react", "react.js", "reactjs", "react native"], "demand": {"base": 90, "monthly_growth": 0.0140, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "nodejs", "name": "Node.js", "category": "software", "aliases": ["node", "node.js", "nodejs", "express", "express.js"], "demand": {"base": 84, "monthly_growth": 0.0120, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "html_css", "name": "HTML & CSS", "category": "software", "aliases": ["html", "css", "html5", "css3", "tailwind", "scss"], "demand": {"base": 92, "monthly_growth": 0.0050, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "java", "name": "Java", "category": "software", "aliases": ["java", "spring", "spring boot", "j2ee"], "demand": {"base": 88, "monthly_growth": 0.0055, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "rest_apis", "name": "REST APIs", "category": "software", "aliases": ["rest api", "rest apis", "restful", "api development", "apis", "graphql"], "demand": {"base": 86, "monthly_growth": 0.0130, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "git", "name": "Git & Version Control", "category": "software", "aliases": ["git", "github", "gitlab", "version control", "bitbucket"], "demand": {"base": 94, "monthly_growth": 0.0070, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "docker", "name": "Docker & Containers", "category": "software", "aliases": ["docker", "containers", "kubernetes", "k8s", "containerization"], "demand": {"base": 76, "monthly_growth": 0.0165, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "devops", "name": "CI/CD & DevOps", "category": "software", "aliases": ["devops", "ci/cd", "cicd", "jenkins", "github actions", "continuous integration"], "demand": {"base": 74, "monthly_growth": 0.0160, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "system_design", "name": "System Design", "category": "software", "aliases": ["system design", "software architecture", "distributed systems", "scalability"], "demand": {"base": 72, "monthly_growth": 0.0155, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+
+    {"id": "cad", "name": "CAD (AutoCAD)", "category": "engineering", "aliases": ["cad", "autocad", "computer aided design", "2d drafting", "drafting"], "demand": {"base": 88, "monthly_growth": 0.0035, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "solidworks", "name": "SolidWorks / 3D CAD", "category": "engineering", "aliases": ["solidworks", "3d cad", "catia", "creo", "fusion 360", "nx", "inventor", "3d modeling", "3d modelling"], "demand": {"base": 84, "monthly_growth": 0.0060, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "mechanical_design", "name": "Mechanical Design", "category": "engineering", "aliases": ["mechanical design", "machine design", "product design engineering", "design engineering"], "demand": {"base": 86, "monthly_growth": 0.0055, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "fea", "name": "FEA / Simulation", "category": "engineering", "aliases": ["fea", "finite element analysis", "ansys", "simulation", "cfd", "structural analysis"], "demand": {"base": 74, "monthly_growth": 0.0075, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "gdt", "name": "GD&T & Tolerancing", "category": "engineering", "aliases": ["gd&t", "gdt", "geometric dimensioning", "tolerancing", "tolerance analysis"], "demand": {"base": 70, "monthly_growth": 0.0040, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "product_development", "name": "Product Development", "category": "engineering", "aliases": ["product development", "npd", "new product development", "concept to production", "design for manufacturing", "dfm"], "demand": {"base": 82, "monthly_growth": 0.0080, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "rnd", "name": "Research & Development", "category": "engineering", "aliases": ["r&d", "rnd", "research and development", "research & development", "innovation"], "demand": {"base": 80, "monthly_growth": 0.0070, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "prototyping", "name": "Prototyping & Testing", "category": "engineering", "aliases": ["prototyping", "prototype", "rapid prototyping", "3d printing", "validation", "testing and validation"], "demand": {"base": 78, "monthly_growth": 0.0075, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "manufacturing", "name": "Manufacturing Processes", "category": "engineering", "aliases": ["manufacturing", "production", "lean manufacturing", "cnc", "machining", "fabrication", "welding"], "demand": {"base": 84, "monthly_growth": 0.0045, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "cam", "name": "CAM / CNC Programming", "category": "engineering", "aliases": ["cam", "cnc programming", "g-code", "mastercam", "tool path"], "demand": {"base": 68, "monthly_growth": 0.0050, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+
+    {"id": "product_management", "name": "Product Management", "category": "design", "aliases": ["product management", "product manager", "product owner", "backlog management", "prioritization frameworks"], "demand": {"base": 82, "monthly_growth": 0.0120, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "roadmapping", "name": "Product Roadmapping", "category": "design", "aliases": ["roadmapping", "product roadmap", "roadmap", "product strategy"], "demand": {"base": 74, "monthly_growth": 0.0100, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "ux_design", "name": "UX Design", "category": "design", "aliases": ["ux", "ux design", "user experience", "ux/ui", "interaction design"], "demand": {"base": 80, "monthly_growth": 0.0115, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "ui_design", "name": "UI Design", "category": "design", "aliases": ["ui", "ui design", "user interface", "visual design", "graphic design"], "demand": {"base": 78, "monthly_growth": 0.0090, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "figma", "name": "Figma", "category": "design", "aliases": ["figma", "sketch", "adobe xd", "design tools"], "demand": {"base": 76, "monthly_growth": 0.0135, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "user_research", "name": "User Research", "category": "design", "aliases": ["user research", "usability testing", "user interviews", "ux research"], "demand": {"base": 72, "monthly_growth": 0.0105, "seasonal_amp": 0.02, "noise_amp": 0.015}},
+    {"id": "wireframing", "name": "Wireframing & Prototyping", "category": "design", "aliases": ["wireframing", "wireframes", "mockups", "prototypes", "design prototyping"], "demand": {"base": 74, "monthly_growth": 0.0095, "seasonal_amp": 0.02, "noise_amp": 0.015}}
   ]
 }

@@ -69,6 +69,86 @@
       "time_to_ready_base_months": 10,
       "description": "Builds the pipelines that move and shape data — highest payoff, steepest climb.",
       "skills": {"sql": 0.20, "python": 0.20, "etl": 0.18, "database_fundamentals": 0.14, "data_cleaning": 0.12, "cloud_basics": 0.10, "problem_solving": 0.06}
+    },
+    {
+      "id": "frontend_developer",
+      "name": "Frontend Developer",
+      "salary_key": "frontend_developer",
+      "time_to_ready_base_months": 8,
+      "description": "Builds the user-facing web interfaces — HTML/CSS, JavaScript and modern frameworks like React.",
+      "skills": {"html_css": 0.22, "javascript": 0.22, "react": 0.20, "typescript": 0.12, "git": 0.12, "rest_apis": 0.12}
+    },
+    {
+      "id": "backend_developer",
+      "name": "Backend Developer",
+      "salary_key": "backend_developer",
+      "time_to_ready_base_months": 10,
+      "description": "Builds the server-side logic, APIs and data layer behind applications.",
+      "skills": {"python": 0.20, "rest_apis": 0.18, "sql": 0.16, "database_fundamentals": 0.14, "docker": 0.12, "git": 0.12, "system_design": 0.08}
+    },
+    {
+      "id": "fullstack_developer",
+      "name": "Full-Stack Developer",
+      "salary_key": "fullstack_developer",
+      "time_to_ready_base_months": 11,
+      "description": "Works across the whole stack — front-end UI through back-end APIs and databases.",
+      "skills": {"javascript": 0.20, "react": 0.18, "nodejs": 0.16, "sql": 0.14, "rest_apis": 0.14, "git": 0.10, "html_css": 0.08}
+    },
+    {
+      "id": "devops_engineer",
+      "name": "DevOps Engineer",
+      "salary_key": "devops_engineer",
+      "time_to_ready_base_months": 11,
+      "description": "Automates build, deploy and infrastructure — containers, CI/CD and cloud.",
+      "skills": {"docker": 0.22, "devops": 0.20, "cloud_basics": 0.18, "git": 0.12, "python": 0.12, "system_design": 0.10, "problem_solving": 0.06}
+    },
+    {
+      "id": "mechanical_design_engineer",
+      "name": "Mechanical Design Engineer",
+      "salary_key": "mechanical_design_engineer",
+      "time_to_ready_base_months": 9,
+      "description": "Designs mechanical parts and assemblies in 3D CAD — from concept through tolerancing and validation.",
+      "skills": {"solidworks": 0.22, "mechanical_design": 0.20, "cad": 0.16, "gdt": 0.12, "fea": 0.12, "prototyping": 0.10, "product_development": 0.08}
+    },
+    {
+      "id": "rnd_engineer",
+      "name": "R&D Engineer",
+      "salary_key": "rnd_engineer",
+      "time_to_ready_base_months": 10,
+      "description": "Leads research and development of new products — concept, feasibility, prototyping and validation.",
+      "skills": {"rnd": 0.22, "mechanical_design": 0.18, "product_development": 0.16, "prototyping": 0.14, "problem_solving": 0.10, "project_coordination": 0.10, "solidworks": 0.10}
+    },
+    {
+      "id": "product_design_engineer",
+      "name": "Product Design Engineer",
+      "salary_key": "product_design_engineer",
+      "time_to_ready_base_months": 9,
+      "description": "Takes products from concept to manufacture — CAD design, design-for-manufacturing and prototyping.",
+      "skills": {"cad": 0.20, "solidworks": 0.20, "mechanical_design": 0.18, "product_development": 0.14, "manufacturing": 0.12, "gdt": 0.10, "prototyping": 0.06}
+    },
+    {
+      "id": "manufacturing_engineer",
+      "name": "Manufacturing Engineer",
+      "salary_key": "manufacturing_engineer",
+      "time_to_ready_base_months": 8,
+      "description": "Optimises how products are made — processes, CNC/CAM, quality and cost.",
+      "skills": {"manufacturing": 0.24, "cam": 0.18, "cad": 0.16, "quality_assurance": 0.14, "gdt": 0.12, "project_coordination": 0.10, "problem_solving": 0.06}
+    },
+    {
+      "id": "product_manager",
+      "name": "Product Manager",
+      "salary_key": "product_manager",
+      "time_to_ready_base_months": 9,
+      "description": "Owns what gets built and why — strategy, roadmap, user needs and cross-functional delivery.",
+      "skills": {"product_management": 0.24, "roadmapping": 0.18, "data_analysis": 0.14, "user_research": 0.12, "communication": 0.12, "project_coordination": 0.12, "problem_solving": 0.08}
+    },
+    {
+      "id": "ux_designer",
+      "name": "UX Designer",
+      "salary_key": "ux_designer",
+      "time_to_ready_base_months": 8,
+      "description": "Designs intuitive product experiences — research, flows, wireframes and high-fidelity UI.",
+      "skills": {"ux_design": 0.24, "user_research": 0.18, "wireframing": 0.16, "figma": 0.16, "ui_design": 0.16, "communication": 0.10}
     }
   ]
 }

@@ -79,6 +79,36 @@ ROLE_ALIASES: List[tuple] = [
     ("data analyst", "data_analyst"),
     ("crm coordinator", "crm_data_coordinator"),
     ("data engineer", "junior_data_engineer"),
+    # Software
+    ("front end developer", "frontend_developer"),
+    ("front-end developer", "frontend_developer"),
+    ("frontend developer", "frontend_developer"),
+    ("back end developer", "backend_developer"),
+    ("back-end developer", "backend_developer"),
+    ("backend developer", "backend_developer"),
+    ("full stack developer", "fullstack_developer"),
+    ("full-stack developer", "fullstack_developer"),
+    ("fullstack developer", "fullstack_developer"),
+    ("devops engineer", "devops_engineer"),
+    ("software developer", "fullstack_developer"),
+    ("software engineer", "fullstack_developer"),
+    # Mechanical / design engineering
+    ("mechanical design engineer", "mechanical_design_engineer"),
+    ("product design engineer", "product_design_engineer"),
+    ("design engineer", "mechanical_design_engineer"),
+    ("r&d engineer", "rnd_engineer"),
+    ("research and development engineer", "rnd_engineer"),
+    ("rnd engineer", "rnd_engineer"),
+    ("manufacturing engineer", "manufacturing_engineer"),
+    ("production engineer", "manufacturing_engineer"),
+    ("mechanical engineer", "mechanical_design_engineer"),
+    # Product / UX
+    ("product manager", "product_manager"),
+    ("product owner", "product_manager"),
+    ("ux designer", "ux_designer"),
+    ("ui designer", "ux_designer"),
+    ("ux/ui designer", "ux_designer"),
+    ("product designer", "ux_designer"),
 ]
 
 

@@ -26,8 +26,9 @@ def test_resolve_role_exact_match_bugfix():
 
 def test_resolve_goal_modes_deterministic():
     assert rm.resolve_goal("data analyst")["mode"] == "grounded"
-    # No data signal + no Gemini → AI-guided fallback.
-    assert rm.resolve_goal("I want to be a fashion designer", "Design")["mode"] == "ai"
+    # A field outside the curated catalog + no Gemini → AI-guided fallback.
+    # (Design/software/mechanical are now covered roles, so use a still-uncovered field.)
+    assert rm.resolve_goal("I want to be a chef", "Culinary Arts")["mode"] == "ai"
 
 
 def test_build_roadmap_readiness_monotonic_and_grounded():

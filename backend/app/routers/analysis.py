@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.agents.orchestrator import Orchestrator
 from app.config import settings
 from app.deps import get_db, get_optional_user
-from app.engines import providers
+from app.engines import providers, ai_pathways
 from app.engines.resume_parser import extract_text_from_pdf
 from app.models import Analysis, User
 from app.schemas import AnalysisResult
@@ -81,6 +81,18 @@ async def run_analysis(
 
     started = time.time()
     result = Orchestrator().run_pipeline(text=text, manual_profile=manual)
+
+    # If the curated (India data/analytics) catalog doesn't fit this résumé, generate
+    # AI-guided pathways in the candidate's actual field (grounded to their real skills).
+    ai_notice = ""
+    top_overlap = max((p.get("overlap_percentage", 0) for p in result["pathways"]), default=0)
+    if top_overlap < 25:
+        ai = ai_pathways.generate_pathways(result["profile"])
+        if ai:
+            result["pathways"] = ai
+            ai_notice = ("These pathways are AI-guided to your résumé's field — our curated data "
+                         "catalog didn't fit your background. Figures are estimates; verify before relying on them.")
+
     generated_ms = int((time.time() - started) * 1000)
 
     title = _title(result["profile"], result["pathways"], (platform or "").strip())
@@ -105,4 +117,5 @@ async def run_analysis(
         trace=result["trace"],
         provider_status=providers.provider_status(),
         generated_ms=generated_ms,
+        ai_notice=ai_notice,
     )

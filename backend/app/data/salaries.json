@@ -14,6 +14,16 @@
     "data_analyst": {"entry": 500000, "median": 750000, "experienced": 1300000},
     "reporting_analyst": {"entry": 420000, "median": 600000, "experienced": 950000},
     "crm_data_coordinator": {"entry": 330000, "median": 450000, "experienced": 700000},
-    "junior_data_engineer": {"entry": 650000, "median": 900000, "experienced": 1600000}
+    "junior_data_engineer": {"entry": 650000, "median": 900000, "experienced": 1600000},
+    "frontend_developer": {"entry": 450000, "median": 800000, "experienced": 1600000},
+    "backend_developer": {"entry": 500000, "median": 900000, "experienced": 1800000},
+    "fullstack_developer": {"entry": 550000, "median": 1000000, "experienced": 2000000},
+    "devops_engineer": {"entry": 600000, "median": 1100000, "experienced": 2200000},
+    "mechanical_design_engineer": {"entry": 350000, "median": 550000, "experienced": 1000000},
+    "rnd_engineer": {"entry": 400000, "median": 650000, "experienced": 1200000},
+    "product_design_engineer": {"entry": 380000, "median": 600000, "experienced": 1100000},
+    "manufacturing_engineer": {"entry": 350000, "median": 550000, "experienced": 950000},
+    "product_manager": {"entry": 800000, "median": 1500000, "experienced": 3000000},
+    "ux_designer": {"entry": 450000, "median": 800000, "experienced": 1600000}
   }
 }

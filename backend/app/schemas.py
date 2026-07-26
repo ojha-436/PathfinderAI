@@ -143,6 +143,7 @@ class Pathway(BaseModel):
     data_source: str = ""
     signal_skill: str = ""                    # the key rising skill defining this path
     signal_forecast: Optional[SkillForecast] = None
+    ai_guided: bool = False                   # True → Gemini-generated (résumé field outside curated catalog)
 
 
 class GroundedPathway(Pathway):
@@ -160,6 +161,7 @@ class AnalysisResult(BaseModel):
     trace: List[AgentTrace]
     provider_status: Dict[str, str] = {}      # which provider served each capability
     generated_ms: int = 0
+    ai_notice: str = ""                        # set when pathways are AI-guided (out-of-catalog résumé)
 
 
 class HistoryItemSummary(BaseModel):

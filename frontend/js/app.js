@@ -41,8 +41,8 @@ async function loadMeta() {
     const ps = m.provider_status || {};
     const active = Object.values(ps);
     const cloud = active.filter((v) => v !== 'local');
-    $('#providerText').textContent = cloud.length ? 'Google Cloud AI' : 'AI engine';
-    $('#footMeta').textContent = `${m.counts.skills} skills · ${m.counts.courses} courses · reproducible forecasts`;
+    $('#providerText').textContent = cloud.length ? 'Google Cloud AI' : 'local engine';
+    // Footer tagline is set in HTML (feature-oriented) — no hardcoded skill/course counts.
   } catch { /* offline meta is non-fatal */ }
 }
 
@@ -1155,8 +1155,17 @@ function renderResults(r) {
     <div class="chips-grid">${chips || '<p class="muted">No in-domain skills detected.</p>'}</div>
     ${recHtml}
 
-    <div class="subhead" style="margin-top:38px"><h2>3 future-proof pathways</h2><span class="hint">ranked by coverage × demand × payoff × achievability</span></div>
+    ${r.ai_notice ? `<div class="coverage-note" style="margin-top:38px;display:flex;gap:8px;align-items:flex-start">${svgIcon('spark', 15, 'flex:none;margin-top:2px')}<span>${esc(r.ai_notice)}</span></div>` : ''}
+    <div class="subhead"${r.ai_notice ? '' : ' style="margin-top:38px"'}><h2>${r.ai_notice ? 'Best-fit pathways for your field' : '3 future-proof pathways'}</h2><span class="hint">${r.ai_notice ? 'AI-guided · grounded to your résumé' : 'ranked by coverage × demand × payoff × achievability'}</span></div>
     <div class="paths">${cards}</div>
+
+    ${r.ai_notice ? '' : `<div class="card aim-bridge">
+        <div class="ab-txt">
+          <h4>Aiming for a role beyond data &amp; analytics?</h4>
+          <p>${Math.max(0, ...r.pathways.map((pw) => pw.overlap_percentage || 0)) < 30 ? "Your background looks like it may sit outside" : "These pathways come from"} PathFinder's curated data-&amp;-analytics catalog. For <b>any</b> field — engineering, design, product, and more — get an AI-guided roadmap built around your actual skills and a target role you name.</p>
+        </div>
+        <button class="btn btn-primary" data-nav="#/goal">Get an AI-guided roadmap →</button>
+      </div>`}
 
     <div id="drill"></div>
 
@@ -1210,19 +1219,26 @@ function summarize(o) {
 
 function pathwayCard(pw, i) {
   const spark = pw.signal_forecast ? Charts.sparkline(pw.signal_forecast.data_points.map((d) => d.value), { w: 100, h: 34, color: Charts.colorFor(pw.signal_forecast.trend_direction) }) : '';
+  const aiBadge = pw.ai_guided ? '<span class="ai-badge">AI-guided</span>' : '';
+  const salaryStat = pw.ai_guided
+    ? `<div class="stat"><div class="k">Salary · est.</div><div class="v pos">${inr(pw.salary_target_inr)}/yr</div></div>`
+    : `<div class="stat"><div class="k">Salary uplift</div><div class="v pos">+${inr(pw.salary_uplift_inr)}</div></div>`;
+  const lastStat = pw.ai_guided
+    ? `<div class="stat"><div class="k">You bring</div><div class="v">${(pw.transferable_skills || []).length} skills</div></div>`
+    : `<div class="stat"><div class="k">You cover</div><div class="v">${pw.overlap_percentage}%</div></div>`;
   return `<div class="card path-card" data-i="${i}">
     <div class="path-top">
-      <div><div class="rank">PATHWAY #${pw.rank}</div><h3>${esc(pw.role)}</h3></div>
+      <div><div class="rank">PATHWAY #${pw.rank}${aiBadge}</div><h3>${esc(pw.role)}</h3></div>
       ${Charts.matchRing(pw.match_score)}
     </div>
     <div class="path-spark">${spark}</div>
     <div class="path-stats">
-      <div class="stat"><div class="k">Salary uplift</div><div class="v pos">+${inr(pw.salary_uplift_inr)}</div></div>
+      ${salaryStat}
       <div class="stat"><div class="k">Demand</div><div class="v pos">${pct(pw.demand_growth_annual)}/yr</div></div>
       <div class="stat"><div class="k">Time to ready</div><div class="v">~${pw.time_to_ready_months} mo</div></div>
-      <div class="stat"><div class="k">You cover</div><div class="v">${pw.overlap_percentage}%</div></div>
+      ${lastStat}
     </div>
-    <div class="cta-row">See why &amp; courses →</div>
+    <div class="cta-row">See why${pw.ai_guided ? '' : ' &amp; courses'} →</div>
   </div>`;
 }
 function highlightCards() {
@@ -1598,7 +1614,9 @@ async function renderProfile(draftSections = null, editingSecType = null, active
             <button class="btn btn-ghost btn-sm" id="profReuploadBtn" style="border:1px solid rgba(13,148,136,0.3); color:#0d9488;">${ICONS.upload} Re-upload Resume</button>
           </div>
         </div>
-        <p class="muted" style="margin-bottom:20px; font-size:0.95rem;">This data grounds all AI-generated application materials to prevent hallucinations.</p>
+        <p class="muted" style="margin-bottom:16px; font-size:0.95rem;">This data grounds all AI-generated application materials to prevent hallucinations.</p>
+
+        <div id="rolesStrip" class="roles-strip"></div>
 
         <!-- Section Navigation Tabs -->
         <div class="prof-tabs-bar" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:12px; margin-bottom:28px; border-bottom:1px solid rgba(13, 148, 136, 0.2);">
@@ -1875,9 +1893,21 @@ async function renderProfile(draftSections = null, editingSecType = null, active
             html += `<div style="font-size:1rem; line-height:1.6; color:#334155; background:rgba(248, 250, 252, 0.9); padding:20px; border-radius:12px; border:1px solid rgba(13, 148, 136, 0.15);">${esc(sec.text || '')}</div>`;
           }
         } else {
-          html += `<pre class="mono" style="font-size:0.85rem; white-space:pre-wrap; background:var(--paper); padding:16px; border-radius:var(--r); border:1px solid var(--line-soft);">${esc(JSON.stringify(sec, null, 2))}</pre>`;
+          // Generic sections (languages, hackathons, achievements, publications, volunteering, custom…)
+          if (sec.text) {
+            html += `<div style="font-size:1rem; line-height:1.6; color:#334155; background:rgba(248,250,252,0.9); padding:16px 20px; border-radius:12px; border:1px solid rgba(13,148,136,0.15);">${esc(sec.text)}</div>`;
+          } else if (Array.isArray(sec.items) && sec.items.length) {
+            html += `<div style="display:flex; flex-direction:column; gap:8px;">` + sec.items.map((it) => {
+              if (typeof it === 'string') return `<div style="padding:10px 14px; background:rgba(248,250,252,0.9); border-radius:10px; border:1px solid rgba(13,148,136,0.12); color:#334155;">${esc(it)}</div>`;
+              const head = esc(it.heading || it.name || '');
+              const detail = esc(it.detail || it.issuer || '');
+              return `<div style="padding:10px 14px; background:rgba(248,250,252,0.9); border-radius:10px; border:1px solid rgba(13,148,136,0.12);"><div style="font-weight:600; color:#0f172a;">${head}</div>${detail ? `<div style="color:#475569; font-size:.92rem; margin-top:2px;">${detail}</div>` : ''}</div>`;
+            }).join('') + `</div>`;
+          } else {
+            html += `<p style="color:#94a3b8; font-style:italic; margin:0;">No entries yet — use Edit Section to add some.</p>`;
+          }
         }
-        
+
         html += `</div>`;
       });
       
@@ -1898,7 +1928,20 @@ async function renderProfile(draftSections = null, editingSecType = null, active
       reupBtn.onclick = () => renderProfile(sections, editingSecType, activeTab, !showReupload);
     }
     const rolesBtn = $('#profRolesBtn');
-    if (rolesBtn) rolesBtn.onclick = () => openRoleProfiles();
+    if (rolesBtn) rolesBtn.onclick = () => openRoleProfiles(() => renderProfile(null, null, activeTab, false));
+
+    // "Your profiles" strip — master + saved role profiles, visible on the dashboard.
+    const stripEl = $('#rolesStrip');
+    if (stripEl && !isDraft && editingSecType === null) {
+      Api.listVariants().then((vs) => {
+        const chips = (vs || []).map((v) => `<button class="role-chip${v.is_default ? ' is-default' : ''}" data-role-manage="1">${esc(v.name)}${v.is_default ? ' · default' : ''}</button>`).join('');
+        stripEl.innerHTML = `<span class="roles-strip-label">Your profiles</span>
+          <button class="role-chip is-master" title="This is your master profile">Master</button>
+          ${chips}
+          <button class="role-chip role-chip-new" data-role-manage="1">${svgIcon('plus', 12, 'vertical-align:-1px;margin-right:3px')}Role profile</button>`;
+        stripEl.querySelectorAll('[data-role-manage]').forEach((b) => b.onclick = () => openRoleProfiles(() => renderProfile(null, null, activeTab, false)));
+      }).catch(() => { stripEl.innerHTML = ''; });
+    }
     const closeReupBtn = $('#closeReuploadBtn');
     if (closeReupBtn) {
       closeReupBtn.onclick = () => renderProfile(sections, editingSecType, activeTab, false);
@@ -2019,16 +2062,24 @@ async function renderProfile(draftSections = null, editingSecType = null, active
         if (!file && !text) { toast("Provide a file or text.", "err"); return; }
         const btn = file ? $('#profBrowseBtn') : $('#profExtractTextBtn');
         const oldText = btn.textContent;
-        btn.textContent = "Extracting...";
-        
+        btn.textContent = "Extracting…"; btn.disabled = true;
+
         try {
           const res = await Api.uploadResume(file, text);
           const extracted = res.sections.sections || res.sections;
-          toast("Profile extracted successfully! Review your sections below.");
-          renderProfile(extracted, null, activeTab, false);
+          // Auto-save so the master profile PERSISTS immediately — no re-upload needed,
+          // and Apply Studio can always find it. Users edit sections afterward.
+          try {
+            await Api.updateProfile(extracted);
+            toast("Profile extracted & saved. Review or edit any section below.");
+            renderProfile(null, null, activeTab, false);   // reload the now-saved profile
+          } catch (saveErr) {
+            toast("Extracted — review and save your sections below.", "err");
+            renderProfile(extracted, null, activeTab, false);
+          }
         } catch (e) {
           toast(e.message, "err");
-          btn.textContent = oldText;
+          btn.textContent = oldText; btn.disabled = false;
         }
       };
 

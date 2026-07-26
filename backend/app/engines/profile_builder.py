@@ -149,43 +149,77 @@ def _extract_contact(text: str) -> Dict[str, Any]:
 
 
 
+_COMPANY_HINTS = re.compile(
+    r"\b(inc|ltd|llc|pvt|corp|technologies|technology|works|systems|solutions|labs|"
+    r"university|institute|college|gmbh|company|industries|enterprises|consulting|"
+    r"services|group|softwares?|infotech|pvt\.? ltd)\b", re.I)
+
+
+def _mk_experience_entry(header_lines: List[str], start: str, end: str) -> Dict[str, Any]:
+    hs = [h.strip(" \t|,·–—-") for h in header_lines if h and h.strip(" \t|,·–—-")]
+    role = org = ""
+    if len(hs) >= 2:
+        # Two header lines: one is the company, the other the role. Prefer the
+        # company-hint match; else assume "Company \n Title" (the common ATS layout).
+        if _COMPANY_HINTS.search(hs[0]) and not _COMPANY_HINTS.search(hs[1]):
+            org, role = hs[0], hs[1]
+        elif _COMPANY_HINTS.search(hs[1]) and not _COMPANY_HINTS.search(hs[0]):
+            role, org = hs[0], hs[1]
+        else:
+            org, role = hs[0], hs[1]
+    elif hs:
+        parts = re.split(r"\s+(?:at|,|\||–|—|·)\s+", hs[0], maxsplit=1)
+        role = parts[0].strip()
+        org = parts[1].strip() if len(parts) > 1 else ""
+    return {"role": role, "org": org, "start": start, "end": end, "bullets": []}
+
+
 def _parse_experience(block: List[str]) -> List[Dict[str, Any]]:
-    """Best-effort: group lines into entries (header + bullets)."""
+    """Group lines into jobs, anchored on DATES so a job's description sentences
+    attach as bullets rather than being mis-split into separate jobs.
+
+    A line with a year / date range completes an entry header (optionally paired with
+    a preceding company/role line). Any other non-bullet line, once inside an entry,
+    is treated as a description bullet — never a new job."""
     items: List[Dict[str, Any]] = []
     cur: Optional[Dict[str, Any]] = None
-
-    def _flush():
-        nonlocal cur
-        if cur:
-            items.append(cur)
-        cur = None
+    pending: List[str] = []   # header lines (company/role) seen before a date anchor
 
     for raw in block:
         line = raw.rstrip()
         if not line.strip():
             continue
-        is_bullet = bool(_BULLET_RE.match(line))
-        if is_bullet and cur is not None:
-            cur["bullets"].append(_BULLET_RE.sub("", line).strip())
+        if _BULLET_RE.match(line):
+            b = _BULLET_RE.sub("", line).strip()
+            if cur is not None:
+                cur["bullets"].append(b)
+            elif pending:
+                cur = _mk_experience_entry(pending, "", "")
+                cur["bullets"].append(b)
+                pending = []
             continue
-        # A non-bullet line starts a new entry header.
-        _flush()
-        start = end = ""
+
         m = _YEAR_RANGE_RE.search(line)
-        if m:
-            start, end = m.group(1), m.group(2)
-            header = _YEAR_RANGE_RE.sub("", line)
+        ym = _YEAR_RE.search(line) if not m else None
+        if m or ym:
+            if cur is not None:
+                items.append(cur)
+            if m:
+                start, end, header = m.group(1), m.group(2), _YEAR_RANGE_RE.sub("", line)
+            else:
+                start, end, header = ym.group(0), "", _YEAR_RE.sub("", line)
+            header = header.strip(" \t|,·–—-")
+            cur = _mk_experience_entry(pending + ([header] if header else []), start, end)
+            pending = []
+        elif cur is None:
+            pending.append(line)          # header awaiting a date (company/role)
         else:
-            ym = _YEAR_RE.search(line)
-            if ym:
-                start = ym.group(0)
-            header = line
-        header = header.strip(" \t|,–-·")
-        parts = re.split(r"\s+(?:at|,|\||–|—|-)\s+", header, maxsplit=1)
-        role = parts[0].strip()
-        org = parts[1].strip() if len(parts) > 1 else ""
-        cur = {"role": role, "org": org, "start": start, "end": end, "bullets": []}
-    _flush()
+            cur["bullets"].append(line)   # inside an entry → description, NOT a new job
+
+    if cur is not None:
+        items.append(cur)
+    elif pending:
+        items.append(_mk_experience_entry(pending, "", ""))
     return items
 
 
@@ -430,6 +464,9 @@ def _gemini_build(resume_text: str) -> Optional[Dict[str, Any]]:  # pragma: no c
         "2. Put every piece of information in the section it BELONGS to: job history → experience, "
         "degrees/schools → education, built things → projects, courses/licenses → certifications, "
         "a profile/objective paragraph → summary, technologies/tools → skills.\n"
+        "2b. EXPERIENCE: group each job as ONE entry with role, org, start, end, and ALL of that "
+        "job's responsibility/description lines as bullets. NEVER split a single job's description "
+        "sentences into multiple experience entries. A new entry begins only at a new employer/role.\n"
         "3. Extract ALL links and route them: a github.com URL → personal.fields.github, a "
         "linkedin.com URL → personal.fields.linkedin, any other personal site → personal.fields.portfolio, "
         "and a link that belongs to a specific project → that project's \"link\".\n"

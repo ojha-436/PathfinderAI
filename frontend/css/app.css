@@ -616,3 +616,20 @@ body.app-mode .footer { margin-left: 218px; }
 .rp-chips .wiz-chip { font-size: .8rem; padding: .35em .8em; }
 .rp-hide { display: flex; flex-wrap: wrap; gap: 8px 16px; }
 .rp-check { display: inline-flex; align-items: center; gap: 6px; font-size: .88rem; color: var(--ink-soft); cursor: pointer; }
+
+/* ================= Profile: "your profiles" strip ================= */
+.roles-strip { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+.roles-strip:empty { display: none; }
+.roles-strip-label { font-family: var(--font-mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-faint); margin-right: 4px; }
+.role-chip { font: inherit; font-size: .84rem; font-weight: 600; padding: .4em .9em; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--card); color: var(--ink-soft); cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
+.role-chip:hover { border-color: var(--pine); color: var(--pine); }
+.role-chip.is-master { background: var(--pine-tint); border-color: #cfe3db; color: var(--pine-2); }
+.role-chip.is-default { border-color: var(--marigold); color: var(--marigold-2); background: var(--marigold-tint); }
+.role-chip-new { border-style: dashed; }
+
+/* Analyze: out-of-catalog / AI-guided bridge card */
+.aim-bridge { margin-top: 20px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  background: linear-gradient(180deg, var(--marigold-tint), var(--card) 70%); border: 1px solid #ead9b0; }
+.aim-bridge .ab-txt { max-width: 62ch; }
+.aim-bridge h4 { margin: 0 0 4px; font-size: 1.05rem; }
+.aim-bridge p { margin: 0; font-size: .9rem; color: var(--ink-soft); }
