@@ -1545,6 +1545,9 @@ const ICON_PATHS = {
   file: '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>',
   chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
   trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  bolt: '<path d="M13 2 3 14h8l-1 8 10-12h-8z"/>',
+  puzzle: '<path d="M19.5 12.5c0-1 .8-1.8 1.8-1.8h.2V8a2 2 0 0 0-2-2h-2.7V5.8c0-1-.8-1.8-1.8-1.8s-1.8.8-1.8 1.8V6H8.5a2 2 0 0 0-2 2v2.7H6.3c-1 0-1.8.8-1.8 1.8s.8 1.8 1.8 1.8h.2V17a2 2 0 0 0 2 2h2.7v.2c0 1 .8 1.8 1.8 1.8s1.8-.8 1.8-1.8V19H19a2 2 0 0 0 2-2v-2.7h-.2c-1 0-1.8-.8-1.8-1.8z"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
 };
 function svgIcon(name, size = 18, style = '') {
   const p = ICON_PATHS[name];
@@ -2122,6 +2125,63 @@ async function renderProfile(draftSections = null, editingSecType = null, active
   }
 }
 
+/* ---------------- Apply Assistant: browser-extension how-to (animated) ---------------- */
+function openExtensionGuide() {
+  const STEPS = [
+    { t: 'Install &amp; sign in', d: 'Load the extension in Chrome, then sign in once with your PathFinder account.' },
+    { t: 'Open a job application', d: 'Go to any Greenhouse, Lever, Ashby or Workday posting.' },
+    { t: 'Click Autofill', d: 'The PathFinder button appears on the page — one click.' },
+    { t: 'Review &amp; submit', d: 'Your details and résumé fill instantly. You review, then hit Submit yourself.' },
+  ];
+  const fieldRow = (label) => `<div class="egf-row"><span class="egf-lbl">${label}</span><span class="egf-val"></span></div>`;
+  const back = document.createElement('div');
+  back.className = 'modal-back';
+  back.innerHTML = `<div class="card modal ext-guide" role="dialog" aria-modal="true" aria-label="How the extension works">
+      <button class="close-x" id="egX" aria-label="Close">×</button>
+      <span class="eyebrow">Browser extension</span>
+      <h2 style="margin:.1em 0 .6em">How one-click Apply works</h2>
+      <div class="eg-wrap">
+        <ol class="eg-steps">${STEPS.map((s, i) => `<li class="eg-step" data-i="${i}"><span class="eg-num">${i + 1}</span><div class="eg-copy"><b>${s.t}</b><span>${s.d}</span></div></li>`).join('')}</ol>
+        <div class="eg-stage" data-step="0">
+          <div class="eg-glass">
+            <div class="eg-bar"><i></i><i></i><i></i><span class="eg-url">greenhouse.io/acme/apply</span></div>
+            <div class="eg-body">
+              <div class="eg-form">${fieldRow('First name')}${fieldRow('Email')}${fieldRow('Phone')}${fieldRow('Company')}${fieldRow('Résumé')}</div>
+              <div class="eg-popup"><div class="egp-title">PathFinder Apply</div><div class="egp-in"></div><div class="egp-in"></div><div class="egp-btn">Sign in</div></div>
+              <button class="eg-fab">${svgIcon('bolt', 12, 'vertical-align:-2px;margin-right:3px')}Autofill</button>
+              <div class="eg-cursor"></div>
+              <div class="eg-done">${svgIcon('check', 13, 'vertical-align:-2px;margin-right:5px')}Ready — you review &amp; submit</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="eg-foot">
+        <span class="muted" style="font-size:.8rem">Desktop Chrome/Edge · you always review &amp; submit — nothing is auto-submitted.</span>
+        <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" id="egReplay">↻ Replay</button><button class="btn btn-primary btn-sm" id="egGot">Got it</button></div>
+      </div>
+    </div>`;
+  document.body.appendChild(back);
+
+  const stage = back.querySelector('.eg-stage');
+  const stepEls = back.querySelectorAll('.eg-step');
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let timer = null;
+  const show = (n) => { stage.dataset.step = n; stepEls.forEach((e, i) => e.classList.toggle('active', i === n)); };
+  const play = () => {
+    if (timer) clearInterval(timer);
+    if (reduce) { show(3); return; }          // reduced-motion: show the end state, no looping
+    let n = 0; show(0);
+    timer = setInterval(() => { n = (n + 1) % 4; show(n); }, 2600);
+  };
+  const close = () => { if (timer) clearInterval(timer); back.remove(); };
+  back.onclick = (e) => { if (e.target === back) close(); };
+  back.querySelector('#egX').onclick = close;
+  back.querySelector('#egGot').onclick = close;
+  back.querySelector('#egReplay').onclick = play;
+  stepEls.forEach((el, i) => el.onclick = () => { if (timer) clearInterval(timer); show(i); });
+  play();
+}
+
 /* ---------------- Apply Assistant: Apply Studio (Phase B) ---------------- */
 async function renderApply() {
   const root = $('#applyRoot');
@@ -2138,13 +2198,30 @@ async function renderApply() {
       </div>`).join('') : '<p style="text-align:center; color:#5c647a; font-family:\\\'Inter\\\', sans-serif;">No applications yet.</p>';
       
     root.innerHTML = `<div class="card" style="max-width:800px; margin:0 auto; background:rgba(248, 249, 255, 0.9); backdrop-filter:blur(40px); border:1px solid rgba(13, 148, 136, 0.15); border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,0.08); padding:40px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid rgba(13, 148, 136, 0.2); padding-bottom:16px; margin-bottom:24px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid rgba(13, 148, 136, 0.2); padding-bottom:16px; margin-bottom:20px;">
         <h2 style="margin:0; font-family:'Inter', sans-serif; font-size:32px; font-weight:700; color:#0f172a; letter-spacing:-0.01em;">Apply Studio</h2>
-        <button class="btn btn-primary" id="newAppBtn" style="background:linear-gradient(135deg, #0d9488 0%, #00685f 100%); border:none; padding:10px 20px; border-radius:8px; font-family:'Inter', sans-serif; font-weight:600; box-shadow:0 4px 15px rgba(13, 148, 136, 0.3); color:white; cursor:pointer;">New Application</button>
+        <div style="display:flex; gap:12px; align-items:center;">
+          <button id="extHowLink" style="background:none;border:none;color:#0d9488;font:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;">How autofill works</button>
+          <button class="btn btn-primary" id="newAppBtn" style="background:linear-gradient(135deg, #0d9488 0%, #00685f 100%); border:none; padding:10px 20px; border-radius:8px; font-family:'Inter', sans-serif; font-weight:600; box-shadow:0 4px 15px rgba(13, 148, 136, 0.3); color:white; cursor:pointer;">New Application</button>
+        </div>
       </div>
+      <div id="extBannerHost"></div>
       <div class="hist-list">${listHtml}</div>
     </div>`;
-    
+
+    // Extension CTA — dismissible banner (progressive disclosure: how-to is one click away).
+    const host = $('#extBannerHost');
+    if (host && !localStorage.getItem('pf_ext_dismissed')) {
+      host.innerHTML = `<div class="ext-banner">
+        <span class="eb-ic">${svgIcon('bolt', 20)}</span>
+        <div class="eb-txt"><b>Apply faster with the browser extension</b><span>Autofill any application — Greenhouse, Lever, Workday and more — from your profile. You review &amp; submit.</span></div>
+        <div class="eb-act"><button class="btn btn-primary btn-sm" id="extSeeHow">See how it works</button><button class="btn btn-ghost btn-sm" id="extDismiss">Got it</button></div>
+      </div>`;
+      $('#extSeeHow').onclick = () => openExtensionGuide();
+      $('#extDismiss').onclick = () => { localStorage.setItem('pf_ext_dismissed', '1'); host.innerHTML = ''; };
+    }
+    $('#extHowLink').onclick = () => openExtensionGuide();
+
     root.querySelectorAll('[data-appid]').forEach(el => {
       el.onclick = () => renderApplicationDetail(el.dataset.appid);
     });
@@ -2452,8 +2529,17 @@ async function renderApplicationDetail(id) {
       <button class="btn btn-primary" id="generateBtn" style="width:100%; background:linear-gradient(135deg, #0d9488 0%, #00685f 100%); border:none; padding:14px; border-radius:8px; font-family:'Inter', sans-serif; font-weight:600; font-size:16px; box-shadow:0 4px 15px rgba(13, 148, 136, 0.3); color:white; cursor:pointer;">Generate Tailored Docs</button>
       
       ${docsHtml}
+
+      <div class="apply-ext-hint">
+        ${svgIcon('bolt', 15, 'vertical-align:-3px;margin-right:6px;color:#0d9488')}
+        <span>Ready to apply on the job site? The <b>PathFinder Apply</b> browser extension autofills the form with this profile &amp; résumé — you review and submit.</span>
+        <button id="detHowLink">How it works</button>
+      </div>
     </div>`;
-    
+
+    const detHow = $('#detHowLink');
+    if (detHow) detHow.onclick = () => openExtensionGuide();
+
     const mgmtBtn = $('#manageVariantsBtn');
     if (mgmtBtn) mgmtBtn.onclick = () => openRoleProfiles(() => renderApplicationDetail(app.id));
 
