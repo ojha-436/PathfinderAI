@@ -7,7 +7,8 @@ from fastapi import Body
 from app.deps import get_db, get_current_user
 from app.models import User, Profile, ProfileVariant
 from app.engines.resume_parser import extract_text_from_pdf
-from app.engines.profile_builder import build_profile
+from app.engines.profile_builder import build_profile, resolve_effective_profile
+from app.engines import apply_gen
 
 router = APIRouter()
 
@@ -151,3 +152,42 @@ def delete_variant(variant_id: str, db: Session = Depends(get_db), current_user:
         db.delete(v)
         db.commit()
     return None
+
+
+@router.get("/resume")
+def profile_resume(
+    variant_id: Optional[str] = None,
+    fmt: str = "pdf",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Render a résumé straight from the master profile (optionally through a role
+    variant) — no saved application needed. Used by the browser extension to attach
+    an ATS-clean résumé when auto-filling. Grounded: content comes only from the profile."""
+    profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
+    if not profile or not profile.sections_json:
+        raise HTTPException(status_code=400, detail="Build your master profile first.")
+
+    sections = profile.sections_json
+    if variant_id:
+        v = db.query(ProfileVariant).filter(ProfileVariant.id == variant_id, ProfileVariant.user_id == current_user.id).first()
+        if v:
+            sections = resolve_effective_profile(profile.sections_json, {
+                "summary_override": v.summary_override,
+                "emphasized_skills": v.emphasized_skills or [],
+                "hidden_sections": v.hidden_sections or [],
+            })
+
+    content = apply_gen._resume_local({"sections": sections, "full_name": profile.full_name,
+                                       "email": profile.email, "phone": profile.phone}, [], [])
+    fname = (profile.full_name or "resume").replace(" ", "_")
+
+    if fmt == "pdf":
+        from fastapi.responses import Response
+        return Response(content=apply_gen._resume_pdf(content), media_type="application/pdf",
+                        headers={"Content-Disposition": f'attachment; filename="{fname}.pdf"'})
+    if fmt == "html":
+        from fastapi.responses import HTMLResponse
+        return HTMLResponse(apply_gen._resume_html(content))
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(apply_gen._resume_txt(content))

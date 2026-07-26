@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Senior Backend Engineer — Application (mock Greenhouse form)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 30px auto; padding: 0 20px; color: #1a1a2e; }
+    h1 { font-size: 22px; } .sub { color: #667; margin-bottom: 24px; }
+    .field { margin-bottom: 18px; }
+    label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 5px; }
+    .req::after { content: " *"; color: #c0392b; }
+    input, textarea, select { width: 100%; box-sizing: border-box; padding: 9px 11px; border: 1px solid #cbd0dd; border-radius: 6px; font: inherit; font-size: 14px; }
+    textarea { min-height: 90px; }
+    .row { display: flex; gap: 14px; } .row .field { flex: 1; }
+    button { background: #2b6; color: #fff; border: none; padding: 11px 22px; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .note { background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #6b5412; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Senior Backend Engineer</h1>
+  <div class="sub">Acme Corp · Remote (India) — Application form</div>
+  <div class="note">Mock form for testing the PathFinder Apply extension. Field names/labels mirror a real Greenhouse application. Submitting does nothing.</div>
+
+  <form id="app" onsubmit="event.preventDefault(); alert('(mock) This is where the portal would submit. The extension never does this for you.');">
+    <div class="row">
+      <div class="field"><label class="req" for="first_name">First Name</label><input id="first_name" name="first_name" type="text"></div>
+      <div class="field"><label class="req" for="last_name">Last Name</label><input id="last_name" name="last_name" type="text"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label class="req" for="email">Email</label><input id="email" name="email" type="email"></div>
+      <div class="field"><label for="phone">Phone</label><input id="phone" name="phone" type="tel"></div>
+    </div>
+    <div class="field"><label class="req" for="resume">Resume/CV</label><input id="resume" name="resume" type="file" accept=".pdf,.doc,.docx,.txt"></div>
+    <div class="row">
+      <div class="field"><label for="company">Current Company</label><input id="company" name="company" type="text"></div>
+      <div class="field"><label for="title">Current Title</label><input id="title" name="title" type="text"></div>
+    </div>
+    <div class="field"><label for="edu_school">School</label><input id="edu_school" name="school" type="text"></div>
+    <div class="field"><label for="linkedin">LinkedIn Profile</label><input id="linkedin" name="linkedin_url" type="url"></div>
+    <div class="field"><label for="website">Website / Portfolio</label><input id="website" name="website" type="url"></div>
+    <div class="field"><label for="cover">Why do you want to work here?</label><textarea id="cover" name="cover_letter"></textarea></div>
+    <div class="field">
+      <label class="req" for="work_auth">Are you authorized to work in India?</label>
+      <select id="work_auth" name="work_authorization"><option value="">Select…</option><option>Yes</option><option>No</option></select>
+    </div>
+    <button type="submit">Submit Application</button>
+  </form>
+</body>
+</html>
