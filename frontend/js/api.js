@@ -150,6 +150,20 @@ const Api = {
   generateApplyDocs: (data) => fetch(`${API}/apply/generate`, {
     method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(data),
   }).then(handle),
+  refineApplyDoc: (application_id, kind, instruction) => fetch(`${API}/apply/refine`, {
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ application_id, kind, instruction }),
+  }).then(handle),
+
+  // Role profiles (curated views of the master profile)
+  listVariants: () => fetch(`${API}/profile/variants`, { headers: authHeaders() }).then(handle),
+  createVariant: (data) => fetch(`${API}/profile/variants`, {
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(data),
+  }).then(handle),
+  updateVariant: (id, data) => fetch(`${API}/profile/variants/${id}`, {
+    method: 'PUT', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(data),
+  }).then(handle),
+  deleteVariant: (id) => fetch(`${API}/profile/variants/${id}`, { method: 'DELETE', headers: authHeaders() }).then(handle),
   exportApplyDoc: async (appId, kind, fmt) => {
     const res = await fetch(`${API}/apply/${appId}/export?kind=${kind}&fmt=${fmt}`, {
       headers: authHeaders()

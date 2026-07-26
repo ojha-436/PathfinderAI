@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 import json
 
 from app.deps import get_db, get_current_user
-from app.models import User, Profile, Application, GeneratedDoc
-from app.engines import jd_extract, jd_parser, matching, apply_gen
+from app.models import User, Profile, Application, GeneratedDoc, ProfileVariant
+from app.engines import jd_extract, jd_parser, matching, apply_gen, profile_builder
 
 router = APIRouter()
 
@@ -130,6 +130,7 @@ def get_application(app_id: str, db: Session = Depends(get_db), current_user: Us
         "jd_skills": app.jd_skills_json,
         "match": app.match_json,
         "status": app.status,
+        "variant_id": app.variant_id,
         "docs": [{"id": d.id, "kind": d.kind, "content": d.content_json} for d in docs]
     }
     return res
@@ -150,13 +151,27 @@ def generate_docs(
         raise HTTPException(status_code=404, detail="Application not found.")
         
     profile = _get_profile(db, current_user.id)
+
+    # Resolve the effective sections through the selected role variant (if any).
+    variant_id = data.get("variant_id") or app_record.variant_id
+    sections = profile.sections_json
+    if variant_id:
+        v = db.query(ProfileVariant).filter(ProfileVariant.id == variant_id, ProfileVariant.user_id == current_user.id).first()
+        if v:
+            sections = profile_builder.resolve_effective_profile(profile.sections_json, {
+                "summary_override": v.summary_override,
+                "emphasized_skills": v.emphasized_skills or [],
+                "hidden_sections": v.hidden_sections or [],
+            })
+            app_record.variant_id = variant_id
+
     profile_dict = {
-        "sections": profile.sections_json,
+        "sections": sections,
         "full_name": profile.full_name,
         "email": profile.email,
         "phone": profile.phone
     }
-    
+
     matched = app_record.match_json.get("matched", [])
     gaps = app_record.match_json.get("gaps", [])
     
@@ -189,8 +204,41 @@ def generate_docs(
     app_record.status = "generated"
     app_record.updated_at = datetime.now(timezone.utc)
     db.commit()
-    
+
     return {"status": "ok", "docs": generated}
+
+@router.post("/refine")
+def refine_doc(
+    data: Dict[str, Any] = Body(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Chat-driven edit of a generated document (grounded + verified)."""
+    app_id = data.get("application_id")
+    kind = data.get("kind", "resume")
+    instruction = data.get("instruction", "")
+
+    app_record = db.query(Application).filter(Application.id == app_id, Application.user_id == current_user.id).first()
+    if not app_record:
+        raise HTTPException(status_code=404, detail="Application not found.")
+
+    doc = db.query(GeneratedDoc).filter(GeneratedDoc.application_id == app_id, GeneratedDoc.kind == kind).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Generate the document first, then edit it.")
+
+    profile = _get_profile(db, current_user.id)
+    profile_dict = {
+        "sections": profile.sections_json,
+        "full_name": profile.full_name, "email": profile.email, "phone": profile.phone,
+    }
+
+    res = apply_gen.refine(doc.content_json, kind, instruction, profile_dict,
+                           company=app_record.company, role=app_record.job_title)
+    doc.content_json = res["content"]
+    doc.created_at = datetime.now(timezone.utc)
+    db.commit()
+
+    return {"content": res["content"], "message": res.get("message", ""), "grounding": res.get("grounding", {})}
 
 @router.get("/{app_id}/export")
 def export_doc(

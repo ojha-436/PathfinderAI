@@ -28,6 +28,7 @@ class User(Base):
     profile = relationship("Profile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     applications = relationship("Application", back_populates="user", cascade="all, delete-orphan")
     answers = relationship("AnswerBank", back_populates="user", cascade="all, delete-orphan")
+    variants = relationship("ProfileVariant", back_populates="user", cascade="all, delete-orphan")
 
 class Analysis(Base):
     __tablename__ = "analyses"
@@ -167,6 +168,7 @@ class Application(Base):
     jd_skills_json = Column(JSON, default=list)   # canonical required-skill IDs
     match_json = Column(JSON, default=dict)       # {match_pct, matched, gaps}
     status = Column(String, nullable=False, default="draft")  # draft | generated | applied
+    variant_id = Column(String, nullable=True)   # which ProfileVariant was used (None = master)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
                         onupdate=lambda: datetime.now(timezone.utc))
@@ -203,3 +205,26 @@ class AnswerBank(Base):
                         onupdate=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="answers")
+
+
+class ProfileVariant(Base):
+    """A role-tailored VIEW of the master Profile ("one profile, two superpowers"
+    preserved). A variant NEVER invents data — it only re-emphasizes and curates the
+    master profile's real facts for a specific role: a role-specific summary, a
+    reordered/surfaced skill set, and sections hidden for that role. The master
+    stays the single source of truth; variants are resolved on top of it at use-time."""
+    __tablename__ = "profile_variants"
+
+    id = Column(String, primary_key=True, index=True, default=get_uuid)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String, nullable=False, default="Untitled role")
+    role_target = Column(String, default="")
+    summary_override = Column(String, default="")     # optional role-specific summary
+    emphasized_skills = Column(JSON, default=list)     # master skill names to surface first
+    hidden_sections = Column(JSON, default=list)       # section types to omit for this role
+    is_default = Column(Integer, nullable=False, default=0)  # 0/1 (SQLite-safe boolean)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+                        onupdate=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="variants")

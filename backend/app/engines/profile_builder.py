@@ -29,8 +29,12 @@ from app.engines import taxonomy
 
 # --- Contact-info extractors (grounded: only what's literally in the text) ----
 _EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
-_PHONE_RE = re.compile(r"(?<!\d)(?:\+?\d{1,3}[\s\-]?)?(?:\(?\d{2,4}\)?[\s\-]?)?\d{3,4}[\s\-]?\d{4}(?!\d)")
-_URL_RE = re.compile(r"(?:https?://|www\.)[^\s,;)]+", re.I)
+_PHONE_RE = re.compile(r"(?<![\w.])\+?\d[\d\s().\-]{6,16}\d(?![\w])")
+_URL_RE = re.compile(
+    r"(?:https?://|www\.)[^\s,;)]+"                                   # explicit http(s):// or www.
+    r"|\b[\w.-]+\.(?:com|org|net|io|dev|me|co|in|ai|app|xyz)/[^\s,;)]+",  # bare domain WITH a path (github.com/user)
+    re.I,
+)
 _YEAR_RANGE_RE = re.compile(r"(\b(?:19|20)\d{2}\b)\s*(?:[-–—]|to)\s*((?:19|20)\d{2}\b|present|current|now)", re.I)
 _YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
 
@@ -309,6 +313,16 @@ def _local_build(resume_text: str) -> Dict[str, Any]:
         if _looks_like_name(ln):
             name = ln.strip()
             break
+    # Relaxed fallback: first non-empty top line that isn't contact/heading/URL.
+    if not name:
+        for ln in lines[:6]:
+            s = ln.strip()
+            if not s or "@" in s or _URL_RE.search(s) or _PHONE_RE.search(s) or _match_heading(s):
+                continue
+            words = s.split()
+            if 1 <= len(words) <= 6 and sum(c.isdigit() for c in s) <= 2:
+                name = re.split(r"\s{2,}|\s[|•·]\s", s)[0].strip()
+                break
     location = ""
     loc_m = re.search(r"\b([A-Z][a-zA-Z]+(?:\s[A-Z][a-zA-Z]+)?),\s*([A-Z][a-zA-Z]+)\b", text)
     if loc_m:
@@ -395,6 +409,7 @@ def _gemini_build(resume_text: str) -> Optional[Dict[str, Any]]:  # pragma: no c
     import google.generativeai as genai
 
     genai.configure(api_key=settings.GEMINI_API_KEY)
+    # A capable extraction model; override with GEMINI_MODEL if desired.
     model = genai.GenerativeModel(getattr(settings, "GEMINI_MODEL", "gemini-2.5-flash"))
     schema_hint = (
         'Return ONLY JSON: {"sections":[...]} where each section is one of: '
@@ -402,44 +417,145 @@ def _gemini_build(resume_text: str) -> Optional[Dict[str, Any]]:  # pragma: no c
         '{"type":"summary","title":"Summary","text":""}, '
         '{"type":"experience","title":"Experience","items":[{"role":"","org":"","start":"","end":"","bullets":[]}]}, '
         '{"type":"education","title":"Education","items":[{"degree":"","institution":"","year":"","score":""}]}, '
-        '{"type":"skills","title":"Skills","items":["skill", ...]}, '
         '{"type":"projects","title":"Projects","items":[{"heading":"","tech_stack":"","detail":"","link":""}]}, '
+        '{"type":"skills","title":"Skills","items":["skill", ...]}, '
         '{"type":"certifications","title":"Certifications","items":[{"heading":"","issuer":"","year":"","link":""}]}, '
         'or {"type":"<name>","title":"<Title>","items":[{"heading":"","detail":""}]} for anything else.'
     )
     prompt = (
-        "You are a résumé PARSER. Structure the résumé below into ordered sections. "
-        "Use ONLY facts present in the text — never invent an employer, title, date, degree, "
-        "score, or skill. If a field is absent, leave it empty. " + schema_hint +
-        "\n\nRÉSUMÉ:\n" + (resume_text or "")[:14000]
+        "You are an expert résumé PARSER. Read the résumé and structure it into typed sections.\n"
+        "RULES:\n"
+        "1. The candidate's NAME is almost always the most prominent line at the very top — "
+        "extract it into personal.fields.name. Never leave name empty if a name appears anywhere.\n"
+        "2. Put every piece of information in the section it BELONGS to: job history → experience, "
+        "degrees/schools → education, built things → projects, courses/licenses → certifications, "
+        "a profile/objective paragraph → summary, technologies/tools → skills.\n"
+        "3. Extract ALL links and route them: a github.com URL → personal.fields.github, a "
+        "linkedin.com URL → personal.fields.linkedin, any other personal site → personal.fields.portfolio, "
+        "and a link that belongs to a specific project → that project's \"link\".\n"
+        "4. ALWAYS include these sections even if empty: summary, experience, education, projects, skills, certifications.\n"
+        "5. GROUNDING: use ONLY facts present in the text — never invent an employer, title, date, "
+        "degree, score, skill, or link. Leave a field \"\" if absent.\n" + schema_hint +
+        "\n\nRÉSUMÉ:\n" + (resume_text or "")[:16000]
     )
     resp = model.generate_content(prompt, generation_config={"temperature": 0.0, "response_mime_type": "application/json"})
     data = _json.loads(resp.text)
     sections = data.get("sections") if isinstance(data, dict) else None
     if not isinstance(sections, list) or not sections:
         return None
-    # Ground skills back to the taxonomy label where possible (keeps free-text too).
     personal = next((s for s in sections if s.get("type") == "personal"), {})
     fields = personal.get("fields", {}) if isinstance(personal, dict) else {}
+    # Belt-and-braces: if the model missed the name/links, recover them locally from the text.
+    if not fields.get("name"):
+        fields["name"] = _local_build(resume_text)["full_name"]
+    contact = _extract_contact(resume_text)
+    for k in ("github", "linkedin", "portfolio", "email", "mobile"):
+        if not fields.get(k) and contact.get(k):
+            fields[k] = contact[k]
+    if isinstance(personal, dict):
+        personal["fields"] = fields
     return {
         "sections": sections,
         "full_name": fields.get("name", "") or "",
         "email": fields.get("email", "") or "",
-        "phone": fields.get("phone", "") or "",
+        "phone": fields.get("mobile", "") or fields.get("phone", "") or "",
     }
 
 
+# Canonical sections that MUST exist in every profile (scaffolded empty if the
+# résumé lacks them) — so the builder always shows a consistent, fillable shape.
+_CANONICAL_ORDER = ["personal", "summary", "experience", "education", "projects", "skills", "certifications"]
+_PERSONAL_KEYS = ("name", "email", "mobile", "phone", "city", "country", "location", "github", "linkedin", "portfolio")
+
+
+def _empty_section(t: str) -> Dict[str, Any]:
+    if t == "personal":
+        return {"type": "personal", "title": "Personal",
+                "fields": {**{k: "" for k in _PERSONAL_KEYS}, "links": []}}
+    if t == "summary":
+        return {"type": "summary", "title": _TITLE["summary"], "text": ""}
+    return {"type": t, "title": _TITLE.get(t, t.title()), "items": []}
+
+
+def _ensure_canonical_sections(result: Dict[str, Any]) -> Dict[str, Any]:
+    """Guarantee every canonical section exists (empty if absent), in order; keep
+    any extra/custom sections appended after. Sync convenience name/email/phone."""
+    sections = result.get("sections") or []
+    by_type: Dict[str, Dict[str, Any]] = {}
+    extras: List[Dict[str, Any]] = []
+    for s in sections:
+        if not isinstance(s, dict):
+            continue
+        t = s.get("type")
+        if t in _CANONICAL_ORDER and t not in by_type:
+            by_type[t] = s
+        else:
+            extras.append(s)
+    ordered: List[Dict[str, Any]] = []
+    for t in _CANONICAL_ORDER:
+        sec = by_type.get(t) or _empty_section(t)
+        if t == "personal":
+            fields = sec.setdefault("fields", {})
+            for k in _PERSONAL_KEYS:
+                fields.setdefault(k, "")
+            fields.setdefault("links", [])
+            if not fields.get("location") and (fields.get("city") or fields.get("country")):
+                fields["location"] = ", ".join(x for x in (fields.get("city"), fields.get("country")) if x)
+        ordered.append(sec)
+    ordered.extend(extras)
+    result["sections"] = ordered
+    pf = ordered[0].get("fields", {})
+    result["full_name"] = result.get("full_name") or pf.get("name", "")
+    result["email"] = result.get("email") or pf.get("email", "")
+    result["phone"] = result.get("phone") or pf.get("mobile") or pf.get("phone", "")
+    return result
+
+
 def build_profile(resume_text: str) -> Dict[str, Any]:
-    """résumé text → structured master profile. Gemini when keyed (grounded),
-    deterministic local split otherwise. Never raises — always returns a profile."""
+    """résumé text → structured master profile. Gemini when keyed (grounded), else the
+    deterministic local split. Canonical sections are always guaranteed. Never raises."""
+    out: Optional[Dict[str, Any]] = None
     if settings.GEMINI_API_KEY:
         try:
             out = _gemini_build(resume_text)
-            if out:
-                return out
         except Exception as exc:  # pragma: no cover - depends on external service
             print(f"[PathFinder] Gemini profile build failed, using local: {exc}", file=sys.stderr)
-    return _local_build(resume_text)
+            out = None
+    if not out:
+        out = _local_build(resume_text)
+    return _ensure_canonical_sections(out)
+
+
+def resolve_effective_profile(master_sections: List[Dict[str, Any]],
+                              variant: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Apply a role VARIANT on top of the master profile → the effective sections used
+    to generate an application's docs. A variant only CURATES the master's real facts:
+    an optional role-specific summary, skills reordered (emphasized first), and sections
+    hidden for that role. It never adds anything not already in the master, so grounding
+    is preserved."""
+    import copy
+
+    sections = copy.deepcopy(master_sections or [])
+    if not variant:
+        return sections
+    hidden = set(variant.get("hidden_sections") or [])
+    summary_override = (variant.get("summary_override") or "").strip()
+    emphasized = [str(s).lower() for s in (variant.get("emphasized_skills") or [])]
+
+    out: List[Dict[str, Any]] = []
+    for sec in sections:
+        t = sec.get("type")
+        if t in hidden and t != "personal":   # never hide the personal/contact section
+            continue
+        if t == "summary" and summary_override:
+            sec = {**sec, "text": summary_override}
+        if t == "skills" and emphasized:
+            items = sec.get("items") or []
+            first = [it for it in items if str(it).lower() in emphasized]
+            rest = [it for it in items if str(it).lower() not in emphasized]
+            sec = {**sec, "items": first + rest}
+        out.append(sec)
+    return out
 
 
 def provider_name() -> str:

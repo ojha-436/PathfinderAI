@@ -371,6 +371,55 @@ def generate(profile: Dict[str, Any], jd_text: str, kind: str, *,
     }
 
 
+def refine(content: Dict[str, Any], kind: str, instruction: str, profile: Dict[str, Any],
+           company: str = "", role: str = "") -> Dict[str, Any]:
+    """Chat-driven edit of a generated doc. Applies the natural-language `instruction`
+    while keeping the same JSON shape and staying grounded (the verifier still gates it).
+    Gemini when available; otherwise returns the doc unchanged with a helpful note."""
+    if not (instruction or "").strip():
+        return {"content": content, "message": "Tell me what to change (e.g. \"make the summary shorter\").",
+                "grounding": {"provider": "local", "verified": True, "rejected_claims": []}}
+    if not settings.GEMINI_API_KEY:
+        return {"content": content,
+                "message": "Live chat-editing needs the Gemini API key. Meanwhile you can edit fields in your "
+                           "Master Profile and regenerate, or tweak the text after exporting.",
+                "grounding": {"provider": "local", "verified": True, "rejected_claims": []}}
+    try:  # pragma: no cover - external service
+        import json as _json
+
+        import google.generativeai as genai
+
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        model = genai.GenerativeModel(getattr(settings, "GEMINI_MODEL", "gemini-2.5-flash"))
+        facts = {
+            "name": _personal(profile).get("name", ""),
+            "summary": _summary_text(profile), "skills": _skill_names(profile),
+            "experience": _experience(profile), "education": _education(profile),
+        }
+        prompt = (
+            "You are editing a job-application document represented as JSON. Apply the USER_INSTRUCTION, "
+            "but keep the SAME JSON structure/keys, and use ONLY facts in PROFILE_FACTS — never invent an "
+            "employer, title, date, degree, number, or skill. Return ONLY the edited JSON document.\n"
+            f"DOCUMENT_KIND: {kind}\nUSER_INSTRUCTION: {instruction}\n"
+            f"CURRENT_DOCUMENT:\n{_json.dumps(content)[:9000]}\n"
+            f"PROFILE_FACTS:\n{_json.dumps(facts)[:6000]}"
+        )
+        resp = model.generate_content(prompt, generation_config={"temperature": 0.3, "response_mime_type": "application/json"})
+        new_content = _json.loads(resp.text)
+        check = verify_grounding(new_content, profile, company)
+        if not check["clean"]:
+            return {"content": content,
+                    "message": (f"That edit would have introduced a date not in your profile "
+                                f"({', '.join(check['flagged'])}), so I kept the grounded version. Try rephrasing."),
+                    "grounding": {"provider": "gemini", "verified": False, "rejected_claims": check["flagged"]}}
+        return {"content": new_content,
+                "message": "Done — I updated your " + kind.replace("_", " ") + ".",
+                "grounding": {"provider": "gemini", "verified": True, "rejected_claims": []}}
+    except Exception as exc:  # pragma: no cover
+        return {"content": content, "message": f"Couldn't apply that edit right now ({exc}). Please try again.",
+                "grounding": {"provider": "local", "verified": True, "rejected_claims": []}}
+
+
 # ---------------------------------------------------------------- ATS renderers
 def _esc(s: Any) -> str:
     return _html.escape(str(s or ""))
@@ -438,46 +487,114 @@ def _resume_txt(c: Dict[str, Any]) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
+def _link_label(u: str) -> str:
+    ul = (u or "").lower()
+    if "github" in ul:
+        return "GitHub"
+    if "linkedin" in ul:
+        return "LinkedIn"
+    if "gitlab" in ul:
+        return "GitLab"
+    return re.sub(r"^https?://(www\.)?", "", u).split("/")[0] or u
+
+
+def _href(u: str) -> str:
+    return u if re.match(r"^https?://", u or "", re.I) else "https://" + (u or "")
+
+
 def _resume_html(c: Dict[str, Any]) -> str:
-    parts: List[str] = []
-    if c.get("name"):
-        parts.append(f"<h1>{_esc(c['name'])}</h1>")
+    """Render the résumé in the jakegut/resume single-column format: centered name +
+    contact, ruled small-caps section headers, right-aligned dates, tight bullets."""
     ct = c.get("contact", {})
-    contact_bits = [ct.get("email", ""), ct.get("phone", ""), ct.get("location", "")] + (ct.get("links") or [])
-    contact_bits = [b for b in contact_bits if b]
-    if contact_bits:
-        parts.append(f"<p class='contact'>{' | '.join(_esc(b) for b in contact_bits)}</p>")
-    if c.get("headline"):
-        parts.append(f"<p class='headline'>{_esc(c['headline'])}</p>")
+    contact_items: List[str] = []
+    if ct.get("location"):
+        contact_items.append(_esc(ct["location"]))
+    if ct.get("email"):
+        contact_items.append(_esc(ct["email"]))
+    if ct.get("phone"):
+        contact_items.append(_esc(ct["phone"]))
+    for u in (ct.get("links") or []):
+        contact_items.append(f"<a href='{_esc(_href(u))}'>{_esc(_link_label(u))}</a>")
+    contact_line = " &nbsp;|&nbsp; ".join(contact_items)
+
+    parts: List[str] = [f"<div class='r-name'>{_esc(c.get('name') or 'Your Name')}</div>"]
+    if contact_line:
+        parts.append(f"<div class='r-contact'>{contact_line}</div>")
     if c.get("summary"):
-        parts.append(f"<h2>Summary</h2><p>{_esc(c['summary'])}</p>")
+        parts.append("<div class='r-sec'>Summary</div>")
+        parts.append(f"<p class='r-sum'>{_esc(c['summary'])}</p>")
+
     for sec in c.get("sections", []):
-        parts.append(f"<h2>{_esc(sec.get('heading',''))}</h2>")
+        items = sec.get("items", [])
+        if not items:
+            continue
         kind = sec.get("kind")
+        parts.append(f"<div class='r-sec'>{_esc(sec.get('heading',''))}</div>")
         if kind == "skills":
-            parts.append(f"<p>{' &middot; '.join(_esc(x) for x in sec.get('items', []))}</p>")
+            parts.append(f"<p class='r-skills'>{' &bull; '.join(_esc(str(x)) for x in items)}</p>")
         elif kind == "experience":
-            for it in sec.get("items", []):
-                head = " — ".join([x for x in [it.get("role", ""), it.get("org", "")] if x])
-                dates = " ".join([x for x in [it.get("start", ""), it.get("end", "")] if x])
-                parts.append(f"<h3>{_esc(head)}{(' <span>'+_esc(dates)+'</span>') if dates else ''}</h3>")
-                bl = "".join(f"<li>{_esc(b)}</li>" for b in it.get("bullets", []))
+            for it in items:
+                dates = " – ".join([x for x in [it.get("start", ""), it.get("end", "")] if x])
+                parts.append("<div class='r-entry'>")
+                parts.append(f"<div class='r-row'><span class='r-title'>{_esc(it.get('role',''))}</span>"
+                             f"<span class='r-date'>{_esc(dates)}</span></div>")
+                if it.get("org"):
+                    parts.append(f"<div class='r-sub'><span>{_esc(it['org'])}</span><span></span></div>")
+                bl = "".join(f"<li>{_esc(b)}</li>" for b in it.get("bullets", []) if b)
                 if bl:
                     parts.append(f"<ul>{bl}</ul>")
+                parts.append("</div>")
         elif kind == "education":
-            for it in sec.get("items", []):
-                bits = [it.get("degree", ""), it.get("institution", ""), it.get("year", ""), it.get("score", "")]
-                parts.append(f"<p>{_esc(', '.join([x for x in bits if x]))}</p>")
-        else:
-            lis = []
-            for it in sec.get("items", []):
+            for it in items:
+                left = it.get("institution", "") or it.get("degree", "")
+                parts.append("<div class='r-entry'>")
+                parts.append(f"<div class='r-row'><span class='r-title'>{_esc(left)}</span>"
+                             f"<span class='r-date'>{_esc(it.get('year',''))}</span></div>")
+                sub_l = it.get("degree", "") if it.get("institution") else ""
+                if sub_l or it.get("score"):
+                    parts.append(f"<div class='r-sub'><span>{_esc(sub_l)}</span><span>{_esc(it.get('score',''))}</span></div>")
+                parts.append("</div>")
+        else:  # generic: projects / certifications / custom
+            for it in items:
                 if isinstance(it, str):
-                    lis.append(f"<li>{_esc(it)}</li>")
-                else:
-                    h, d = it.get("heading", ""), it.get("detail", "")
-                    lis.append(f"<li>{_esc(h)}{(': '+_esc(d)) if d else ''}</li>")
-            parts.append(f"<ul>{''.join(lis)}</ul>")
-    return _html_doc(c.get("name") or "Résumé", "".join(parts))
+                    parts.append(f"<div class='r-entry'><div class='r-title'>{_esc(it)}</div></div>")
+                    continue
+                link = it.get("link", "")
+                link_html = f" &nbsp;<a href='{_esc(_href(link))}'>link</a>" if link else ""
+                parts.append("<div class='r-entry'>")
+                parts.append(f"<div class='r-row'><span class='r-title'>{_esc(it.get('heading',''))}{link_html}</span>"
+                             f"<span class='r-date'>{_esc(it.get('year',''))}</span></div>")
+                sub = it.get("issuer", "") or it.get("tech_stack", "")
+                if sub:
+                    parts.append(f"<div class='r-sub'><span>{_esc(sub)}</span><span></span></div>")
+                if it.get("detail"):
+                    parts.append(f"<p class='r-detail'>{_esc(it['detail'])}</p>")
+                parts.append("</div>")
+    return _resume_doc(c.get("name") or "Résumé", "".join(parts))
+
+
+def _resume_doc(title: str, body: str) -> str:
+    """jakegut/resume-style single-column document (ATS-clean, print-ready)."""
+    return (
+        "<!doctype html><html><head><meta charset='utf-8'>"
+        f"<title>{_esc(title)} — Résumé</title><style>"
+        "*{box-sizing:border-box}"
+        "body{font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;max-width:800px;"
+        "margin:26px auto;padding:0 44px;font-size:11.5pt;line-height:1.32}"
+        ".r-name{text-align:center;font-size:23pt;font-weight:700;letter-spacing:.02em;margin:0 0 3px}"
+        ".r-contact{text-align:center;font-size:10pt;color:#333;margin:0 0 12px}"
+        ".r-contact a{color:#1a1a1a;text-decoration:none}"
+        ".r-sec{text-transform:uppercase;font-size:11pt;font-weight:700;letter-spacing:.09em;"
+        "border-bottom:1.3px solid #1a1a1a;padding-bottom:2px;margin:15px 0 6px}"
+        ".r-entry{margin:0 0 8px}"
+        ".r-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px}"
+        ".r-title{font-weight:700}.r-date{font-size:10pt;color:#333;white-space:nowrap}"
+        ".r-sub{display:flex;justify-content:space-between;font-style:italic;font-size:10.5pt;color:#333;margin-top:1px}"
+        ".r-sum,.r-detail{margin:2px 0}.r-skills{margin:2px 0}"
+        "ul{margin:3px 0 0 18px;padding:0}li{margin:1.5px 0}"
+        "@media print{body{margin:0;padding:0 20px}}"
+        f"</style></head><body>{body}</body></html>"
+    )
 
 
 def _cover_letter_txt(c: Dict[str, Any]) -> str:

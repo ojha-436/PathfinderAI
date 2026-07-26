@@ -56,20 +56,20 @@ function renderNav() {
       <div class="avatar" id="avatarBtn" title="${esc(u.email)}">${esc(initial)}</div>
       <div class="menu-pop hidden" id="menuPop">
         <div class="who">Signed in as<br><strong>${esc(u.email)}</strong></div>
-        <button data-act="profile">👤 My profile</button>
-        <button data-act="history">📁 My analyses</button>
-        <button data-act="learning">🎓 My learning</button>
-        <button data-act="logout">↩ Log out</button>
-        <button data-act="delacct" class="danger">🗑 Delete account</button>
+        <button data-act="dashboard">${svgIcon('home', 15, 'vertical-align:-3px;margin-right:8px')}Dashboard</button>
+        <button data-act="profile">${svgIcon('target', 15, 'vertical-align:-3px;margin-right:8px')}My profile</button>
+        <button data-act="build">${svgIcon('build', 15, 'vertical-align:-3px;margin-right:8px')}Build (learning &amp; plans)</button>
+        <button data-act="logout">${svgIcon('logout', 15, 'vertical-align:-3px;margin-right:8px')}Log out</button>
+        <button data-act="delacct" class="danger">${svgIcon('trash', 15, 'vertical-align:-3px;margin-right:8px')}Delete account</button>
       </div>
     </div>`;
     $('#avatarBtn').onclick = (e) => { e.stopPropagation(); $('#menuPop').classList.toggle('hidden'); };
     el.querySelectorAll('[data-act]').forEach((b) => b.onclick = () => {
       $('#menuPop').classList.add('hidden');
       const a = b.dataset.act;
-      if (a === 'history') location.hash = '#/history';
+      if (a === 'dashboard') location.hash = '#/dashboard';
       else if (a === 'profile') location.hash = '#/profile';
-      else if (a === 'learning') location.hash = '#/learning';
+      else if (a === 'build') location.hash = '#/build';
       else if (a === 'logout') { Store.clear(); renderNav(); toast('Logged out.'); location.hash = '#/'; }
       else if (a === 'delacct') confirmDeleteAccount();
     });
@@ -79,6 +79,19 @@ function renderNav() {
     $('#loginBtn').onclick = () => openAuth('login');
     $('#signupBtn').onclick = () => openAuth('register');
   }
+  renderTopLinks();
+  renderRail();
+}
+
+/* Auth-aware top-nav links: guests get quick entries; authed users navigate via the rail. */
+function renderTopLinks() {
+  const nl = $('#navLinks');
+  if (!nl) return;
+  nl.innerHTML = Store.user
+    ? ''
+    : `<a href="#/aim" data-nav>Aim</a>
+       <a href="#/analyze" data-nav class="hide-sm">Analyze</a>
+       <a href="#/apply" data-nav>Apply</a>`;
 }
 document.addEventListener('click', () => { const m = $('#menuPop'); if (m) m.classList.add('hidden'); });
 
@@ -120,7 +133,7 @@ async function onGoogleCredential(credential) {
     renderNav();
     toast('Signed in with Google.');
     const after = State.pendingAfterAuth; State.pendingAfterAuth = null;
-    if (after) after();
+    if (after) after(); else location.hash = '#/dashboard';
   } catch (e) {
     toast(e.message || 'Google sign-in failed. Please try again.', 'err');
   }
@@ -172,7 +185,7 @@ function openAuth(mode) {
       close(); renderNav();
       toast(isReg ? 'Account created — welcome!' : 'Logged in.');
       const after = State.pendingAfterAuth; State.pendingAfterAuth = null;
-      if (after) after();
+      if (after) after(); else location.hash = '#/dashboard';
     } catch (err) {
       errEl.textContent = err.status === 409 ? 'That email is already registered. Try logging in.' :
         err.status === 401 ? 'Invalid email or password.' : (err.message || 'Something went wrong.');
@@ -266,9 +279,9 @@ const SECTORS = ['IT / Software', 'Data & Analytics', 'Finance & Banking', 'Manu
   'Mechanical / Engineering', 'Design / Creative', 'Healthcare', 'Government / PSU',
   'E-commerce & Retail', 'Marketing / Media', 'Education', 'Legal', 'Operations', 'Other'];
 const LEVELS = [
-  { id: 'student', icon: '🎓', label: 'Student', desc: 'Still studying or in college' },
-  { id: 'fresher', icon: '🌱', label: 'Fresher', desc: 'Graduated, seeking my first role' },
-  { id: 'professional', icon: '💼', label: 'Working professional', desc: 'Working now — want to grow or switch' },
+  { id: 'student', icon: 'grad', label: 'Student', desc: 'Still studying or in college' },
+  { id: 'fresher', icon: 'spark', label: 'Fresher', desc: 'Graduated, seeking my first role' },
+  { id: 'professional', icon: 'briefcase', label: 'Working professional', desc: 'Working now — want to grow or switch' },
 ];
 const WIZ_STEPS = ['Goal', 'Sector', 'Level', 'Confirm'];
 const reduceMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -316,7 +329,7 @@ function renderWizStep() {
     html = `<div class="wiz-step card">${back}
       <h2 class="wiz-q">Where are you right now?</h2>
       <p class="muted wiz-sub">So we set the right starting point.</p>
-      <div class="wiz-levels">${LEVELS.map((l, i) => `<button class="wiz-level${w.level === l.id ? ' sel' : ''}" data-level="${l.id}" style="animation-delay:${i * 45}ms"><span class="wl-icon">${l.icon}</span><span class="wl-label">${l.label}</span><span class="wl-desc">${l.desc}</span></button>`).join('')}</div>`;
+      <div class="wiz-levels">${LEVELS.map((l, i) => `<button class="wiz-level${w.level === l.id ? ' sel' : ''}" data-level="${l.id}" style="animation-delay:${i * 45}ms"><span class="wl-icon">${svgIcon(l.icon, 26)}</span><span class="wl-label">${l.label}</span><span class="wl-desc">${l.desc}</span></button>`).join('')}</div>`;
   } else {
     html = `<div class="wiz-step card">${back}
       <div id="confirmBody"><div class="wiz-resolving"><div class="wiz-spinner"></div><p class="muted">Finding your best-fit path…</p></div></div>`;
@@ -427,7 +440,7 @@ function renderRoadmapView(root, rm) {
       <div class="rm-head"><h4>${esc(p.title)}</h4><span class="rm-weeks">~${p.est_weeks} wks</span></div>
       <p class="rm-why">${esc(p.why)}</p>
       <div class="rm-courses">${(p.courses || []).map(courseChip).join('')}</div>
-      <div class="rm-project">🛠 ${esc(p.project)}</div>
+      <div class="rm-project">${svgIcon('build', 14, 'vertical-align:-2px;margin-right:6px')}${esc(p.project)}</div>
       <div class="rm-ready"><div class="rm-ready-bar"><span data-fill="${p.readiness_after}" style="transform:scaleX(0)"></span></div><span>You'll be <b>${p.readiness_after}%</b> ready for ${esc(rm.role)}</span></div>
     </div></div>`;
   const isAi = rm.mode === 'ai';
@@ -697,15 +710,46 @@ function renderLegal(kind) {
   window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
 }
 
-/* ---------------- router ---------------- */
-const VIEWS = ['landing', 'analyze', 'discover', 'card', 'goal', 'history', 'learning', 'legal', 'profile', 'apply'];
+/* ---------------- router ----------------
+   Job-based IA: Profile (spine) + Aim → Build → Apply, on an app shell (left rail).
+   Discover + Career Goal + Analyze are now MODES reached through "Aim" (one door,
+   not three parallel tabs); Learning + History live under "Build". Old hashes still
+   resolve, so existing links/bookmarks keep working. */
+const VIEWS = ['landing', 'dashboard', 'aim', 'build', 'analyze', 'discover', 'card', 'goal', 'history', 'learning', 'legal', 'profile', 'apply'];
+// Views that render inside the app shell (with the left rail). Marketing/auth don't.
+const SHELL_VIEWS = new Set(['dashboard', 'aim', 'build', 'analyze', 'discover', 'goal', 'history', 'learning', 'profile', 'apply']);
+// Route prefix → rail anchor it belongs under (for active-state highlighting).
+const RAIL_GROUPS = [
+  ['#/dashboard', 'dashboard'], ['#/profile', 'profile'],
+  ['#/aim', 'aim'], ['#/discover', 'aim'], ['#/goal', 'aim'], ['#/analyze', 'aim'],
+  ['#/build', 'build'], ['#/learning', 'build'], ['#/history', 'build'],
+  ['#/apply', 'apply'],
+];
+function currentRailGroup() {
+  const h = location.hash || '';
+  for (const [r, g] of RAIL_GROUPS) if (h.startsWith(r)) return g;
+  return '';
+}
 function showView(name) {
-  VIEWS.forEach((v) => $(`#view-${v}`).classList.toggle('hidden', v !== name));
+  VIEWS.forEach((v) => { const el = $(`#view-${v}`); if (el) el.classList.toggle('hidden', v !== name); });
+  // The left rail shows only for signed-in users on app routes (guests keep the top nav).
+  document.body.classList.toggle('app-mode', SHELL_VIEWS.has(name) && !!Store.user);
+  renderRail();
   window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+}
+function _authGate(hash, label) {
+  if (Store.user) return false;
+  toast(`Log in to ${label}.`);
+  State.pendingAfterAuth = () => (location.hash = hash);
+  openAuth('login'); location.hash = '#/';
+  return true;
 }
 function route() {
   const hash = location.hash || '#/';
-  if (hash === '#/' || hash === '') { showView('landing'); return; }
+  if (hash === '#/' || hash === '') {
+    if (Store.user) { showView('dashboard'); renderDashboard(); } else showView('landing');
+    return;
+  }
   if (hash.startsWith('#/reset')) {
     const qs = hash.includes('?') ? hash.slice(hash.indexOf('?') + 1) : '';
     const token = new URLSearchParams(qs).get('token');
@@ -713,28 +757,23 @@ function route() {
     if (token) openReset(token); else toast('That reset link is invalid or incomplete.', 'err');
     return;
   }
+  // --- Primary job-based anchors ---
+  if (hash.startsWith('#/dashboard')) { if (!Store.user) { showView('landing'); return; } showView('dashboard'); renderDashboard(); return; }
+  if (hash.startsWith('#/aim')) { showView('aim'); renderAim(); return; }
+  if (hash.startsWith('#/build')) { if (_authGate('#/build', 'see your learning journey')) return; showView('build'); renderBuild(); return; }
+  if (hash.startsWith('#/profile')) { if (_authGate('#/profile', 'manage your profile')) return; showView('profile'); renderProfile(); return; }
+  if (hash.startsWith('#/apply')) { if (_authGate('#/apply', 'use Apply Studio')) return; showView('apply'); renderApply(); return; }
+  // --- Aim modes (reached through the Aim hub; kept as deep-links) ---
   if (hash.startsWith('#/analyze')) { showView('analyze'); if (!State.result) renderAnalyzeIntro(); return; }
   if (hash.startsWith('#/discover')) { showView('discover'); renderDiscover(); return; }
+  if (hash.startsWith('#/goal')) { showView('goal'); renderGoal(); return; }
+  // --- Build sub-surfaces ---
+  if (hash.startsWith('#/history')) { if (_authGate('#/history', 'see your saved analyses')) return; showView('history'); renderHistory(); return; }
+  if (hash.startsWith('#/learning')) { if (_authGate('#/learning', 'see your learning')) return; showView('learning'); renderLearning(); return; }
+  // --- Public / marketing ---
   if (hash.startsWith('#/card/')) { showView('card'); renderCard(hash.slice('#/card/'.length)); return; }
   if (hash.startsWith('#/privacy')) { showView('legal'); renderLegal('privacy'); return; }
   if (hash.startsWith('#/terms')) { showView('legal'); renderLegal('terms'); return; }
-  if (hash.startsWith('#/goal')) { showView('goal'); renderGoal(); return; }
-  if (hash.startsWith('#/history')) {
-    if (!Store.user) { toast('Log in to see your saved analyses.'); State.pendingAfterAuth = () => location.hash = '#/history'; openAuth('login'); location.hash = '#/'; return; }
-    showView('history'); renderHistory(); return;
-  }
-  if (hash.startsWith('#/learning')) {
-    if (!Store.user) { toast('Log in to see your learning.'); State.pendingAfterAuth = () => (location.hash = '#/learning'); openAuth('login'); location.hash = '#/'; return; }
-    showView('learning'); renderLearning(); return;
-  }
-  if (hash.startsWith('#/profile')) {
-    if (!Store.user) { toast('Log in to manage your profile.'); State.pendingAfterAuth = () => (location.hash = '#/profile'); openAuth('login'); location.hash = '#/'; return; }
-    showView('profile'); renderProfile(); return;
-  }
-  if (hash.startsWith('#/apply')) {
-    if (!Store.user) { toast('Log in to use Apply Studio.'); State.pendingAfterAuth = () => (location.hash = '#/apply'); openAuth('login'); location.hash = '#/'; return; }
-    showView('apply'); renderApply(); return;
-  }
   showView('landing');
 }
 window.addEventListener('hashchange', route);
@@ -751,6 +790,124 @@ document.addEventListener('click', (e) => {
     .then(() => { toast('Added to My Learning ✓'); b.textContent = '✓ Tracking'; b.disabled = true; })
     .catch((err) => toast(err.message || 'Could not track.', 'err'));
 });
+
+/* ================= App shell: left rail + job-based home ================= */
+const RAIL_ITEMS = [
+  { k: 'dashboard', href: '#/dashboard', label: 'Dashboard', icon: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>' },
+  { k: 'profile', href: '#/profile', label: 'Profile', icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/>' },
+  { k: 'aim', href: '#/aim', label: 'Aim', icon: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>' },
+  { k: 'build', href: '#/build', label: 'Build', icon: '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>' },
+  { k: 'apply', href: '#/apply', label: 'Apply', icon: '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>' },
+];
+function renderRail() {
+  const rail = $('#appRail');
+  if (!rail) return;
+  const active = currentRailGroup();
+  rail.innerHTML = `<div class="rail-label">Navigate</div>
+    ${RAIL_ITEMS.map((it) => `
+      <button class="rail-link${it.k === active ? ' active' : ''}" data-nav="${it.href}" aria-current="${it.k === active ? 'page' : 'false'}">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${it.icon}</svg><span>${it.label}</span>
+      </button>`).join('')}
+    <button class="btn btn-primary btn-sm rail-new" data-nav="#/apply">＋ New application</button>`;
+}
+
+function profileCompleteness(p) {
+  const types = new Set(((p && p.sections) || []).map((s) => s.type));
+  const core = ['personal', 'summary', 'experience', 'education', 'skills'];
+  return Math.round(100 * core.filter((t) => types.has(t)).length / core.length);
+}
+
+async function renderDashboard() {
+  const root = $('#dashboardRoot');
+  if (!root) return;
+  const who = ((Store.user && Store.user.email) || '').split('@')[0];
+  root.innerHTML = `
+    <span class="eyebrow">Welcome back</span>
+    <h2 style="margin:.1em 0 .5em">${esc(who || 'Your dashboard')}</h2>
+    <div id="dashStrength"></div>
+    <div class="subhead"><h2 style="font-size:1.25rem">What do you want to do?</h2></div>
+    <div class="hub-grid">
+      <div class="card hub-card" data-nav="#/aim"><div class="hub-ic">${svgIcon('target', 26)}</div><h3>Aim</h3><p>Find your best-fit, future-proof direction — from interests, a goal, or your résumé.</p><span class="cta-row">Explore →</span></div>
+      <div class="card hub-card" data-nav="#/build"><div class="hub-ic">${svgIcon('build', 26)}</div><h3>Build</h3><p>Follow your roadmap, track courses, and watch your readiness climb.</p><span class="cta-row">Continue →</span></div>
+      <div class="card hub-card" data-nav="#/apply"><div class="hub-ic">${svgIcon('send', 26)}</div><h3>Apply</h3><p>Generate grounded, ATS-ready docs for a job and track every application.</p><span class="cta-row">Apply →</span></div>
+    </div>
+    <div id="dashRecent" style="margin-top:26px"></div>`;
+  const strengthEl = $('#dashStrength');
+  try {
+    const p = await Api.getProfile();
+    const v = profileCompleteness(p);
+    strengthEl.innerHTML = `<div class="card strength">
+      <div class="strength-txt"><b>Profile strength</b> — your master profile powers every feature.${v < 100 ? ' Add more to sharpen your results.' : ' Looking great.'}</div>
+      <div class="strength-bar"><div class="strength-fill" style="width:${v}%"></div></div>
+      <span class="mono strength-pct">${v}%</span>
+      <button class="btn btn-ghost btn-sm" data-nav="#/profile">Edit</button>
+    </div>`;
+  } catch {
+    strengthEl.innerHTML = `<div class="card strength strength-empty">
+      <div class="strength-txt"><b>Build your master profile</b> — upload your résumé once and every feature (Aim, Build, Apply) reads from it.</div>
+      <button class="btn btn-primary btn-sm" data-nav="#/profile">Build profile →</button>
+    </div>`;
+  }
+  try {
+    const [hist, apps] = await Promise.all([Api.history().catch(() => []), Api.getApplications().catch(() => [])]);
+    const bits = [];
+    if (hist && hist.length) bits.push(`<div class="card recent-item" data-nav="#/history"><span class="ri-k">${svgIcon('compass', 13, 'vertical-align:-2px;margin-right:5px')}Last analysis</span><b>${esc(hist[0].title)}</b></div>`);
+    if (apps && apps.length) bits.push(`<div class="card recent-item" data-nav="#/apply"><span class="ri-k">${svgIcon('send', 13, 'vertical-align:-2px;margin-right:5px')}Last application</span><b>${esc(apps[0].company || apps[0].job_title || 'Draft application')}</b></div>`);
+    if (bits.length) $('#dashRecent').innerHTML = `<div class="subhead"><h2 style="font-size:1.25rem">Pick up where you left off</h2></div><div class="recent-grid">${bits.join('')}</div>`;
+  } catch { /* recent activity is best-effort */ }
+}
+
+function renderAim() {
+  const root = $('#aimRoot');
+  if (!root) return;
+  root.innerHTML = `
+    <span class="eyebrow">Aim</span>
+    <h2 style="margin:.1em 0 .3em">Where do you want to aim?</h2>
+    <p class="lede" style="max-width:62ch">Three ways in — all lead to a grounded, best-fit direction with your readiness and the next step to take.</p>
+    <div class="aim-fork">
+      <button class="card aim-card" data-nav="#/discover">
+        <div class="af-ic">${svgIcon('compass', 30)}</div><h3>Help me figure it out</h3>
+        <p>Not sure yet? Answer a few quick questions and we'll map your interests to real careers.</p>
+        <span class="cta-row">Start the quiz →</span>
+      </button>
+      <button class="card aim-card" data-nav="#/goal">
+        <div class="af-ic">${svgIcon('target', 30)}</div><h3>I have a target</h3>
+        <p>Know the role you want? We'll ground it and build a step-by-step roadmap to get there.</p>
+        <span class="cta-row">Set my goal →</span>
+      </button>
+      <button class="card aim-card" data-nav="#/analyze">
+        <div class="af-ic">${svgIcon('file', 30)}</div><h3>Analyze my résumé</h3>
+        <p>Have a résumé? See your skill forecast and three future-proof pathways from what you already have.</p>
+        <span class="cta-row">Analyze →</span>
+      </button>
+    </div>`;
+}
+
+async function renderBuild() {
+  const root = $('#buildRoot');
+  if (!root) return;
+  root.innerHTML = `
+    <span class="eyebrow">Build</span>
+    <h2 style="margin:.1em 0 .3em">Build toward your goal</h2>
+    <p class="lede" style="max-width:62ch">Your roadmap, courses, and progress in one place — keep going and watch your readiness climb.</p>
+    <div id="buildJourney"></div>
+    <div class="hub-grid" style="margin-top:20px">
+      <div class="card hub-card" data-nav="#/learning"><div class="hub-ic">${svgIcon('grad', 26)}</div><h3>My learning</h3><p>Tracked courses, streak, and coverage progress.</p><span class="cta-row">Open →</span></div>
+      <div class="card hub-card" data-nav="#/goal"><div class="hub-ic">${svgIcon('compass', 26)}</div><h3>Roadmaps</h3><p>Build or revisit a step-by-step plan to your target role.</p><span class="cta-row">Plan →</span></div>
+      <div class="card hub-card" data-nav="#/history"><div class="hub-ic">${svgIcon('folder', 26)}</div><h3>My analyses</h3><p>Your saved skill forecasts and pathway maps.</p><span class="cta-row">View →</span></div>
+    </div>`;
+  try {
+    const j = await Api.journey();
+    $('#buildJourney').innerHTML = `<div class="card journey-mini">
+      <div class="jc-streak"><div class="jc-streak-n">${j.streak_weeks || 0}<span style="color:var(--marigold-2)">${svgIcon('flame', 18, 'vertical-align:-3px')}</span></div><div class="jc-streak-l">week${j.streak_weeks === 1 ? '' : 's'} streak</div></div>
+      <div class="jc-stats">
+        <div class="jc-stat"><div class="k">Skills acquired</div><div class="v">${(j.acquired || []).length}</div></div>
+        <div class="jc-stat"><div class="k">Courses done</div><div class="v">${j.completed_total || 0}</div></div>
+        <div class="jc-stat"><div class="k">This week</div><div class="v">${j.completed_this_week ? '✓' : '—'}</div></div>
+      </div>
+    </div>`;
+  } catch { /* journey strip is best-effort */ }
+}
 
 /* ---------------- analyze: intro (tabs) ---------------- */
 function renderAnalyzeIntro() {
@@ -983,11 +1140,11 @@ function renderResults(r) {
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div class="persona-toggle" id="personaToggle">
-          <button data-persona="student">🎓 Student</button>
-          <button data-persona="professional">💼 Professional</button>
+          <button data-persona="student">${svgIcon('grad', 14, 'vertical-align:-2px;margin-right:5px')}Student</button>
+          <button data-persona="professional">${svgIcon('briefcase', 14, 'vertical-align:-2px;margin-right:5px')}Professional</button>
         </div>
-        ${!r.saved ? `<button class="btn btn-amber btn-sm" id="saveBtn">🔒 Log in to save</button>` : ''}
-        ${r.saved ? `<button class="btn btn-ghost btn-sm" id="delBtn">🗑 Delete</button>` : ''}
+        ${!r.saved ? `<button class="btn btn-amber btn-sm" id="saveBtn">Log in to save</button>` : ''}
+        ${r.saved ? `<button class="btn btn-ghost btn-sm" id="delBtn">${svgIcon('trash', 13, 'vertical-align:-2px;margin-right:5px')}Delete</button>` : ''}
         <button class="btn btn-ghost btn-sm" id="newBtn">＋ New analysis</button>
       </div>
     </div>
@@ -1004,7 +1161,7 @@ function renderResults(r) {
     <div id="drill"></div>
 
     <div class="subhead" id="jobsHead" style="margin-top:38px">
-      <h2>💼 Jobs matched to you</h2><span class="hint">real openings ranked by your skill match</span>
+      <h2>${svgIcon('briefcase', 20, 'vertical-align:-3px;margin-right:8px')}Jobs matched to you</h2><span class="hint">real openings ranked by your skill match</span>
     </div>
     <div id="jobsPanel">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
@@ -1015,7 +1172,7 @@ function renderResults(r) {
     </div>
 
     <div class="card trace-strip" style="margin-top:34px">
-      <h4>🧠 How PathFinder decided — ${r.trace.length}-agent trace</h4>
+      <h4>${svgIcon('spark', 14, 'vertical-align:-2px;margin-right:7px')}How PathFinder decided — ${r.trace.length}-agent trace</h4>
       <div class="trace-flow">
         ${r.trace.map((t) => `<div class="trace-node">
           <div class="tn">${esc(t.agent_name)}</div>
@@ -1228,7 +1385,7 @@ function jobCard(m) {
 /* ---------------- learning tracker ---------------- */
 async function renderLearning() {
   const root = $('#learningRoot');
-  root.innerHTML = `<span class="eyebrow">Your account</span><h2 style="margin:.2em 0 18px">🎓 My learning</h2>
+  root.innerHTML = `<span class="eyebrow">Your account</span><h2 style="margin:.2em 0 18px">${svgIcon('grad', 22, 'vertical-align:-3px;margin-right:9px')}My learning</h2>
     <div id="journeyBox"></div>
     <div id="progressBox"></div>
     <div class="subhead" style="margin-top:26px"><h2 style="font-size:1.3rem">Tracked courses</h2></div>
@@ -1257,7 +1414,7 @@ async function renderJourney() {
     : '<p class="muted" style="font-size:.85rem;margin:4px 0 0">Complete a tracked course to start building your skill timeline.</p>';
   box.innerHTML = `<div class="card journey-card">
     <div class="jc-head">
-      <div class="jc-streak"><div class="jc-streak-n">${j.streak_weeks}🔥</div><div class="jc-streak-l">week${j.streak_weeks === 1 ? '' : 's'} streak</div></div>
+      <div class="jc-streak"><div class="jc-streak-n">${j.streak_weeks}<span style="color:var(--marigold-2)">${svgIcon('flame', 18, 'vertical-align:-3px')}</span></div><div class="jc-streak-l">week${j.streak_weeks === 1 ? '' : 's'} streak</div></div>
       <div class="jc-stats">
         <div class="jc-stat"><div class="k">Skills acquired</div><div class="v">${(j.acquired || []).length}</div></div>
         <div class="jc-stat"><div class="k">Courses done</div><div class="v">${j.completed_total}</div></div>
@@ -1351,6 +1508,36 @@ const ICONS = {
   x: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
 };
 
+/* Reusable icon system — Lucide-style stroke paths rendered at any size.
+   Replaces emoji as structural/decorative icons across the app (consistent stroke,
+   currentColor, crisp at any scale). */
+const ICON_PATHS = {
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>',
+  build: '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>',
+  send: '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>',
+  home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',
+  grad: '<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/>',
+  compass: '<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>',
+  folder: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+  flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/>',
+  logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  spark: '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/>',
+  briefcase: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+  file: '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>',
+  chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+};
+function svgIcon(name, size = 18, style = '') {
+  const p = ICON_PATHS[name];
+  if (!p) return '';
+  return `<svg class="ic" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="${style}" aria-hidden="true">${p}</svg>`;
+}
+ICONS.send = svgIcon('send', 15, 'vertical-align:-2px;margin-right:5px');
+ICONS.download = svgIcon('download', 14, 'vertical-align:-2px;margin-right:5px');
+
 async function renderProfile(draftSections = null, editingSecType = null, activeTab = 'all', showReupload = false) {
   const root = $('#profileRoot');
   if (!draftSections && editingSecType === null) {
@@ -1378,8 +1565,8 @@ async function renderProfile(draftSections = null, editingSecType = null, active
           <div class="big" style="margin-bottom: 8px; color: #0d9488;">${ICONS.upload}</div>
           <h4 style="margin:0 0 4px 0; font-family:'Inter', sans-serif;">Drag & drop your resume here</h4>
           <p class="muted" style="font-size: 0.85rem; margin-bottom:12px;">PDF or TXT up to 5MB</p>
-          <button class="btn btn-primary btn-sm" id="profBrowseBtn" style="position:relative; z-index:10;">Browse Files</button>
-          <input type="file" id="profFile" accept=".pdf,.txt" style="position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer;">
+          <button type="button" class="btn btn-primary btn-sm" id="profBrowseBtn" style="position:relative; z-index:10;">Browse Files</button>
+          <input type="file" id="profFile" accept=".pdf,.txt" hidden>
         </div>
         <div style="text-align: left;">
           <label class="muted" style="font-size: 0.8rem; display:block; margin-bottom:6px; font-weight:600; text-transform:uppercase;">Or paste resume text</label>
@@ -1406,7 +1593,8 @@ async function renderProfile(draftSections = null, editingSecType = null, active
 
       let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
           <h2 style="margin:0; font-family:'Inter', sans-serif; font-size:28px; font-weight:700; color:#0f172a;">Master Profile ${isDraft ? '<span class="pill-have" style="background:#e11d48;color:white;margin-left:8px;font-size:0.75rem; vertical-align:middle; padding:4px 10px; border-radius:999px;">Unsaved Draft</span>' : ''}</h2>
-          <div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-ghost btn-sm" id="profRolesBtn" style="border:1px solid rgba(13,148,136,0.3); color:#0d9488;">${svgIcon('target', 14, 'vertical-align:-2px;margin-right:5px')}Role profiles</button>
             <button class="btn btn-ghost btn-sm" id="profReuploadBtn" style="border:1px solid rgba(13,148,136,0.3); color:#0d9488;">${ICONS.upload} Re-upload Resume</button>
           </div>
         </div>
@@ -1709,6 +1897,8 @@ async function renderProfile(draftSections = null, editingSecType = null, active
     if (reupBtn) {
       reupBtn.onclick = () => renderProfile(sections, editingSecType, activeTab, !showReupload);
     }
+    const rolesBtn = $('#profRolesBtn');
+    if (rolesBtn) rolesBtn.onclick = () => openRoleProfiles();
     const closeReupBtn = $('#closeReuploadBtn');
     if (closeReupBtn) {
       closeReupBtn.onclick = () => renderProfile(sections, editingSecType, activeTab, false);
@@ -1850,8 +2040,13 @@ async function renderProfile(draftSections = null, editingSecType = null, active
         };
       }
 
+      const browseBtn = $('#profBrowseBtn');
+      if (browseBtn && fileInput) browseBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); fileInput.click(); };
+
       const dz = $('#profDropzone');
       if (dz) {
+        dz.style.cursor = 'pointer';
+        dz.onclick = (e) => { if (fileInput && !e.target.closest('#profBrowseBtn')) fileInput.click(); };
         dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('drag'); };
         dz.ondragleave = (e) => { e.preventDefault(); dz.classList.remove('drag'); };
         dz.ondrop = (e) => {
@@ -1871,122 +2066,6 @@ async function renderProfile(draftSections = null, editingSecType = null, active
       }
     }
 
-  } catch (e) {
-    root.innerHTML = `<div class="card err-msg">Failed to load profile.</div>`;
-  }
-}
-    
-    if (!sections.length) {
-      const handleExtract = async (file, text) => {
-        if (!file && !text) { toast("Provide a file or text.", "err"); return; }
-        const btn = file ? $('#profDropzone') : $('#profExtractTextBtn');
-        const oldHtml = btn.innerHTML;
-        if (!file) btn.textContent = "Extracting...";
-        else {
-          $('#profDropzone h3').textContent = "Extracting Profile...";
-          $('#profDropzone .muted').textContent = "This might take a few seconds.";
-        }
-        
-        try {
-          const res = await Api.uploadResume(file, text);
-          const extracted = res.sections.sections || res.sections;
-          toast("Profile extracted. Review and save below.");
-          renderProfile(extracted); // Re-render with draft sections
-        } catch (e) {
-          toast(e.message, "err");
-          if (!file) btn.textContent = "Extract from text";
-          else {
-            btn.innerHTML = oldHtml;
-          }
-        }
-      };
-
-      $('#profFile').onchange = () => {
-        const file = $('#profFile').files[0];
-        if (file) handleExtract(file, '');
-      };
-      
-      const dz = $('#profDropzone');
-      dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('drag'); };
-      dz.ondragleave = (e) => { e.preventDefault(); dz.classList.remove('drag'); };
-      dz.ondrop = (e) => {
-        e.preventDefault(); dz.classList.remove('drag');
-        if (e.dataTransfer.files.length) {
-          $('#profFile').files = e.dataTransfer.files;
-          handleExtract(e.dataTransfer.files[0], '');
-        }
-      };
-
-      $('#profExtractTextBtn').onclick = () => {
-        handleExtract(null, $('#profText').value.trim());
-      };
-    } else if (isEditMode) {
-      $('#profCancelBtn').onclick = () => renderProfile(isDraft ? sections : null, false);
-      $('#profSaveEditBtn').onclick = async () => {
-        $('#profSaveEditBtn').disabled = true;
-        $('#profSaveEditBtn').textContent = "Saving...";
-        try {
-          // Rebuild sections array from DOM
-          const updated = JSON.parse(JSON.stringify(sections)); // deep copy to be safe
-          updated.forEach(sec => {
-            if (sec.type === 'personal') {
-              sec.fields.name = $('#edit-personal-name').value.trim();
-              sec.fields.mobile = $('#edit-personal-mobile').value.trim();
-              sec.fields.phone = $('#edit-personal-mobile').value.trim();
-              sec.fields.email = $('#edit-personal-email').value.trim();
-              sec.fields.city = $('#edit-personal-city').value.trim();
-              sec.fields.country = $('#edit-personal-country').value.trim();
-              sec.fields.location = [sec.fields.city, sec.fields.country].filter(Boolean).join(', ');
-              sec.fields.github = $('#edit-personal-github').value.trim();
-              sec.fields.linkedin = $('#edit-personal-linkedin').value.trim();
-              sec.fields.portfolio = $('#edit-personal-portfolio').value.trim();
-              sec.fields.links = [sec.fields.github, sec.fields.linkedin, sec.fields.portfolio].filter(Boolean);
-            } else if (sec.type === 'skills') {
-              sec.items = $('#edit-skills').value.split(',').map(s => s.trim()).filter(s => s);
-            } else if (sec.type === 'experience') {
-              sec.items.forEach((item, idx) => {
-                item.role = $(`#edit-exp-role-${idx}`).value;
-                item.org = $(`#edit-exp-org-${idx}`).value;
-                item.start = $(`#edit-exp-start-${idx}`).value;
-                item.end = $(`#edit-exp-end-${idx}`).value;
-                item.bullets = $(`#edit-exp-bullets-${idx}`).value.split('\\n').filter(b => b.trim());
-              });
-            } else if (sec.type === 'education') {
-              sec.items.forEach((item, idx) => {
-                item.degree = $(`#edit-edu-deg-${idx}`).value;
-                item.institution = $(`#edit-edu-inst-${idx}`).value;
-                item.year = $(`#edit-edu-year-${idx}`).value;
-              });
-            }
-          });
-          await Api.updateProfile(updated);
-          toast("Profile saved successfully!");
-          renderProfile(null, false); // Reload from server
-        } catch (e) {
-          toast("Save failed.", "err");
-          $('#profSaveEditBtn').disabled = false;
-          $('#profSaveEditBtn').textContent = "Save Changes";
-        }
-      };
-    } else {
-      $('#profEditBtn').onclick = async () => {
-        if (isDraft) {
-          $('#profEditBtn').disabled = true;
-          $('#profEditBtn').textContent = "Saving...";
-          try {
-            await Api.updateProfile(sections);
-            toast("Profile saved successfully!");
-            renderProfile(null, false); // Reload from server to confirm
-          } catch (e) {
-            toast("Save failed.", "err");
-            $('#profEditBtn').disabled = false;
-            $('#profEditBtn').textContent = "Save Extracted Profile";
-          }
-        } else {
-          renderProfile(sections, true); // Enter edit mode
-        }
-      };
-    }
   } catch (e) {
     root.innerHTML = `<div class="card err-msg">Failed to load profile.</div>`;
   }
@@ -2080,27 +2159,210 @@ async function renderApply() {
   }
 }
 
+/* ---- Apply Studio: rendered doc previews (no raw JSON) ---- */
+function _alHref(u) { return /^https?:\/\//i.test(u || '') ? u : 'https://' + (u || ''); }
+function _alLabel(u) {
+  const l = (u || '').toLowerCase();
+  if (l.includes('github')) return 'GitHub';
+  if (l.includes('linkedin')) return 'LinkedIn';
+  if (l.includes('gitlab')) return 'GitLab';
+  return (u || '').replace(/^https?:\/\/(www\.)?/i, '').split('/')[0] || u;
+}
+function applyResumeHTML(c) {
+  c = c || {};
+  const ct = c.contact || {};
+  const contact = [];
+  if (ct.location) contact.push(esc(ct.location));
+  if (ct.email) contact.push(esc(ct.email));
+  if (ct.phone) contact.push(esc(ct.phone));
+  (ct.links || []).forEach((u) => contact.push(`<a href="${esc(_alHref(u))}" target="_blank" rel="noopener">${esc(_alLabel(u))}</a>`));
+  let h = `<div class="rp-name">${esc(c.name || 'Your Name')}</div>`;
+  if (contact.length) h += `<div class="rp-contact">${contact.join(' &nbsp;|&nbsp; ')}</div>`;
+  if (c.summary) h += `<div class="rp-sec">Summary</div><p class="rp-p">${esc(c.summary)}</p>`;
+  (c.sections || []).forEach((sec) => {
+    const items = sec.items || [];
+    if (!items.length) return;
+    h += `<div class="rp-sec">${esc(sec.heading || '')}</div>`;
+    if (sec.kind === 'skills') {
+      h += `<p class="rp-skills">${items.map((x) => esc(String(x))).join(' • ')}</p>`;
+    } else if (sec.kind === 'experience') {
+      items.forEach((it) => {
+        const dates = [it.start, it.end].filter(Boolean).join(' – ');
+        h += `<div class="rp-entry"><div class="rp-row"><span class="rp-title">${esc(it.role || '')}</span><span class="rp-date">${esc(dates)}</span></div>`;
+        if (it.org) h += `<div class="rp-sub"><span>${esc(it.org)}</span><span></span></div>`;
+        const bl = (it.bullets || []).filter(Boolean).map((b) => `<li>${esc(b)}</li>`).join('');
+        if (bl) h += `<ul>${bl}</ul>`;
+        h += `</div>`;
+      });
+    } else if (sec.kind === 'education') {
+      items.forEach((it) => {
+        const left = it.institution || it.degree || '';
+        h += `<div class="rp-entry"><div class="rp-row"><span class="rp-title">${esc(left)}</span><span class="rp-date">${esc(it.year || '')}</span></div>`;
+        const subl = it.institution ? (it.degree || '') : '';
+        if (subl || it.score) h += `<div class="rp-sub"><span>${esc(subl)}</span><span>${esc(it.score || '')}</span></div>`;
+        h += `</div>`;
+      });
+    } else {
+      items.forEach((it) => {
+        if (typeof it === 'string') { h += `<div class="rp-entry"><div class="rp-title">${esc(it)}</div></div>`; return; }
+        const link = it.link ? ` &nbsp;<a href="${esc(_alHref(it.link))}" target="_blank" rel="noopener">link</a>` : '';
+        h += `<div class="rp-entry"><div class="rp-row"><span class="rp-title">${esc(it.heading || '')}${link}</span><span class="rp-date">${esc(it.year || '')}</span></div>`;
+        const sub = it.issuer || it.tech_stack || '';
+        if (sub) h += `<div class="rp-sub"><span>${esc(sub)}</span><span></span></div>`;
+        if (it.detail) h += `<p class="rp-p">${esc(it.detail)}</p>`;
+        h += `</div>`;
+      });
+    }
+  });
+  return `<div class="resume-paper">${h}</div>`;
+}
+function applyCoverLetterHTML(c) {
+  c = c || {};
+  const ps = (c.paragraphs || []).map((p) => `<p>${esc(p)}</p>`).join('');
+  return `<div class="letter-paper"><p>${esc(c.greeting || 'Dear Hiring Manager,')}</p>${ps}<p class="cl-sign">${esc(c.signoff || 'Sincerely,')}<br>${esc(c.name || '')}</p></div>`;
+}
+function applyAnswersHTML(c) {
+  c = c || {};
+  const items = (c.items || []).map((it) => `<div class="qa-item"><div class="qa-q">${esc(it.question || '')}</div><div class="qa-a">${esc(it.answer || '')}</div></div>`).join('');
+  return `<div class="qa-wrap">${items || '<p class="muted">No screening questions were provided.</p>'}</div>`;
+}
+function applyDocPreview(kind, content) {
+  if (kind === 'resume') return applyResumeHTML(content);
+  if (kind === 'cover_letter') return applyCoverLetterHTML(content);
+  if (kind === 'answers') return applyAnswersHTML(content);
+  return '';
+}
+
+/* ---- Role profiles: curated, role-tailored views of the master profile ---- */
+const RP_SECTION_TYPES = [
+  { t: 'summary', label: 'Summary' }, { t: 'experience', label: 'Experience' },
+  { t: 'education', label: 'Education' }, { t: 'projects', label: 'Projects' },
+  { t: 'skills', label: 'Skills' }, { t: 'certifications', label: 'Certifications' },
+];
+async function openRoleProfiles(onChange) {
+  let variants = [], master = null;
+  try { [variants, master] = await Promise.all([Api.listVariants(), Api.getProfile()]); }
+  catch (e) { toast(e.message || 'Could not load role profiles.', 'err'); return; }
+  const masterSkills = [];
+  (master.sections_json || []).forEach((s) => { if (s.type === 'skills') (s.items || []).forEach((x) => masterSkills.push(String(x))); });
+
+  const back = document.createElement('div');
+  back.className = 'modal-back';
+  document.body.appendChild(back);
+  const close = () => { back.remove(); if (onChange) onChange(); };
+  back.onclick = (e) => { if (e.target === back) close(); };
+
+  const listView = () => {
+    back.innerHTML = `<div class="card modal rp-modal" style="position:relative">
+      <button class="close-x" id="rpClose">×</button>
+      <span class="eyebrow">Apply once, apply everywhere</span>
+      <h2 style="margin:.1em 0 .2em">Role profiles</h2>
+      <p class="muted" style="font-size:.88rem">Tailored views of your <b>master profile</b> — curate which facts to emphasize per role. The master stays your single source of truth; nothing is invented.</p>
+      <div class="rp-list">${variants.length ? variants.map((v) => `
+        <div class="card rp-row">
+          <div style="min-width:0"><div class="rp-vname">${esc(v.name)}${v.is_default ? ' <span class="pill-have" style="font-size:.66rem;padding:.15em .5em">Default</span>' : ''}</div>
+          <div class="muted" style="font-size:.8rem">${esc(v.role_target || '—')}${(v.emphasized_skills || []).length ? ` · ${v.emphasized_skills.length} emphasized` : ''}${(v.hidden_sections || []).length ? ` · ${v.hidden_sections.length} hidden` : ''}</div></div>
+          <div style="display:flex;gap:6px;flex:none"><button class="btn btn-ghost btn-sm" data-edit="${esc(v.id)}">Edit</button><button class="btn btn-ghost btn-sm" data-del="${esc(v.id)}" style="color:var(--terracotta)">Delete</button></div>
+        </div>`).join('') : '<p class="muted" style="font-size:.88rem;padding:8px 0">No role profiles yet — create one to tailor applications by role.</p>'}</div>
+      <button class="btn btn-primary" id="rpNew" style="margin-top:14px">${svgIcon('plus', 14, 'vertical-align:-2px;margin-right:5px')}New role profile</button>
+    </div>`;
+    $('#rpClose').onclick = close;
+    $('#rpNew').onclick = () => editView(null);
+    back.querySelectorAll('[data-edit]').forEach((b) => b.onclick = () => editView(variants.find((v) => v.id === b.dataset.edit)));
+    back.querySelectorAll('[data-del]').forEach((b) => b.onclick = async () => {
+      if (!confirm('Delete this role profile?')) return;
+      try { await Api.deleteVariant(b.dataset.del); variants = variants.filter((v) => v.id !== b.dataset.del); listView(); toast('Deleted.'); }
+      catch (e) { toast(e.message, 'err'); }
+    });
+  };
+
+  const editView = (v) => {
+    const hidden = new Set(v ? v.hidden_sections || [] : []);
+    const emph = new Set((v ? v.emphasized_skills || [] : []).map((s) => s.toLowerCase()));
+    back.innerHTML = `<div class="card modal rp-modal" style="position:relative">
+      <button class="close-x" id="rpClose">×</button>
+      <h2 style="margin:.1em 0 .4em">${v ? 'Edit' : 'New'} role profile</h2>
+      <div class="field"><label>Name</label><input id="rpName" value="${esc(v ? v.name : '')}" placeholder="e.g. Backend Engineer"></div>
+      <div class="field"><label>Target role (optional)</label><input id="rpRole" value="${esc(v ? v.role_target || '' : '')}" placeholder="e.g. Senior Backend Engineer"></div>
+      <div class="field"><label>Role-specific summary <span class="muted">(overrides the master summary)</span></label>
+        <textarea id="rpSummary" rows="3" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r);font:inherit;background:var(--card)">${esc(v ? v.summary_override || '' : '')}</textarea></div>
+      <div class="field"><label>Emphasize skills <span class="muted">(surfaced first — from your master profile)</span></label>
+        <div class="rp-chips">${masterSkills.length ? masterSkills.map((s) => `<button type="button" class="wiz-chip${emph.has(s.toLowerCase()) ? ' sel' : ''}" data-skill="${esc(s)}">${esc(s)}</button>`).join('') : '<span class="muted" style="font-size:.82rem">Add skills to your master profile first.</span>'}</div></div>
+      <div class="field"><label>Hide sections for this role</label>
+        <div class="rp-hide">${RP_SECTION_TYPES.map((s) => `<label class="rp-check"><input type="checkbox" data-hide="${s.t}"${hidden.has(s.t) ? ' checked' : ''}> ${s.label}</label>`).join('')}</div></div>
+      <label class="rp-check" style="margin:4px 0 14px"><input type="checkbox" id="rpDefault"${v && v.is_default ? ' checked' : ''}> Set as default</label>
+      <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" id="rpCancel">Cancel</button><button class="btn btn-primary" id="rpSave">Save role profile</button></div>
+    </div>`;
+    $('#rpClose').onclick = close;
+    $('#rpCancel').onclick = listView;
+    back.querySelectorAll('[data-skill]').forEach((b) => b.onclick = () => b.classList.toggle('sel'));
+    $('#rpSave').onclick = async () => {
+      const payload = {
+        name: $('#rpName').value.trim() || 'Untitled role',
+        role_target: $('#rpRole').value.trim(),
+        summary_override: $('#rpSummary').value.trim(),
+        emphasized_skills: [...back.querySelectorAll('[data-skill].sel')].map((b) => b.dataset.skill),
+        hidden_sections: [...back.querySelectorAll('[data-hide]:checked')].map((c) => c.dataset.hide),
+        is_default: $('#rpDefault').checked,
+      };
+      try {
+        if (v) { const nv = await Api.updateVariant(v.id, payload); variants[variants.findIndex((x) => x.id === v.id)] = nv; }
+        else { const nv = await Api.createVariant(payload); variants.push(nv); }
+        toast('Role profile saved.'); listView();
+      } catch (e) { toast(e.message || 'Could not save.', 'err'); }
+    };
+  };
+  listView();
+}
+
 async function renderApplicationDetail(id) {
   const root = $('#applyRoot');
   root.innerHTML = `<div class="card" style="text-align:center; padding:40px;"><h2>Loading...</h2></div>`;
   try {
     const app = await Api.getApplication(id);
     const m = app.match || {};
-    
+    const variants = await Api.listVariants().catch(() => []);
+    const selVar = app.variant_id || (variants.find((v) => v.is_default) || {}).id || '';
+    const variantSelectHtml = `
+      <div class="field" style="margin-bottom:24px;">
+        <label style="font-family:'JetBrains Mono', monospace; font-size:12px; color:#5c647a; font-weight:500; display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <span>PROFILE FOR THIS APPLICATION</span>
+          <button type="button" id="manageVariantsBtn" class="linklike" style="font-size:.78rem">Manage role profiles →</button>
+        </label>
+        <select id="applyVariant" style="width:100%; padding:12px; border:1px solid rgba(13, 148, 136, 0.4); border-radius:8px; font-family:'Inter', sans-serif; font-size:14px; background:rgba(255,255,255,0.85); color:#0f172a; box-sizing:border-box;">
+          <option value="">Master profile (full)</option>
+          ${variants.map((v) => `<option value="${esc(v.id)}"${v.id === selVar ? ' selected' : ''}>${esc(v.name)}${v.is_default ? ' (default)' : ''}</option>`).join('')}
+        </select>
+      </div>`;
+
     let docsHtml = '';
     if (app.docs && app.docs.length) {
-      docsHtml = `<div style="margin-top:32px;">
-        <h3 style="color:var(--primary); font-family:'Inter', sans-serif; font-weight:600; margin-bottom:16px;">Generated Documents</h3>
-        <div style="display:flex; flex-direction:column; gap:16px;">` + app.docs.map(d => {
-        return `<div class="card" style="background:rgba(255, 255, 255, 0.7); backdrop-filter:blur(20px); border:1px solid rgba(13, 148, 136, 0.2); box-shadow:0 10px 30px rgba(0,0,0,0.05); border-radius:12px; padding:24px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(13, 148, 136, 0.1); padding-bottom:12px; margin-bottom:16px;">
-            <h4 style="margin:0; color:#0f172a; font-family:'Inter', sans-serif; font-size:18px;">${esc(d.kind.replace('_', ' ').toUpperCase())}</h4>
-            <div style="display:flex; gap:8px;">
-              <button onclick="Api.exportApplyDoc('${app.id}', '${esc(d.kind)}', 'pdf')" class="btn btn-sm" style="background:#0d9488; color:white; border-radius:8px; border:none; padding:6px 12px; font-family:'Inter', sans-serif; cursor:pointer;">Export PDF</button>
-              <button onclick="Api.exportApplyDoc('${app.id}', '${esc(d.kind)}', 'docx')" class="btn btn-sm" style="background:transparent; color:#0d9488; border:1px solid #0d9488; border-radius:8px; padding:6px 12px; font-family:'Inter', sans-serif; cursor:pointer;">Export DOCX</button>
+      // Preferred order: resume, cover letter, answers.
+      const order = { resume: 0, cover_letter: 1, answers: 2 };
+      const docs = app.docs.slice().sort((a, b) => (order[a.kind] ?? 9) - (order[b.kind] ?? 9));
+      docsHtml = `<div style="margin-top:34px;">
+        <div class="subhead"><h2 style="font-size:1.35rem">Generated documents</h2><span class="hint">grounded to your master profile · edit with the assistant</span></div>
+        <div class="apply-docs">` + docs.map((d) => {
+        const title = d.kind.replace('_', ' ');
+        const chat = (d.kind === 'resume' || d.kind === 'cover_letter') ? `
+          <div class="apply-chat">
+            <div class="ac-head">${svgIcon('chat', 15, 'vertical-align:-3px;margin-right:6px')}Edit assistant <span class="muted" style="font-weight:400">— ask for a change</span></div>
+            <div class="ac-log" id="aclog-${esc(d.kind)}"></div>
+            <form class="ac-form" data-kind="${esc(d.kind)}">
+              <input class="ac-input" autocomplete="off" placeholder="e.g. make the summary more concise, or lead with my strongest skill…">
+              <button type="submit" class="btn btn-primary btn-sm">${ICONS.send}Send</button>
+            </form>
+          </div>` : '';
+        return `<div class="card apply-doc">
+          <div class="ad-head">
+            <h4>${svgIcon(d.kind === 'resume' ? 'file' : d.kind === 'cover_letter' ? 'send' : 'chat', 17, 'vertical-align:-3px;margin-right:7px')}${esc(title)}</h4>
+            <div class="ad-actions">
+              <button class="btn btn-ghost btn-sm" data-export="pdf" data-kind="${esc(d.kind)}">${ICONS.download}PDF</button>
+              <button class="btn btn-ghost btn-sm" data-export="docx" data-kind="${esc(d.kind)}">${ICONS.download}DOCX</button>
             </div>
           </div>
-          <pre style="white-space:pre-wrap; font-size:13px; font-family:'JetBrains Mono', monospace; background:rgba(248, 249, 255, 0.8); border:1px solid rgba(109, 122, 119, 0.2); border-radius:8px; padding:16px; max-height:400px; overflow-y:auto; color:#333;">${esc(JSON.stringify(d.content, null, 2))}</pre>
+          <div class="ad-preview" data-kind="${esc(d.kind)}">${applyDocPreview(d.kind, d.content)}</div>
+          ${chat}
         </div>`;
       }).join('') + `</div></div>`;
     }
@@ -2127,30 +2389,36 @@ async function renderApplicationDetail(id) {
         <textarea id="appQs" rows="3" placeholder="e.g. How many years of Python experience do you have?" style="width:100%; padding:12px; border:1px solid rgba(109, 122, 119, 0.3); border-radius:8px; font-family:'Inter', sans-serif; background:rgba(255,255,255,0.7); box-sizing:border-box;"></textarea>
       </div>
       
+      ${variantSelectHtml}
+
       <div class="field" style="margin-bottom:32px;">
         <label style="font-family:'JetBrains Mono', monospace; font-size:12px; color:#5c647a; font-weight:500; display:block; margin-bottom:4px;">TAILORING STRATEGY</label>
         <select id="tailorMode" style="width:100%; padding:12px; border:1px solid rgba(13, 148, 136, 0.4); border-radius:8px; font-family:'Inter', sans-serif; font-size:14px; background:rgba(255,255,255,0.8); color:#0f172a; outline:none; box-shadow:0 0 0 2px rgba(13,148,136,0.1); box-sizing:border-box;">
-          <option value="moderate">Moderate (Strict Grounding - Use my actual skills)</option>
-          <option value="aggressive">Aggressive (ATS Hacking - Inject missing JD keywords)</option>
+          <option value="moderate">Moderate (Strict grounding — use my actual skills)</option>
         </select>
       </div>
-      
+
       <button class="btn btn-primary" id="generateBtn" style="width:100%; background:linear-gradient(135deg, #0d9488 0%, #00685f 100%); border:none; padding:14px; border-radius:8px; font-family:'Inter', sans-serif; font-weight:600; font-size:16px; box-shadow:0 4px 15px rgba(13, 148, 136, 0.3); color:white; cursor:pointer;">Generate Tailored Docs</button>
       
       ${docsHtml}
     </div>`;
     
+    const mgmtBtn = $('#manageVariantsBtn');
+    if (mgmtBtn) mgmtBtn.onclick = () => openRoleProfiles(() => renderApplicationDetail(app.id));
+
     $('#generateBtn').onclick = async () => {
       const qsRaw = $('#appQs').value.trim();
-      const qs = qsRaw ? qsRaw.split('\\n').map(s => s.trim()).filter(Boolean) : [];
+      const qs = qsRaw ? qsRaw.split('\n').map(s => s.trim()).filter(Boolean) : [];
       const mode = $('#tailorMode').value;
-      $('#generateBtn').disabled = true; $('#generateBtn').textContent = "Generating... (this takes ~15s)";
+      const variantId = $('#applyVariant') ? ($('#applyVariant').value || null) : null;
+      $('#generateBtn').disabled = true; $('#generateBtn').textContent = "Generating…";
       try {
         await Api.generateApplyDocs({
           application_id: app.id,
           kinds: ["resume", "cover_letter", "answers"],
           questions: qs,
-          tailor_mode: mode
+          tailor_mode: mode,
+          variant_id: variantId
         });
         toast("Documents generated & grounded!");
         renderApplicationDetail(app.id); // reload view
@@ -2159,6 +2427,39 @@ async function renderApplicationDetail(id) {
         $('#generateBtn').disabled = false; $('#generateBtn').textContent = "Generate Tailored Docs";
       }
     };
+
+    // Export buttons (rendered previews replace the old raw-JSON code block).
+    root.querySelectorAll('[data-export]').forEach((b) => b.onclick = () => {
+      Api.exportApplyDoc(app.id, b.dataset.kind, b.dataset.export).catch((err) => toast(err.message || 'Export failed.', 'err'));
+    });
+
+    // Chat assistant: refine a generated doc from a short prompt (grounded + verified).
+    root.querySelectorAll('.ac-form').forEach((f) => {
+      f.onsubmit = async (e) => {
+        e.preventDefault();
+        const kind = f.dataset.kind;
+        const input = f.querySelector('.ac-input');
+        const msg = (input.value || '').trim();
+        if (!msg) return;
+        const log = $(`#aclog-${kind}`);
+        log.insertAdjacentHTML('beforeend', `<div class="ac-msg user">${esc(msg)}</div>`);
+        log.insertAdjacentHTML('beforeend', `<div class="ac-msg bot" id="ac-typing">…</div>`);
+        input.value = ''; input.disabled = true;
+        log.scrollTop = log.scrollHeight;
+        try {
+          const res = await Api.refineApplyDoc(app.id, kind, msg);
+          const t = $('#ac-typing'); if (t) t.remove();
+          log.insertAdjacentHTML('beforeend', `<div class="ac-msg bot">${esc(res.message || 'Updated.')}</div>`);
+          const prev = f.closest('.apply-doc').querySelector('.ad-preview');
+          if (prev && res.content) prev.innerHTML = applyDocPreview(kind, res.content);
+        } catch (err) {
+          const t = $('#ac-typing'); if (t) t.remove();
+          log.insertAdjacentHTML('beforeend', `<div class="ac-msg bot err">${esc(err.message || 'Could not apply that edit.')}</div>`);
+        } finally {
+          input.disabled = false; input.focus(); log.scrollTop = log.scrollHeight;
+        }
+      };
+    });
   } catch (e) {
     toast(e.message, "err");
     renderApply();
