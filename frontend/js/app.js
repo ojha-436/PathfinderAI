@@ -2176,7 +2176,7 @@ function openInstallExtension() {
       <h2 style="margin:.1em 0 .5em">Add PathFinder Apply to your browser</h2>
       ${EXT_STORE_URL ? '' : '<div class="ei-note">One-click Chrome Web Store install is coming soon. For now, add it in four quick steps (Chrome, Edge or Brave):</div>'}
       <ol class="ei-steps">
-        <li><b>Download</b> the extension and unzip it.<div style="margin-top:8px"><a class="btn btn-primary btn-sm" href="/api/extension/download">${svgIcon('download', 14, 'vertical-align:-2px;margin-right:5px')}Download extension (.zip)</a></div></li>
+        <li><b>Download</b> the extension and unzip it.<div style="margin-top:8px"><a class="btn btn-primary btn-sm" href="/pathfinder-apply-extension.zip" download="pathfinder-apply-extension.zip">${svgIcon('download', 14, 'vertical-align:-2px;margin-right:5px')}Download extension (.zip)</a></div></li>
         <li>Open <code>chrome://extensions</code> and turn on <b>Developer mode</b> (top-right).</li>
         <li>Click <b>Load unpacked</b> and select the unzipped <code>pathfinder-apply</code> folder.</li>
         <li>Pin it, open the popup, and <b>sign in</b> with your PathFinder account.</li>
@@ -2226,7 +2226,7 @@ function openExtensionGuide() {
       </div>
       <div class="eg-foot">
         <span class="muted" style="font-size:.8rem">Desktop Chrome/Edge · you always review &amp; submit — nothing is auto-submitted.</span>
-        <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" id="egReplay">↻ Replay</button><button class="btn btn-primary btn-sm" id="egGot">Got it</button></div>
+        <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" id="egReplay">↻ Replay</button><button class="btn btn-primary btn-sm" id="egGet">Get the extension</button></div>
       </div>
     </div>`;
   document.body.appendChild(back);
@@ -2245,7 +2245,7 @@ function openExtensionGuide() {
   const close = () => { if (timer) clearInterval(timer); back.remove(); };
   back.onclick = (e) => { if (e.target === back) close(); };
   back.querySelector('#egX').onclick = close;
-  back.querySelector('#egGot').onclick = close;
+  back.querySelector('#egGet').onclick = () => { close(); openInstallExtension(); };
   back.querySelector('#egReplay').onclick = play;
   stepEls.forEach((el, i) => el.onclick = () => { if (timer) clearInterval(timer); show(i); });
   play();
@@ -2269,8 +2269,9 @@ async function renderApply() {
     root.innerHTML = `<div class="card" style="max-width:800px; margin:0 auto; background:rgba(248, 249, 255, 0.9); backdrop-filter:blur(40px); border:1px solid rgba(13, 148, 136, 0.15); border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,0.08); padding:40px;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid rgba(13, 148, 136, 0.2); padding-bottom:16px; margin-bottom:20px;">
         <h2 style="margin:0; font-family:'Inter', sans-serif; font-size:32px; font-weight:700; color:#0f172a; letter-spacing:-0.01em;">Apply Studio</h2>
-        <div style="display:flex; gap:12px; align-items:center;">
-          <button id="extHowLink" style="background:none;border:none;color:#0d9488;font:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;">How autofill works</button>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+          <button id="extGetBtn" style="display:inline-flex;align-items:center;gap:5px;background:#fff;border:1.5px solid #0d9488;color:#0d9488;font:inherit;font-size:13px;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;">${svgIcon('download', 14, 'vertical-align:-2px')} Get the extension</button>
+          <button id="extHowLink" style="background:none;border:none;color:#0d9488;font:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;">How it works</button>
           <button class="btn btn-primary" id="newAppBtn" style="background:linear-gradient(135deg, #0d9488 0%, #00685f 100%); border:none; padding:10px 20px; border-radius:8px; font-family:'Inter', sans-serif; font-weight:600; box-shadow:0 4px 15px rgba(13, 148, 136, 0.3); color:white; cursor:pointer;">New Application</button>
         </div>
       </div>
@@ -2281,6 +2282,7 @@ async function renderApply() {
     // Extension CTA — adapts to browser + install state (progressive disclosure).
     renderExtBanner($('#extBannerHost'));
     $('#extHowLink').onclick = () => openExtensionGuide();
+    $('#extGetBtn').onclick = () => openInstallExtension();
 
     root.querySelectorAll('[data-appid]').forEach(el => {
       el.onclick = () => renderApplicationDetail(el.dataset.appid);

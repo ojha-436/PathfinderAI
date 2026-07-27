@@ -124,4 +124,8 @@ app.include_router(extension.router, prefix=f"{settings.API_V1_STR}/extension", 
 # Static SPA (landing + app). html=True serves index.html at "/".
 _frontend = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend"))
 if os.path.isdir(_frontend) and os.path.exists(os.path.join(_frontend, "index.html")):
+    # Refresh the downloadable extension zip from source before mounting, so the
+    # static /pathfinder-apply-extension.zip the web app links to is always current.
+    if extension.refresh_static_zip(_frontend):
+        print(json.dumps({"t": "boot", "msg": "refreshed static extension zip"}), flush=True)
     app.mount("/", StaticFiles(directory=_frontend, html=True), name="frontend")
