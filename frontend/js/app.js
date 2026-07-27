@@ -131,6 +131,7 @@ async function onGoogleCredential(credential) {
     Store.user = await Api.me();
     $('#authModal').innerHTML = '';
     renderNav();
+    pushExtensionCredentials(true);
     toast('Signed in with Google.');
     const after = State.pendingAfterAuth; State.pendingAfterAuth = null;
     if (after) after(); else location.hash = '#/dashboard';
@@ -183,6 +184,7 @@ function openAuth(mode) {
       Store.token = res.access_token;
       Store.user = await Api.me();
       close(); renderNav();
+      pushExtensionCredentials(true);
       toast(isReg ? 'Account created — welcome!' : 'Logged in.');
       const after = State.pendingAfterAuth; State.pendingAfterAuth = null;
       if (after) after(); else location.hash = '#/dashboard';
@@ -2164,8 +2166,26 @@ function renderExtBanner(host) {
   $('#extSeeHow').onclick = () => openExtensionGuide();
   $('#extDismiss').onclick = () => { localStorage.setItem('pf_ext_dismissed', '1'); host.innerHTML = ''; };
 }
-// Flip the banner to "installed" live if the extension announces itself while the page is open.
-window.addEventListener('pf-apply-installed', () => { const h = document.getElementById('extBannerHost'); if (h) renderExtBanner(h); });
+// Auto-connect: hand the installed extension a scoped token + this exact origin, so it
+// is signed in AND pointed at the right PathFinder server with zero setup. The extension
+// never needs a "server" URL or a second login — it inherits this web session.
+let _extPushed = false;
+async function pushExtensionCredentials(force) {
+  if (!Store.token || !extInstalled()) return;   // only when signed in AND the extension is present
+  if (_extPushed && !force) return;               // once per page load is enough
+  _extPushed = true;
+  try {
+    const t = await Api.extensionToken();
+    // detect.js (our content script on this origin) is the only listener; it relays to the extension.
+    window.postMessage({ source: 'pathfinder-web', type: 'PF_CONNECT', apiBase: location.origin, token: t.access_token }, location.origin);
+  } catch (e) { _extPushed = false; /* not fatal — the popup's manual sign-in still works */ }
+}
+// Flip the banner to "installed" live if the extension announces itself while the page is open,
+// and immediately auto-connect it (this fires right after install, before the user opens the popup).
+window.addEventListener('pf-apply-installed', () => {
+  const h = document.getElementById('extBannerHost'); if (h) renderExtBanner(h);
+  pushExtensionCredentials(true);
+});
 
 function openInstallExtension() {
   const back = document.createElement('div');
@@ -2179,7 +2199,7 @@ function openInstallExtension() {
         <li><b>Download</b> the extension and unzip it.<div style="margin-top:8px"><a class="btn btn-primary btn-sm" href="/pathfinder-apply-extension.zip" download="pathfinder-apply-extension.zip">${svgIcon('download', 14, 'vertical-align:-2px;margin-right:5px')}Download extension (.zip)</a></div></li>
         <li>Open <code>chrome://extensions</code> and turn on <b>Developer mode</b> (top-right).</li>
         <li>Click <b>Load unpacked</b> and select the unzipped <code>pathfinder-apply</code> folder.</li>
-        <li>Pin it, open the popup, and <b>sign in</b> with your PathFinder account.</li>
+        <li>That's it — because you're signed in here, it <b>connects automatically</b>. Just pin it and open any job posting.</li>
       </ol>
       <div class="eg-foot">
         <span class="muted" style="font-size:.8rem">Chrome · Edge · Brave (desktop)${extSupported() ? '' : ' — your current browser is not supported'}.</span>
@@ -2672,6 +2692,7 @@ async function renderApplicationDetail(id) {
   Api.skills().then((s) => State.catalog = s).catch(() => {});
   if (Store.token) { try { Store.user = await Api.me(); } catch { Store.clear(); } }
   renderNav();
+  pushExtensionCredentials();   // if already signed in and the extension is installed, connect it silently
   $('#tryAshaBtn').onclick = () => runAnalysis('text', ASHA_SAMPLE);
   if (!location.hash) location.hash = '#/';
   route();

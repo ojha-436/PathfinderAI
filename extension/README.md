@@ -1,4 +1,4 @@
-# PathFinder Apply — browser extension (v1.0.0)
+# PathFinder Apply — browser extension (v1.1.0)
 
 One-click autofill for job applications, from your PathFinder profile — **in your own
 browser and login session**. It fills the form, attaches your ATS-clean résumé, flags
@@ -7,7 +7,12 @@ submit. It **never** submits for you, bypasses CAPTCHAs, or creates accounts.
 
 ## What it does
 
-- **Sign in** with your PathFinder account (token stays in the browser; the job site never sees it).
+- **Auto-connect** — the extension links itself to your PathFinder account the moment you're
+  signed in on the PathFinder web app. No "server" URL, no separate login in the popup: the web
+  app hands the extension a scoped token + its own origin over a trusted `postMessage` → `detect.js`
+  → background handshake (`/api/auth/extension-token`). Works against localhost in dev and the
+  deployed URL for real users with zero setup. Manual sign-in still lives under **Advanced** for
+  self-hosted/dev use.
 - **Pick a profile** — your master profile or any **role variant**.
 - **Autofill** — on supported ATS a floating **⚡ Autofill with PathFinder** button appears; on any
   other page use the popup's *Autofill* button. Fills name/contact/work-history/education/links,
@@ -26,9 +31,10 @@ submit. It **never** submits for you, bypasses CAPTCHAs, or creates accounts.
 
 ## Install
 
-1. Start the PathFinder backend (`:8099`).
+1. Start the PathFinder backend and open the web app (dev: `:8099` / `:8000`).
 2. `chrome://extensions` → **Developer mode** → **Load unpacked** → select this `extension/` folder.
-3. Click the **PathFinder Apply** icon → sign in with your PathFinder email + password.
+3. Make sure you're **signed in on the PathFinder web app** — the extension connects automatically.
+   Open the popup and it's already connected. (Manual login is under **Advanced** if you need it.)
 
 ## Try it safely (no real portal)
 
@@ -50,8 +56,10 @@ Nothing submits. Then try a real Greenhouse/Lever/Ashby posting.
 
 ## Configure for production
 
-- **API host:** set it in the popup (Settings) or `chrome.storage`. When you deploy the backend to a
-  domain, add that origin to `host_permissions` in `manifest.json`.
+- **API host:** auto-learned from the web app you sign in on (via the PF_CONNECT handshake). The
+  production origin is baked in as `DEFAULT_API` (`background.js`) and listed in `host_permissions` +
+  `detect.js` `content_scripts.matches` (`manifest.json`) — update all three if the deploy URL changes.
+  The popup **Advanced/Settings** field is a manual override for self-hosted/dev.
 - **More ATS:** add the host to `content_scripts.matches` + `host_permissions`, and (optionally) a
   selector map in `ADAPTERS` in `content.js`. The generic matcher already covers most fields.
 

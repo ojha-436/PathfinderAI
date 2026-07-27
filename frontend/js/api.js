@@ -54,6 +54,9 @@ const Api = {
       body: JSON.stringify({ email, password }),
     }).then(handle),
 
+  // Mints a scoped token for the browser extension (requires the user to be signed in).
+  extensionToken: () => fetch(`${API}/auth/extension-token`, { method: 'POST', headers: authHeaders() }).then(handle),
+
   me: () => fetch(`${API}/auth/me`, { headers: authHeaders() }).then(handle),
   deleteAccount: () => fetch(`${API}/auth/me`, { method: 'DELETE', headers: authHeaders() }).then(handle),
 

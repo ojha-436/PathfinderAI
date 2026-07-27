@@ -2,7 +2,21 @@
  * Central place for auth + all PathFinder API calls, so the page/content script
  * never sees the token. Content script and popup talk to it via messages.
  */
-const DEFAULT_API = 'http://localhost:8099';
+// Production PathFinder. Used only as a fallback default; in practice the extension
+// learns its server from the web app via the PF_CONNECT auto-connect handshake, so it
+// works against localhost during development and production for real users with no setup.
+const DEFAULT_API = 'https://pathfinder-383713992026.asia-south1.run.app';
+
+// Origins we accept auto-connect credentials from (the PathFinder web app only).
+function isTrustedOrigin(url) {
+  try {
+    const u = new URL(url);
+    if (u.protocol === 'http:' && (u.hostname === 'localhost' || u.hostname === '127.0.0.1')) return true;
+    if (u.protocol === 'https:' && (u.hostname.endsWith('.pathfinder.app') ||
+        u.hostname === 'pathfinder-383713992026.asia-south1.run.app')) return true;
+    return false;
+  } catch (e) { return false; }
+}
 
 async function cfg() {
   const s = await chrome.storage.local.get(['apiBase', 'token', 'selectedVariant']);
@@ -84,6 +98,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     try {
       switch (msg.type) {
+        case 'PF_CONNECT': {
+          // Auto-connect handshake relayed by detect.js. Trust it only from a PathFinder origin.
+          if (!sender || !isTrustedOrigin(sender.url || (sender.origin ? sender.origin + '/' : ''))) { sendResponse({ error: 'untrusted origin' }); break; }
+          if (!msg.token) { sendResponse({ error: 'no token' }); break; }
+          await chrome.storage.local.set({ apiBase: (msg.apiBase || '').replace(/\/$/, ''), token: msg.token });
+          sendResponse({ ok: true });
+          break;
+        }
         case 'PF_LOGIN': await login(msg.email, msg.password); sendResponse({ ok: true }); break;
         case 'PF_LOGOUT': await chrome.storage.local.remove('token'); sendResponse({ ok: true }); break;
         case 'PF_ME': { const r = await api('/api/auth/me'); sendResponse(r.ok ? { ok: true, user: await r.json() } : { ok: false }); break; }

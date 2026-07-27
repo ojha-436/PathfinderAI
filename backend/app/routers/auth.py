@@ -72,6 +72,16 @@ def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
+@router.post("/extension-token", response_model=Token)
+def extension_token(current_user: User = Depends(get_current_user)):
+    """Mint a scoped, longer-lived token so the browser extension can bootstrap its
+    session from an already-authenticated web session — no separate email/password
+    login in the extension. The web app calls this while the user is signed in and
+    hands the token to the extension over a trusted page→content-script handshake."""
+    token = create_access_token({"sub": current_user.id, "scope": "extension"}, timedelta(days=30))
+    return {"access_token": token, "token_type": "bearer"}
+
+
 @router.patch("/me", response_model=UserResponse)
 def update_me(body: PersonaUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if body.persona not in {"student", "professional", "auto"}:
