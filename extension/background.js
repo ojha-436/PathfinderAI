@@ -36,9 +36,10 @@ async function login(email, password) {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
-  if (!res.ok) throw new Error(res.status === 401 ? 'Wrong email or password.' : `Login failed (${res.status}).`);
+  if (!res.ok) throw new Error(res.status === 401 ? `Wrong email or password for ${apiBase}.` : `Login failed (${res.status}).`);
   const d = await res.json();
-  await chrome.storage.local.set({ token: d.access_token });
+  // A manual sign-in is a clear "connect" intent — clear any prior disconnect.
+  await chrome.storage.local.set({ token: d.access_token, disconnected: false });
   return true;
 }
 
@@ -102,12 +103,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           // Auto-connect handshake relayed by detect.js. Trust it only from a PathFinder origin.
           if (!sender || !isTrustedOrigin(sender.url || (sender.origin ? sender.origin + '/' : ''))) { sendResponse({ error: 'untrusted origin' }); break; }
           if (!msg.token) { sendResponse({ error: 'no token' }); break; }
+          // Respect an explicit disconnect: ignore silent pushes until the user reconnects.
+          const st = await chrome.storage.local.get('disconnected');
+          if (st.disconnected) { sendResponse({ ok: false, ignored: 'disconnected' }); break; }
           await chrome.storage.local.set({ apiBase: (msg.apiBase || '').replace(/\/$/, ''), token: msg.token });
           sendResponse({ ok: true });
           break;
         }
         case 'PF_LOGIN': await login(msg.email, msg.password); sendResponse({ ok: true }); break;
-        case 'PF_LOGOUT': await chrome.storage.local.remove('token'); sendResponse({ ok: true }); break;
+        case 'PF_LOGOUT': await chrome.storage.local.set({ disconnected: true }); await chrome.storage.local.remove('token'); sendResponse({ ok: true }); break;
+        case 'PF_RECONNECT': await chrome.storage.local.set({ disconnected: false }); sendResponse({ ok: true }); break;
         case 'PF_ME': { const r = await api('/api/auth/me'); sendResponse(r.ok ? { ok: true, user: await r.json() } : { ok: false }); break; }
         case 'PF_VARIANTS': { const r = await api('/api/profile/variants'); sendResponse({ ok: true, variants: r.ok ? await r.json() : [] }); break; }
         case 'PF_GET_FILLDATA': sendResponse(await getFillData()); break;

@@ -2169,16 +2169,18 @@ function renderExtBanner(host) {
 // Auto-connect: hand the installed extension a scoped token + this exact origin, so it
 // is signed in AND pointed at the right PathFinder server with zero setup. The extension
 // never needs a "server" URL or a second login — it inherits this web session.
-let _extPushed = false;
+let _extLastPush = 0;
 async function pushExtensionCredentials(force) {
-  if (!Store.token || !extInstalled()) return;   // only when signed in AND the extension is present
-  if (_extPushed && !force) return;               // once per page load is enough
-  _extPushed = true;
+  if (!Store.token || !extInstalled()) return;        // only when signed in AND the extension is present
+  const now = Date.now();
+  if (!force && now - _extLastPush < 3000) return;     // throttle (focus + visibility can fire together)
+  _extLastPush = now;
   try {
     const t = await Api.extensionToken();
     // detect.js (our content script on this origin) is the only listener; it relays to the extension.
+    // The extension ignores this while the user has explicitly disconnected, so it never overrides a logout.
     window.postMessage({ source: 'pathfinder-web', type: 'PF_CONNECT', apiBase: location.origin, token: t.access_token }, location.origin);
-  } catch (e) { _extPushed = false; /* not fatal — the popup's manual sign-in still works */ }
+  } catch (e) { _extLastPush = 0; /* allow retry — the popup's manual sign-in still works too */ }
 }
 // Flip the banner to "installed" live if the extension announces itself while the page is open,
 // and immediately auto-connect it (this fires right after install, before the user opens the popup).
@@ -2186,6 +2188,11 @@ window.addEventListener('pf-apply-installed', () => {
   const h = document.getElementById('extBannerHost'); if (h) renderExtBanner(h);
   pushExtensionCredentials(true);
 });
+// Re-hand credentials whenever the user returns to this tab — this is what makes reconnecting
+// after a disconnect (or a token expiry) automatic: come back to PathFinder and you're connected.
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') pushExtensionCredentials(); });
+window.addEventListener('focus', () => pushExtensionCredentials());
+window.addEventListener('pageshow', () => pushExtensionCredentials());
 
 function openInstallExtension() {
   const back = document.createElement('div');

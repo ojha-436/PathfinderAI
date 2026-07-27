@@ -22,20 +22,31 @@ async function init() {
   else renderConnect(apiBase);
 }
 
-// Default state: not connected yet. Guide the user to sign in on the web app — the
-// extension links itself automatically. No "server" field in the primary flow.
-function renderConnect(apiBase) {
+// Default / disconnected state. The extension links itself automatically from the web app —
+// so this screen's job is a friendly one-click reconnect, not a login form.
+async function renderConnect(apiBase) {
+  // If the active tab is a PathFinder page we can reconnect straight through it — and for
+  // developers, prefer its origin (e.g. localhost) over the production default so the
+  // Advanced field and manual login never silently point at the wrong server.
+  let pfTab = null, pfOrigin = null;
+  try {
+    const [t] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (t && t.url) {
+      const u = new URL(t.url);
+      const isPF = u.hostname === 'localhost' || u.hostname === '127.0.0.1' ||
+        u.hostname.endsWith('.pathfinder.app') || u.hostname === 'pathfinder-383713992026.asia-south1.run.app';
+      if (isPF) { pfTab = t; pfOrigin = u.origin; }
+    }
+  } catch (e) { /* activeTab URL may be unavailable */ }
+  const advBase = pfOrigin || apiBase;
+
   root.innerHTML = `
-    <p class="lead">This extension links to your PathFinder account <b>automatically</b> — no setup, no server, no second login.</p>
-    <ol class="steps">
-      <li>Open PathFinder and <b>sign in</b> (if you aren't already).</li>
-      <li>You're connected. Come back and pick a profile.</li>
-    </ol>
-    <button class="primary" id="open">Open PathFinder</button>
-    <div class="waiting" id="waiting">Waiting for you to sign in…</div>
+    <p class="lead">Not connected. The extension links to your PathFinder account <b>automatically</b> — just make sure you're signed in on the website.</p>
+    <button class="primary" id="reconnect">${pfTab ? 'Reconnect via this tab' : 'Open PathFinder & connect'}</button>
+    <div class="waiting" id="waiting">Waiting…</div>
     <details class="adv"><summary>Advanced — developer / self-hosted</summary>
       <label>PathFinder server</label>
-      <input id="apiBase" type="text" value="${esc(apiBase)}">
+      <input id="apiBase" type="text" value="${esc(advBase)}">
       <label>Email</label>
       <input id="email" type="email" placeholder="you@example.com" autocomplete="username">
       <label>Password</label>
@@ -44,18 +55,25 @@ function renderConnect(apiBase) {
       <div id="advStatus"></div>
     </details>`;
 
-  document.getElementById('open').onclick = async () => {
-    const base = (document.getElementById('apiBase').value.trim() || apiBase).replace(/\/$/, '');
-    await chrome.storage.local.set({ apiBase: base });
-    chrome.tabs.create({ url: base });
+  document.getElementById('reconnect').onclick = async () => {
+    await send({ type: 'PF_RECONNECT' });   // clear the explicit-disconnect flag first
     const w = document.getElementById('waiting');
-    if (w) w.textContent = 'Opened PathFinder — sign in there, then reopen this popup.';
+    if (pfTab && pfTab.id) {
+      await chrome.storage.local.set({ apiBase: pfOrigin });
+      chrome.tabs.reload(pfTab.id);          // re-runs the page → it re-hands credentials to us
+      if (w) w.textContent = 'Reconnecting via your PathFinder tab…';
+    } else {
+      const base = (document.getElementById('apiBase').value.trim() || apiBase).replace(/\/$/, '');
+      await chrome.storage.local.set({ apiBase: base });
+      chrome.tabs.create({ url: base });     // open the web app → it hands credentials on load
+      if (w) w.textContent = 'Opened PathFinder — sign in there if needed; this connects on its own.';
+    }
   };
 
   document.getElementById('login').onclick = async () => {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    await chrome.storage.local.set({ apiBase: document.getElementById('apiBase').value.trim().replace(/\/$/, '') });
+    await chrome.storage.local.set({ apiBase: document.getElementById('apiBase').value.trim().replace(/\/$/, ''), disconnected: false });
     const st = (h) => { const e = document.getElementById('advStatus'); if (e) e.innerHTML = h; };
     if (!email || !password) { st('<span class="err">Enter your email and password.</span>'); return; }
     st('<span class="ok">Signing in…</span>');
@@ -63,7 +81,7 @@ function renderConnect(apiBase) {
     if (r && r.ok) init(); else st(`<span class="err">${esc((r && r.error) || 'Login failed.')}</span>`);
   };
 
-  // If the web app pushes credentials while this popup is open, PF_ME starts succeeding —
+  // If the web app hands over credentials while this popup is open, PF_ME starts succeeding —
   // flip to the connected view on its own.
   stopPoll();
   _poll = setInterval(async () => {

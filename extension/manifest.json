@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PathFinder Apply",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "One-click autofill for job applications from your PathFinder profile — you review and submit. No auto-submit, no scraping, no fake accounts.",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": [
