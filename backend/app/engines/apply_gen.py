@@ -53,7 +53,7 @@ def _personal(profile: Dict[str, Any]) -> Dict[str, Any]:
     portfolio = fields.get("portfolio") or ""
     links = fields.get("links") or []
     if not links:
-        links = [l for l in [github, linkedin, portfolio] if l]
+        links = [link for link in [github, linkedin, portfolio] if link]
 
     return {
         "name": fields.get("name") or profile.get("full_name") or "",
